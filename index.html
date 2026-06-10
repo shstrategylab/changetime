@@ -167,9 +167,28 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
 .sajugrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--goldd);padding:12px 24px;border-radius:4px;font-size:13px;z-index:999;display:none;max-width:320px;text-align:center;}
 .toast.on{display:block;}
+/* 히어로 축소 */
+.hero{padding:32px 24px 24px;text-align:center;background:linear-gradient(180deg,var(--paper),var(--paper2));border-bottom:1px solid var(--paper3);position:relative;overflow:hidden;}
+.hero::before{content:'易';position:absolute;top:-30px;left:50%;transform:translateX(-50%);font-family:'Noto Serif KR',serif;font-size:180px;font-weight:700;color:var(--paper3);opacity:.4;pointer-events:none;user-select:none;}
+.hero h1{font-family:'Noto Serif KR',serif;font-size:clamp(22px,4vw,36px);font-weight:700;color:var(--ink);margin-bottom:10px;position:relative;}
+.hero h1 em{color:var(--gold);font-style:normal;}
+.hero-sub{font-size:13px;color:var(--ink3);line-height:1.7;max-width:560px;margin:0 auto;position:relative;}
+
+/* 상단 2컬럼 레이아웃 */
+.top-grid{display:grid;grid-template-columns:1fr 300px;gap:28px;align-items:start;}
+.entry-main{}
+.daily-side{background:var(--ink);border-radius:var(--r);padding:24px;color:var(--goldd);}
+.daily-date{font-size:11px;color:var(--ink3);margin-bottom:12px;letter-spacing:1px;}
+.dcrd-v{border-top:1px solid rgba(255,255,255,.08);padding-top:14px;margin-top:4px;}
+.dgua-sm{font-family:'Noto Serif KR',serif;font-size:40px;color:var(--gold);line-height:1;margin-bottom:8px;}
+.daily-note{font-size:10px;color:var(--ink3);margin-top:14px;line-height:1.6;letter-spacing:.3px;}
+
+@media(max-width:900px){
+  .top-grid{grid-template-columns:1fr;}
+  .daily-side{order:-1;}
+}
 @media(max-width:680px){
   .egrid,.cgrid,.pgrid{grid-template-columns:1fr;}
-  .dcrd{flex-direction:column;gap:16px;}
   nav{padding:0 16px;}
   .nav-r a:not(.nbtn):not(.nu){display:none;}
   .md{padding:28px 20px;}
@@ -197,66 +216,67 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
   </div>
 </nav>
 
-<!-- HERO -->
+<!-- HERO (미니) -->
 <section class="hero">
-  <p class="eye">주역 — 변화의 지혜</p>
-  <h1>지금 나는<br><em>어디에</em> 서 있는가</h1>
-  <p class="hero-sub">미래를 점치는 것이 아니라, 지금 이 순간의 형세를 읽고<br>어떻게 나아갈지 스스로 묻는 3천 년의 지혜</p>
-  <div class="hact">
-    <a href="#entry" class="bp">점괘 보기 시작</a>
-    <a href="#concept" class="bs">주역이란?</a>
-  </div>
+  <p class="eye">주역 — 변화의 지혜 · 3천 년의 처세술</p>
+  <h1>지금 나는 <em>어디에</em> 서 있는가</h1>
+  <p class="hero-sub">미래 예언이 아닌, 지금 이 순간의 형세를 읽고 어떻게 나아갈지를 스스로 묻는 도구입니다</p>
 </section>
 
-<!-- DAILY -->
-<section class="sec">
-  <p class="slbl">오늘의 괘</p>
-  <h2 class="stit" id="dailyTitle">오늘의 형세</h2>
-  <div class="dcrd">
-    <div class="dgua">☯</div>
-    <div>
-      <div class="dname" id="dName">수뢰둔 (水雷屯)</div>
-      <div class="dhj" id="dHj">屯 · 어려운 시작</div>
-      <p class="ddesc" id="dDesc">새싹이 단단한 땅을 뚫고 나오려는 시기입니다. 묵묵히 실력을 쌓고 조력자를 구하십시오.</p>
-      <div id="dKws"><span class="kw">신중</span><span class="kw">준비</span><span class="kw">조력자</span></div>
-    </div>
-  </div>
-</section>
-<hr class="divr">
+<!-- 점괘 시스템 + 오늘의 괘 (최상단 2컬럼) -->
+<section class="secw" id="entry" style="padding-top:32px;padding-bottom:32px;">
+  <div class="top-grid">
 
-<!-- ENTRY -->
-<section class="secw" id="entry">
-  <p class="slbl">점괘 시스템</p>
-  <h2 class="stit">무엇을 여쭙겠습니까</h2>
-  <div class="egrid">
-    <div class="ec free" onclick="startDiv('free')">
-      <span class="ebdg bf">무료 · 하루 3회</span>
-      <div class="eico">🪙</div>
-      <h3 class="etit">즉석 점괘</h3>
-      <p class="edesc">사주 없이 누구나. 지금 마음속 고민을 가지고 동전을 던져 현재 형세를 읽습니다.</p>
-      <ul class="efeat">
-        <li>괘명 + 핵심 한 줄 <span class="ft ftf">무료</span></li>
-        <li>괘사 해설 (현재 상황) <span class="ft ftf">무료</span></li>
-        <li>행동 지침 <span class="ft ftf">무료</span></li>
-        <li>동효 · 효사 해석 <span class="ft ftp">유료</span></li>
-        <li>지괘 분석 <span class="ft ftp">유료</span></li>
-        <li>AI 해설 프롬프트 <span class="ft ftp">유료</span></li>
-      </ul>
+    <!-- 좌: 점괘 카드 -->
+    <div class="entry-main">
+      <p class="slbl">점괘 시스템</p>
+      <h2 class="stit" style="margin-bottom:16px;">무엇을 여쭙겠습니까</h2>
+      <div class="egrid">
+        <div class="ec free" onclick="startDiv('free')">
+          <span class="ebdg bf">무료 · 하루 3회</span>
+          <div class="eico">🪙</div>
+          <h3 class="etit">즉석 점괘</h3>
+          <p class="edesc">사주 없이 누구나. 지금 마음속 고민을 가지고 동전을 던져 현재 형세를 읽습니다.</p>
+          <ul class="efeat">
+            <li>괘명 + 핵심 한 줄 <span class="ft ftf">무료</span></li>
+            <li>괘사 해설 (현재 상황) <span class="ft ftf">무료</span></li>
+            <li>행동 지침 <span class="ft ftf">무료</span></li>
+            <li>동효 · 효사 해석 <span class="ft ftp">유료</span></li>
+            <li>지괘 분석 <span class="ft ftp">유료</span></li>
+            <li>AI 해설 프롬프트 <span class="ft ftp">유료</span></li>
+          </ul>
+        </div>
+        <div class="ec paid" onclick="startDiv('paid')">
+          <span class="ebdg bp2">유료 · 회원 전용</span>
+          <div class="eico">☯</div>
+          <h3 class="etit">사주 기반 정밀 점괘</h3>
+          <p class="edesc">생년월일시를 바탕으로 인생 본괘와 현재 시운을 연결한 심층 해석을 제공합니다.</p>
+          <ul class="efeat">
+            <li>즉석 점괘 전체 포함 <span class="ft ftp">유료</span></li>
+            <li>인생 본괘 도출 <span class="ft ftp">유료</span></li>
+            <li>육룡 단계 분석 <span class="ft ftp">유료</span></li>
+            <li>연 · 월 운세 <span class="ft ftp">유료</span></li>
+            <li>사주 맥락 연결 <span class="ft ftp">유료</span></li>
+            <li>AI 심층 프롬프트 <span class="ft ftp">유료</span></li>
+          </ul>
+        </div>
+      </div>
     </div>
-    <div class="ec paid" onclick="startDiv('paid')">
-      <span class="ebdg bp2">유료 · 회원 전용</span>
-      <div class="eico">☯</div>
-      <h3 class="etit">사주 기반 정밀 점괘</h3>
-      <p class="edesc">생년월일시를 바탕으로 인생 본괘와 현재 시운을 연결한 심층 해석을 제공합니다.</p>
-      <ul class="efeat">
-        <li>즉석 점괘 전체 포함 <span class="ft ftp">유료</span></li>
-        <li>인생 본괘 도출 <span class="ft ftp">유료</span></li>
-        <li>육룡 단계 분석 <span class="ft ftp">유료</span></li>
-        <li>연 · 월 운세 <span class="ft ftp">유료</span></li>
-        <li>사주 맥락 연결 <span class="ft ftp">유료</span></li>
-        <li>AI 심층 프롬프트 <span class="ft ftp">유료</span></li>
-      </ul>
+
+    <!-- 우: 오늘의 괘 -->
+    <div class="daily-side">
+      <p class="slbl" style="color:var(--gold);">오늘의 괘</p>
+      <p class="daily-date" id="dailyTitle"></p>
+      <div class="dcrd-v">
+        <div class="dgua-sm">☯</div>
+        <div class="dname" id="dName" style="font-family:'Noto Serif KR',serif;font-size:17px;font-weight:600;color:var(--goldl);margin-bottom:3px;"></div>
+        <div class="dhj" id="dHj" style="font-size:11px;color:var(--ink3);margin-bottom:10px;letter-spacing:1px;"></div>
+        <p class="ddesc" id="dDesc" style="font-size:13px;line-height:1.8;color:#c8b898;margin-bottom:12px;"></p>
+        <div id="dKws"></div>
+      </div>
+      <p class="daily-note">날짜를 기반으로 매일 자동 산출됩니다</p>
     </div>
+
   </div>
 </section>
 <hr class="divr">
@@ -271,7 +291,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
       <div class="cc" onclick="openConcept(1)"><div class="ccnum">02</div><h3>점을 치는 원리</h3><p>동전 던지기가 단순한 우연이 아닌 이유. 칼 융의 동시성 이론과 천인감응.</p></div>
       <div class="cc" onclick="openConcept(2)"><div class="ccnum">03</div><h3>괘를 읽는 법</h3><p>본괘와 동효, 지괘의 관계. 결과를 내 상황에 어떻게 적용하는가.</p></div>
       <div class="cc" onclick="openConcept(3)"><div class="ccnum">04</div><h3>사주와 주역의 차이</h3><p>정해진 운명을 보는 사주팔자 vs 지금 이 순간의 형세를 읽는 주역점.</p></div>
-      <div class="cc" onclick="openConcept(4)"><div class="ccnum">05</div><h3>AI 프롬프트 사용법</h3><p>다운로드한 프롬프트를 ChatGPT · Claude · Gemini에서 활용하는 방법.</p></div>
+      <div class="cc" onclick="openConcept(4)"><div class="ccnum">05</div><h3>주역의 학문적 뿌리</h3><p>성리학·이기론·주리론·주기론이 어떻게 연결되는가. 동양 철학 3천 년의 맥락.</p></div>
       <div class="cc" onclick="openConcept(5)"><div class="ccnum">06</div><h3>올바른 마음가짐</h3><p>점을 치기 전 알아야 할 것. 욕심과 기(氣), 처세술로서의 주역.</p></div>
     </div>
   </div>
@@ -293,7 +313,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
         <li>오늘의 일일 운세</li>
         <li>개념 콘텐츠 전체</li>
       </ul>
-      <button class="btnplan" onclick="startDiv('free')">무료로 시작</button>
+      <button class="btnplan" onclick="startDiv('free')">회원가입 후 무료 시작</button>
     </div>
     <div class="pc feat">
       <p class="pplan">충전형</p>
@@ -716,22 +736,32 @@ let throws=[], simIdx=0, tMode='real';
 
 function startDiv(type){
   divType=type;
+
+  // 비회원 차단 — 모든 점괘는 로그인 필수
+  if(!CU){
+    openMo('loginMo');
+    toast('점괘 서비스는 회원가입 후 이용 가능합니다.');
+    return;
+  }
+
   if(type==='paid'){
-    if(!CU){openMo('loginMo');toast('유료 서비스는 로그인이 필요합니다.');return;}
-    if(!(UP?.subscribed||(UP?.remainCount>0))){openMo('payMo');setPayType('charge');toast('이용권이 없습니다. 충전 후 이용하세요.');return;}
+    if(!(UP?.subscribed||(UP?.remainCount>0))){
+      openMo('payMo');setPayType('charge');
+      toast('이용권이 없습니다. 충전 후 이용하세요.');return;
+    }
     if(UP?.saju){startCoin();}else{openMo('sajuMo');}
     return;
   }
-  // 무료 횟수 체크
-  if(CU){
-    const today=todayStr();
-    if((UP?.freeResetDate||'')!==today){
-      db.ref('users/'+CU.uid).update({freeUsedToday:0,freeResetDate:today});
-      if(UP){UP.freeUsedToday=0;UP.freeResetDate=today;}
-    }
-    if((UP?.freeUsedToday||0)>=3&&!UP?.subscribed){
-      toast('오늘 무료 횟수(3회)를 모두 사용했습니다.');openMo('payMo');return;
-    }
+
+  // 무료 횟수 체크 (로그인 회원만)
+  const today=todayStr();
+  if((UP?.freeResetDate||'')!==today){
+    db.ref('users/'+CU.uid).update({freeUsedToday:0,freeResetDate:today});
+    if(UP){UP.freeUsedToday=0;UP.freeResetDate=today;}
+  }
+  if((UP?.freeUsedToday||0)>=3&&!UP?.subscribed){
+    toast('오늘 무료 횟수(3회)를 모두 사용했습니다. 충전 후 이용하세요.');
+    openMo('payMo');setPayType('charge');return;
   }
   startCoin();
 }
@@ -831,48 +861,103 @@ async function showResult(){
   const q=document.getElementById('userQ').value||'(질문 없음)';
   const isPaid=CU&&(UP?.subscribed||(UP?.remainCount>0));
 
-  const movHtml=moving.length>0
-    ?`<p class="rstit">동효 (변하는 자리)</p><p class="rtxt">${moving.map(y=>y+'효').join(', ')} — 상황이 변화를 예고합니다. <span style="color:var(--pb);font-size:12px;">(효사 상세해석 유료)</span></p>`:'';
+  // 지괘 계산
+  let jiGuaHtml='';
+  if(moving.length>0&&isPaid){
+    const jiKey=throws.map((s,i)=>{
+      if(s===6)return'1'; if(s===9)return'0';
+      return (s===7||s===9)?'1':'0';
+    }).join('');
+    const jiGua=getGua(jiKey);
+    jiGuaHtml=`
+      <div style="margin-top:12px;padding:12px 16px;background:var(--paper2);border-radius:8px;border-left:3px solid var(--pb);">
+        <p style="font-size:10px;letter-spacing:2px;color:var(--pb);margin-bottom:6px;">지괘 (之卦) — 앞으로 변해갈 방향</p>
+        <p style="font-size:14px;font-weight:600;color:var(--ink);font-family:'Noto Serif KR',serif;">${jiGua.name} <span style="font-size:12px;color:var(--ink3);">${jiGua.hanja}</span></p>
+        <p style="font-size:13px;color:var(--ink2);margin-top:4px;line-height:1.7;">${jiGua.desc}</p>
+      </div>`;
+  }
 
+  // 동효 해석 (유료)
+  const movHtml = moving.length>0 ? `
+    <div style="margin-top:20px;">
+      <p class="rstit">동효 (動爻) — 변화를 예고하는 자리</p>
+      <p class="rtxt">${moving.map(y=>y+'효').join(', ')}에서 변화의 기운이 감지됩니다.
+      ${isPaid
+        ? `이 자리는 지금 상황에서 가장 역동적으로 움직이는 지점입니다. 변화를 두려워하지 말되, 그 변화가 어떤 방향으로 흘러가는지를 냉정하게 읽어야 합니다.`
+        : `<span style="color:var(--pb);font-size:12px;">(효사 상세 해석은 유료 기능입니다)</span>`}
+      </p>
+      ${isPaid ? jiGuaHtml : ''}
+    </div>` : '';
+
+  // 유료 AI 프롬프트 (훅+카드 보고서 형태)
   let paidHtml='';
   if(isPaid){
     const prompt=buildPrompt(q,gua,moving);
-    paidHtml=`<p class="rstit" style="margin-top:20px;">AI 해설 프롬프트</p>
-    <p style="font-size:12px;color:var(--ink3);margin-bottom:8px;">아래 전체를 복사하여 ChatGPT · Claude · Gemini에 붙여넣으세요.</p>
-    <div class="promptbox"><pre id="promptTxt">${escHtml(prompt)}</pre>
-    <button class="btncopy" onclick="copyPrompt()">📋 복사하기</button></div>`;
+    paidHtml=`
+      <div style="margin-top:28px;border-top:1px solid var(--paper3);padding-top:24px;">
+        <p class="rstit">AI 심층 해설 프롬프트</p>
+        <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.7;">
+          아래 프롬프트 전체를 복사해 <strong>ChatGPT · Claude · Gemini</strong> 중 하나에 붙여넣으세요.<br>
+          훅+카드 형태의 1페이지 보고서로 심층 해석을 받을 수 있습니다.
+        </p>
+        <div class="promptbox">
+          <pre id="promptTxt">${escHtml(prompt)}</pre>
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+            <button class="btncopy" onclick="copyPrompt()">📋 프롬프트 복사</button>
+            <span style="font-size:11px;color:var(--ink3);align-self:center;">복사 후 AI 대화창에 붙여넣기 하세요</span>
+          </div>
+        </div>
+      </div>`;
+    // 횟수 차감
     if(!UP?.subscribed&&CU){
       const nc=Math.max(0,(UP?.remainCount||0)-1);
       await db.ref('users/'+CU.uid).update({remainCount:nc});
       if(UP)UP.remainCount=nc;updateCnt();
     }
-  }else{
-    paidHtml=`<div class="paidbox">
-      <p>동효·효사 해석, 지괘 분석, AI 해설 프롬프트는 유료 기능입니다.<br>프롬프트를 복사하여 ChatGPT · Claude · Gemini에서 심층 보고서를 받아보실 수 있습니다.</p>
-      <button class="btnpaid" onclick="openMo('payMo')">심층 해석 이용하기</button></div>`;
+  } else {
+    paidHtml=`
+      <div class="paidbox" style="margin-top:24px;">
+        <p>동효·효사 해석, 지괘 분석,<br>AI 심층 해설 프롬프트(훅+카드 1페이지 보고서)는 유료 기능입니다.</p>
+        <button class="btnpaid" onclick="openMo('payMo')">유료 기능 이용하기</button>
+      </div>`;
   }
 
   document.getElementById('resultArea').innerHTML=`
-    <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;">
-      <div style="font-family:'Noto Serif KR',serif;font-size:48px;color:var(--gold);line-height:1;flex-shrink:0;">☯</div>
+    <!-- 괘 헤더 -->
+    <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--paper3);">
+      <div style="font-family:'Noto Serif KR',serif;font-size:52px;color:var(--gold);line-height:1;flex-shrink:0;">☯</div>
       <div>
         <div class="rgua">${gua.name}</div>
         <div class="rhj">${gua.hanja} · ${gua.meaning}</div>
         <span class="rkw">${gua.keyword}</span>
       </div>
     </div>
-    <p style="font-size:11px;color:var(--ink3);margin-bottom:4px;">당신의 질문</p>
-    <p style="font-size:13px;background:var(--paper2);padding:10px 14px;border-radius:6px;margin-bottom:16px;line-height:1.7;color:var(--ink2);">${escHtml(q)}</p>
-    <p class="rstit">괘사 — 지금의 형세</p>
-    <p class="rtxt">${gua.desc}</p>
+
+    <!-- 질문 -->
+    <p style="font-size:10px;letter-spacing:2px;color:var(--ink3);margin-bottom:6px;">당신의 질문</p>
+    <p style="font-size:13px;background:var(--paper2);padding:10px 14px;border-radius:6px;margin-bottom:20px;line-height:1.8;color:var(--ink2);font-style:italic;">"${escHtml(q)}"</p>
+
+    <!-- 형세 해석 (서술형) -->
+    <p class="rstit">지금의 형세</p>
+    <p class="rtxt" style="margin-bottom:12px;">${gua.desc}</p>
+    <p class="rtxt">이 괘가 나온 것은 우연이 아닙니다. 지금 당신이 처한 상황은 <strong>${gua.keyword}</strong>의 기운 안에 있습니다. 이 형세를 거스르려 하면 더 큰 저항을 만나게 됩니다. 흐름을 읽고 그 안에서 가장 현명한 자리를 찾는 것이 지금 할 일입니다.</p>
+
     ${movHtml}
-    <p class="rstit" style="margin-top:16px;">행동 지침</p>
-    <div class="ract"><p>${gua.action}</p></div>
+
+    <!-- 행동 지침 (서술형) -->
+    <p class="rstit" style="margin-top:20px;">지금 당신이 취해야 할 태도</p>
+    <div class="ract">
+      <p style="line-height:1.9;">${gua.action}</p>
+      <p style="margin-top:10px;font-size:12px;color:var(--ink3);line-height:1.7;">주역은 결과를 예언하지 않습니다. 당신이 이 지침을 어떻게 받아들이고 실천하느냐에 따라 앞으로의 형세는 얼마든지 달라질 수 있습니다.</p>
+    </div>
+
     ${paidHtml}
-    <div style="margin-top:20px;text-align:center;">
+
+    <div style="margin-top:24px;text-align:center;">
       <button class="bs" style="font-size:13px;" onclick="goCS(1)">다시 점괘 보기</button>
     </div>`;
 
+  // 기록 저장
   if(CU){
     await db.ref('users/'+CU.uid+'/records').push({
       date:Date.now(),key,guaName:gua.name,hanja:gua.hanja,
@@ -886,35 +971,61 @@ async function showResult(){
   }
 }
 
+/* ══ AI 프롬프트 — 훅+카드 보고서 형태 ══ */
 function buildPrompt(q,gua,moving){
   const d=new Date();
-  const saju=UP?.saju?`생년: ${UP.saju.year}년 / 생월: ${UP.saju.month}월 / 생일: ${UP.saju.day}일 / 생시: ${UP.saju.hour}`:'사주 정보 없음';
-  return `[주역 점괘 심층 해석 요청]
+  const dateStr=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
+  const saju=UP?.saju
+    ?`${UP.saju.year}년 ${UP.saju.month}월 ${UP.saju.day}일 ${UP.saju.hour}`
+    :'미입력';
+  const movStr=moving.length>0?moving.map(y=>y+'효').join(', '):'없음';
 
-날짜: ${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일
-사주 정보: ${saju}
+  return `당신은 주역(周易) 전문 해설가입니다. 아래 점괘 정보를 바탕으로 훅(Hook) + 카드(Card) 형태의 1페이지 심층 해설 보고서를 작성해 주세요.
 
-[나의 질문]
-${q}
+━━━━━━━━━━━━━━━━━━━━
+📋 점괘 기본 정보
+━━━━━━━━━━━━━━━━━━━━
+날짜: ${dateStr}
+사주: ${saju}
+질문: "${q}"
+본괘: ${gua.name} (${gua.hanja}) — ${gua.meaning}
+키워드: ${gua.keyword}
+동효: ${movStr}
 
-[나온 점괘]
-괘명: ${gua.name} (${gua.hanja})
-의미: ${gua.meaning} / 키워드: ${gua.keyword}
-동효(변하는 자리): ${moving.length>0?moving.map(y=>y+'효').join(', '):'없음'}
+━━━━━━━━━━━━━━━━━━━━
+📝 보고서 형식 (반드시 이 구조로 작성)
+━━━━━━━━━━━━━━━━━━━━
 
-[해석 요청 사항]
-1. 위 점괘(${gua.name})가 내 질문 맥락에서 어떤 의미를 가지는지 주역 관점에서 상세히 해석해주세요.
-2. 동효가 있다면 해당 효사(爻辭)의 의미와 내 상황에 대한 시사점을 설명해주세요.
-3. 지괘(동효가 변한 후의 괘)를 도출하고 앞으로의 변화 방향을 알려주세요.
-4. 지금 내가 취해야 할 구체적인 행동 지침을 처세술 관점에서 3가지로 정리해주세요.
-5. 주역의 철학적 관점에서 어떤 태도로 임해야 하는가를 중심으로 결론을 내려주세요.
+【HOOK — 핵심 한 문장】
+이 점괘가 전하는 가장 본질적인 메시지를 임팩트 있는 한 문장으로 시작하세요.
 
-※ 단순한 미래 예언이 아닌, 지금 내 상황을 냉정하게 비추는 거울로서 해석해주세요.`;
+【카드 1 — 지금의 형세】
+${gua.name}괘가 말하는 현재 상황을 3~4문장으로 서술하되, 단순 나열이 아닌 논리적 흐름으로 설명하세요. 질문의 맥락과 연결하여 해석하세요.
+
+【카드 2 — 동효의 메시지】
+${moving.length>0?`${movStr}의 효사(爻辭)를 해석하고, 이것이 질문자의 상황에서 무엇을 의미하는지 설명하세요.`:'동효가 없으므로 본괘의 전체적인 균형과 안정성에 대해 설명하세요.'}
+
+【카드 3 — 지괘와 변화의 방향】
+${moving.length>0?'동효가 변한 후 만들어지는 지괘를 도출하고, 이 변화가 앞으로의 상황에 어떤 방향을 시사하는지 설명하세요.':'동효가 없으므로 지금 이 형세를 유지했을 때의 전망을 설명하세요.'}
+
+【카드 4 — 지금 당장 취해야 할 행동 3가지】
+처세술(處世術) 관점에서 구체적이고 실천 가능한 행동 지침 3가지를 제시하세요. 각 지침은 왜 그렇게 해야 하는지 주역의 논리로 뒷받침하세요.
+
+【결론 — 주역이 전하는 진짜 메시지】
+미래 예언이 아닌, '지금 어떤 태도로 임해야 하는가'를 중심으로 2~3문장으로 마무리하세요. 길흉보다 지혜를 강조하세요.
+
+━━━━━━━━━━━━━━━━━━━━
+⚠️ 작성 시 유의사항
+━━━━━━━━━━━━━━━━━━━━
+• 단순한 키워드 나열이 아닌, 논리적 흐름과 인과관계가 있는 서술로 작성하세요
+• "길합니다", "흉합니다" 같은 단정보다 "이런 상황에서 이렇게 하면 이런 결과로 이어집니다"는 흐름으로 설명하세요
+• 질문자의 구체적인 상황("${q}")을 항상 해석의 중심에 놓으세요
+• 전체 분량은 A4 1페이지 분량(약 600~800자)으로 작성하세요`;
 }
 
 function copyPrompt(){
   const t=document.getElementById('promptTxt').textContent;
-  navigator.clipboard.writeText(t).then(()=>toast('프롬프트가 복사되었습니다. AI에 붙여넣기 하세요.'));
+  navigator.clipboard.writeText(t).then(()=>toast('✅ 프롬프트가 복사되었습니다. AI 대화창에 붙여넣기 하세요.'));
 }
 
 /* ══ 사주 저장 ══ */
@@ -935,11 +1046,24 @@ async function saveSaju(){
 
 /* ══ 결제 ══ */
 function setPayType(t){
+  // 비회원 차단
+  if(!CU){
+    closeMo('payMo');
+    openMo('loginMo');
+    toast('결제는 회원가입 후 이용 가능합니다.');
+    return;
+  }
   document.getElementById('payTit').textContent=t==='subscribe'?'구독 신청':'충전하기';
   if(t==='subscribe')document.getElementById('payProd').value='sub_month';
+  // 회원 정보 자동 입력
+  if(CU){
+    document.getElementById('payName').value=UP?.name||CU.displayName||'';
+    document.getElementById('payEmail').value=CU.email||'';
+  }
 }
 
 async function submitPay(){
+  if(!CU){openMo('loginMo');toast('결제는 로그인 후 이용 가능합니다.');return;}
   const n=document.getElementById('payName').value.trim();
   const ph=document.getElementById('payPhone').value.trim();
   const em=document.getElementById('payEmail').value.trim();
@@ -947,7 +1071,7 @@ async function submitPay(){
   if(!n||!ph||!em||!pr)return toast('모든 항목을 입력해주세요.');
   await db.ref('payments').push({
     name:n,phone:ph,email:em,product:pr,
-    uid:CU?.uid||null,status:'pending',createdAt:Date.now()
+    uid:CU.uid,status:'pending',createdAt:Date.now()
   });
   const sel=document.getElementById('payProd');
   alert(`신청이 완료되었습니다!\n\n이름: ${n}\n상품: ${sel.options[sel.selectedIndex].text}\n\n입금자명: ${n}${ph.slice(-4)}\n입금 확인 후 1~2시간 내에 처리됩니다.`);
@@ -956,12 +1080,76 @@ async function submitPay(){
 
 /* ══ 개념 콘텐츠 ══ */
 const CONC=[
-  {e:'01 · 기초',t:'주역이란 무엇인가',b:`<p>주역(周易)은 동양 철학의 뿌리이자 3천 년을 내려온 고전입니다. 서양에서는 '변화의 책(Book of Changes, I Ching)'이라 부릅니다.</p><div class="hl">핵심: 미래가 어떻게 정해져 있는지를 보는 것이 아니라, 지금 내가 처한 형세를 파악하고 어떻게 행동해야 하는지를 배우는 것입니다.</div><h4>역(易)의 세 가지 뜻</h4><p>변역(變易) — 세상의 모든 것은 끊임없이 변한다.<br>불역(不易) — 그 변화에는 변하지 않는 법칙이 있다.<br>간역(簡易) — 복잡한 우주의 원리가 음과 양, 단 두 가지로 설명된다.</p><h4>64괘란</h4><p>음(╌╌)과 양(—)을 세 줄로 쌓으면 8괘, 두 개를 합치면 64괘가 됩니다. 인간사에서 일어날 수 있는 64가지 전형적인 상황을 나타냅니다.</p>`},
-  {e:'02 · 원리',t:'점을 치는 원리',b:`<p>동전 던지기는 단순한 확률 게임이 아닙니다. 인간의 마음과 우주의 기운이 서로 통한다는 천인감응(天人感應)의 원리가 작동합니다.</p><div class="hl">칼 융(Carl Jung)은 이를 '동시성(Synchronicity) 원리'로 설명했습니다. 인간의 내면(무의식)과 외부 사건(동전의 결과)은 비인과적 동시성으로 연결됩니다.</div><h4>왜 간절할 때 더 잘 맞는가</h4><p>인간의 마음도 기(氣)이고 동전도 기(氣)입니다. 극도로 집중한 마음의 기가 동전이라는 기와 공명할 때, 우주의 법칙인 이(理)가 그 결과를 통해 드러납니다.</p>`},
-  {e:'03 · 독법',t:'괘를 읽는 법',b:`<h4>본괘와 지괘</h4><p>6번 던져 나온 효를 읽으면 본괘(本卦)입니다. 동효(6점이나 9점)를 반대로 뒤집어 만들어지는 괘가 지괘(之卦)입니다.</p><div class="hl">본괘는 지금 현재의 형세, 지괘는 앞으로 변해갈 방향을 보여줍니다.</div><h4>올바른 독법</h4><p>결과를 '맞다/틀리다'로 검증하지 마십시오. 괘의 메시지를 거울 삼아 지금 나의 상태와 태도를 점검하는 것이 올바른 방법입니다.</p>`},
-  {e:'04 · 비교',t:'사주팔자와 주역의 차이',b:`<h4>사주팔자 — 타고난 기운의 설계도</h4><p>태어난 연·월·일·시의 기운을 분석해 타고난 기질과 시기별 운세를 봅니다.</p><h4>주역점 — 지금 이 순간의 형세</h4><p>생년월일은 필요 없습니다. "지금 이 고민에 대해 어떤 태도를 취해야 하는가"를 묻습니다.</p><div class="hl">사주가 인생 기상청의 장기 예보라면, 주역은 오늘 우산을 들어야 할지 말지를 알려주는 현재의 나침반입니다.</div>`},
-  {e:'05 · 활용',t:'AI 프롬프트 사용법',b:`<p>유료 기능으로 제공되는 AI 해설 프롬프트는 점괘를 AI에게 깊이 해석받을 수 있도록 만들어진 맞춤 질문서입니다.</p><h4>사용 방법</h4><p>1. 점괘 결과 화면에서 프롬프트 전체 복사<br>2. ChatGPT, Claude, 또는 Gemini 대화창에 붙여넣기<br>3. AI가 주역 관점의 심층 해설 보고서를 제공합니다</p><div class="hl"><strong>Claude</strong> — 맥락 파악과 철학적 해석에 강합니다. 주역 텍스트 해석에 특히 잘 맞습니다.<br><strong>ChatGPT</strong> — 가장 많이 사용되며 접근성이 높습니다.<br><strong>Gemini</strong> — Google 계정만 있으면 바로 사용 가능합니다.</div>`},
-  {e:'06 · 마음가짐',t:'올바른 마음가짐',b:`<h4>세 가지 원칙</h4><p><strong>초서불재(初筮不再)</strong> — 처음 나온 괘가 답입니다. 마음에 들지 않는다고 다시 던지면 정확도는 0이 됩니다.</p><p><strong>욕심보다 태도를 물어라</strong> — "부자가 될까요?"가 아니라 "지금 내 태도가 올바른가요?"가 좋은 질문입니다.</p><p><strong>거울로 삼아라</strong> — 점괘는 내 무의식의 거울입니다. 맞다/틀리다로 검증하지 말고 스스로를 점검하십시오.</p><div class="hl">"길하면 자만하지 말고, 흉하면 낙담하지 않고 대비하라." — 주역의 핵심 처세술</div>`}
+  {e:'01 · 기초',t:'주역이란 무엇인가',b:`
+    <p>주역(周易)은 동양 철학의 뿌리이자 3천 년을 내려온 고전입니다. 서양에서는 '변화의 책(Book of Changes, I Ching)'이라 부릅니다. 단순한 점술서로 오해받지만, 실제로는 우주와 인간사의 변화 원리를 체계적으로 정리한 거대한 철학서입니다.</p>
+    <div class="hl">핵심: 미래가 어떻게 정해져 있는지를 보는 것이 아니라, 지금 내가 처한 형세를 파악하고 어떻게 행동해야 하는지 — 즉 처세술(處世術)을 배우는 것입니다.</div>
+    <h4>역(易)의 세 가지 뜻</h4>
+    <p><strong>변역(變易)</strong> — 세상의 모든 것은 끊임없이 변한다. 영원히 좋은 것도, 영원히 나쁜 것도 없다. 낮이 가면 밤이 오고, 겨울이 가면 봄이 오듯 모든 현상은 순환한다.</p>
+    <p><strong>불역(不易)</strong> — 그 변화에는 변하지 않는 법칙이 있다. 차면 기울고, 비면 채워진다(物極必反). 이 법칙 자체는 절대로 바뀌지 않는다.</p>
+    <p><strong>간역(簡易)</strong> — 복잡한 우주의 원리가 음(陰)과 양(陽), 단 두 가지 기호로 설명된다. 단순함 속에 위대한 진리가 있다.</p>
+    <h4>64괘란 무엇인가</h4>
+    <p>음(╌╌)과 양(—)을 세 줄로 쌓으면 8가지 조합(8괘)이 만들어지고, 이 8괘를 위아래로 조합하면 총 64괘가 됩니다. 이 64개의 상(象)은 인간사에서 일어날 수 있는 64가지 전형적인 상황 — 전쟁, 협력, 위기, 번영, 물러남, 전진 — 을 나타냅니다.</p>
+    <div class="hl">주역은 "이런 상황에서 인간은 어떻게 행동해야 하는가"를 3천 년간 축적된 경험으로 알려주는 일종의 인류 최초의 빅데이터입니다.</div>
+    <h4>주역의 탄생</h4>
+    <p>전설에 따르면 복희씨(伏羲)가 8괘를 처음 그렸고(약 5,000년 전), 주나라 문왕(文王)이 감옥에서 64괘로 확장하며 괘사를 썼으며, 공자(孔子)가 철학적 해설인 십익(十翼)을 더해 지금의 형태가 완성되었습니다. 현대 역사학자들은 상(商)나라 시대 갑골 점복의 방대한 기록들이 주나라로 이어지며 체계화된 것이 주역의 실질적 기원이라고 봅니다.</p>
+  `},
+  {e:'02 · 원리',t:'점을 치는 원리 — 우연 속의 필연',b:`
+    <p>동전 던지기는 단순한 확률 게임처럼 보입니다. 그러나 주역의 세계관에서 이 우연은 단순한 우연이 아닙니다. 인간의 마음과 우주의 기운이 서로 통한다는 천인감응(天人感應)의 원리가 작동하기 때문입니다.</p>
+    <h4>칼 융의 동시성 이론</h4>
+    <p>세계적인 정신분석학자 칼 융(Carl Jung)은 주역을 수년간 연구한 후 이를 '동시성(Synchronicity) 원리'로 설명했습니다. 인과관계 없이 내면의 심리 상태와 외부 사건이 의미 있게 일치하는 현상 — 절박한 마음으로 던진 동전이 지금 내 상황을 기막히게 반영하는 괘를 만들어내는 것 — 이 바로 동시성입니다. 융은 이것이 미신이 아니라 심리학적으로 유효한 현상이라고 보았습니다.</p>
+    <div class="hl">간절한 마음으로 치면 맞고, 장난삼아 치면 맞지 않는다는 주역 대가들의 공통된 말은 이 원리를 직관적으로 표현한 것입니다.</div>
+    <h4>이기론(理氣論)으로 본 점괘의 원리</h4>
+    <p>성리학의 이기론적 관점에서 보면, 인간의 마음도 기(氣)이고 동전도 기(氣)입니다. 극도로 집중한 마음의 기(氣)가 동전이라는 기(氣)와 공명할 때, 우주의 변하지 않는 법칙인 이(理)가 그 결과를 통해 드러납니다. 이것이 "동전이 굴러가는 결과가 내 무의식의 답을 비춰주는 거울"이 되는 이유입니다.</p>
+    <h4>척전법(擲錢法) — 동전 던지기 방법</h4>
+    <p>동전 3개를 동시에 6번 던져 효(爻)를 쌓습니다. 앞면(양)은 3점, 뒷면(음)은 2점으로 계산하면 합계는 반드시 6~9점 중 하나가 됩니다. 6점(노음·변하는 음)과 9점(노양·변하는 양)은 동효(動爻) — 곧 변화를 예고하는 자리입니다.</p>
+    <p>실제 동전으로 던지는 것을 권장합니다. 화면 클릭보다 몸을 통해 기(氣)를 담는 행위 자체가 주역 점의 본질이기 때문입니다.</p>
+  `},
+  {e:'03 · 독법',t:'괘를 읽는 법 — 본괘와 지괘',b:`
+    <h4>본괘(本卦) — 지금 이 순간의 형세</h4>
+    <p>6번 던져 나온 효를 밑에서부터 위로 쌓으면 하나의 괘가 만들어집니다. 이것이 본괘입니다. 본괘는 지금 내가 처한 상황의 전체적인 형세와 성격을 보여줍니다. 64개의 괘 각각은 특정한 상황적 논리를 담고 있어, 내 질문과의 맥락 안에서 읽어야 합니다.</p>
+    <h4>동효(動爻) — 변화의 핵심</h4>
+    <p>6점(노음)이나 9점(노양)이 나온 자리가 동효입니다. 동효는 "이 상황에서 가장 주목해야 할 변화의 지점"을 가리킵니다. 동효에 해당하는 효사(爻辭)가 지금 내 상황에 대한 가장 핵심적인 메시지를 담고 있습니다.</p>
+    <h4>지괘(之卦) — 앞으로 변해갈 방향</h4>
+    <p>동효를 반대로 뒤집어 새로 만들어지는 괘가 지괘입니다. 본괘가 현재라면, 지괘는 이 상황이 자연스럽게 흘러갈 미래의 방향입니다. 단, 지괘는 확정된 미래가 아니라 지금 행동하지 않으면 흘러갈 방향을 보여주는 것입니다.</p>
+    <div class="hl">본괘는 지금 내가 서 있는 곳, 지괘는 이 길을 계속 걸어가면 도달할 곳입니다. 주역은 그 경로를 바꿀 수 있다고 말합니다.</div>
+    <h4>올바른 독법의 태도</h4>
+    <p>괘의 결과를 '맞다/틀리다'로 검증하려 들지 마십시오. 주역은 예언이 아니라 거울입니다. 나온 괘를 거울 삼아 지금 나의 상태, 욕심, 두려움을 냉정하게 점검하는 것이 올바른 독법입니다. 길(吉)이 나왔다고 자만하지 말고, 흉(凶)이 나왔다고 낙담하지 말 것 — 이것이 주역의 핵심 처세술입니다.</p>
+  `},
+  {e:'04 · 비교',t:'사주팔자와 주역점의 차이',b:`
+    <h4>사주팔자 — 타고난 기운의 설계도</h4>
+    <p>사주(四柱)는 태어난 연·월·일·시의 네 기둥으로 이루어진 명리학(命理學) 시스템입니다. 태어나는 순간 부여받은 기운의 배치를 분석해 "이 사람은 어떤 기질을 타고났고, 어떤 시기에 어떤 운이 흘러오는가"를 읽습니다. 생년월일시가 핵심 정보이며, 10년 단위의 대운(大運)과 연도별 세운(歲運)을 통해 인생의 흐름을 예측합니다.</p>
+    <h4>주역점 — 지금 이 순간의 형세 진단</h4>
+    <p>주역점은 생년월일이 필요 없습니다. "지금 내가 고민하는 이 상황에서 어떤 태도를 취해야 하는가"라는 현재의 구체적 질문에 답합니다. 조선의 왕들이 전쟁이나 외교 같은 중요한 국가적 결정 앞에서 주역점을 친 이유가 여기 있습니다. 타고난 운명이 아니라, 지금 이 순간 어떻게 행동할 것인가를 묻는 것입니다.</p>
+    <div class="hl">사주팔자가 인생 전체의 기상 예보라면, 주역은 오늘 우산을 들고 나가야 할지, 처마 밑에서 기다려야 할지를 알려주는 현재의 나침반입니다.</div>
+    <h4>이 서비스에서 두 가지를 결합하는 이유</h4>
+    <p>사주로 인생의 큰 흐름(대운)을 파악하고, 주역점으로 지금 이 순간의 구체적 형세를 읽으면 훨씬 입체적인 통찰을 얻을 수 있습니다. 사주 기반 정밀 점괘는 이 두 가지를 연결해 "지금 내 대운의 어느 지점에서 이 형세가 나왔는가"를 함께 해석합니다.</p>
+  `},
+  {e:'05 · 학문',t:'주역의 학문적 뿌리 — 성리학과 이기론',b:`
+    <p>주역은 단순한 점술 도구가 아니라 동양 철학 전체의 뿌리입니다. 주역에서 출발한 사상의 흐름을 이해하면 점괘 해석의 깊이가 전혀 달라집니다.</p>
+    <h4>주역 → 성리학으로</h4>
+    <p>공자 시대의 유학은 주로 윤리와 정치를 다뤘습니다. 그런데 송나라 시대(10~13세기)에 이르러 학자들은 "유학도 불교·도교처럼 우주의 근본 원리를 설명해야 한다"며 유학을 혁신합니다. 이때 뼈대로 삼은 책이 바로 주역이었습니다. 주돈이(周敦頤)의 태극도설(太極圖說)을 시작으로, 정이(程頤)·정호(程顥) 형제, 그리고 주희(朱熹)에 이르러 성리학(性理學)이 완성됩니다.</p>
+    <h4>이기론(理氣論) — 우주를 설명하는 두 열쇠</h4>
+    <p>성리학의 핵심 도구는 이(理)와 기(氣)입니다. <strong>이(理)</strong>는 세상 만물의 변하지 않는 근본 원리이자 도덕적 기준으로, 주역의 태극(太極)과 통합니다. <strong>기(氣)</strong>는 그 원리를 담아 실제로 현상으로 드러나게 하는 에너지이자 물질적 재료로, 주역의 음양(陰陽)과 통합니다.</p>
+    <div class="hl">컴퓨터로 비유하면 이(理)는 소프트웨어(운영체제), 기(氣)는 하드웨어(본체·모니터)입니다. 둘은 항상 함께 움직이지만, 어느 쪽이 더 근본인가를 두고 조선의 학자들이 수백 년간 치열하게 논쟁했습니다.</div>
+    <h4>주리론(主理論) vs 주기론(主氣論) — 조선 유학의 대논쟁</h4>
+    <p><strong>주리론(퇴계 이황)</strong>: 변하지 않는 도덕 원리인 이(理)가 기(氣)보다 근본이다. 사단(四端·인의예지)은 이(理)에서 발동하며, 도덕적 원칙과 근본이 가장 중요하다. → 원칙주의·도덕주의.</p>
+    <p><strong>주기론(율곡 이이)</strong>: 원리(理)는 스스로 움직이지 못하고 기(氣)를 통해서만 현실에 드러난다. 현실의 변화와 실천이 중요하다. → 개혁주의·현실주의.</p>
+    <p>이 논쟁은 오늘날에도 유효합니다. "원칙을 지키는 것이 우선인가, 현실에 맞게 변화하는 것이 우선인가" — 주역 점괘를 읽을 때도 이 두 관점이 해석의 깊이를 만듭니다.</p>
+    <h4>우주의 기운이란 무엇인가</h4>
+    <p>이기론의 관점에서 우주의 기운은 세 가지 층위를 가집니다. 첫째, 일정한 주기(봄·여름·가을·겨울, 간지 60甲子)가 있습니다. 둘째, 균형을 회복하기 위해 끊임없이 요동칩니다(음이 극에 달하면 양이 오고, 양이 극에 달하면 음이 옵니다). 셋째, 절대적인 법칙(理)에 따라 움직이지만, 인격적인 신(神)은 없습니다. 주역은 이 기운의 흐름을 읽는 도구입니다.</p>
+  `},
+  {e:'06 · 마음가짐',t:'올바른 마음가짐 — 주역을 대하는 태도',b:`
+    <p>주역에서 가장 중요한 것은 도구가 아니라 묻는 사람의 마음입니다. 어떤 마음으로 임하느냐에 따라 같은 괘도 전혀 다른 의미로 다가옵니다.</p>
+    <h4>초서불재(初筮不再) — 처음이 전부다</h4>
+    <p>처음 나온 괘가 진짜 답입니다. 마음에 들지 않는다고 다시 던지면 그 순간 점의 정확도는 0이 됩니다. 두 번째 던지는 행위 자체가 이미 "나는 원하는 답을 원한다"는 사적 욕심이 개입된 것이기 때문입니다. 주역 서적의 첫머리에는 반드시 이 경고가 있습니다.</p>
+    <h4>욕심보다 태도를 물어라</h4>
+    <p>좋은 질문과 나쁜 질문이 있습니다. "내가 이 주식으로 돈을 벌 수 있을까요?"는 나쁜 질문입니다. "지금 내 마음이 탐욕에 치우쳐 있지는 않은가, 지금 투자를 결행하는 것이 올바른 태도인가?"는 좋은 질문입니다. 주역은 미래를 맞히는 예언가가 아니라 현재 나의 상태를 비추는 거울입니다.</p>
+    <div class="hl">"길하면 자만하지 말고, 흉하면 낙담하지 않고 대비하라." — 이것이 주역 3천 년의 핵심 처세술입니다.</div>
+    <h4>욕심이 있어도 된다</h4>
+    <p>인간인데 어떻게 욕심이 없을 수 있겠습니까. 욕심을 품고 던지셔도 됩니다. 다만 주역은 그 욕심을 들어주는 요술 램프가 아니라, 욕심이 가져올 결과를 냉정하게 보여주는 거울입니다. 동전을 던지기 전 단 1분만이라도 욕심과 불안에서 한 발 물러나 내 상황을 제3자의 눈으로 바라보십시오. 그것만으로도 주역은 충분히 작동합니다.</p>
+    <h4>주역은 처방전이지 치트키가 아니다</h4>
+    <p>주역이 "기다려라"고 했다고 해서 현실 판단을 포기하면 안 됩니다. 기업의 펀더멘탈이 무너지는데 점괘만 믿고 버티는 것은 지혜가 아닙니다. 주역의 조언을 참고하되, 최종 결정은 철저히 본인의 이성적 분석과 책임 위에 이루어져야 합니다.</p>
+  `}
 ];
 
 function openConcept(i){
@@ -980,6 +1168,18 @@ function toast(msg,dur=3200){
   t.textContent=msg;t.classList.add('on');
   setTimeout(()=>t.classList.remove('on'),dur);
 }
+
+/* ══ 엔터키 로그인 ══ */
+document.addEventListener('DOMContentLoaded',()=>{
+  ['lEmail','lPw'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+  });
+  ['sName','sEmail','sPw'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('keydown',e=>{ if(e.key==='Enter') doSignup(); });
+  });
+});
 </script>
 </body>
 </html>
