@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>역易 — 관리자</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+:root{
+  --ink:#1a1208;--ink2:#3d2e14;--ink3:#7a6040;
+  --gold:#c8922a;--goldl:#e8b84b;--goldd:#f5e8c8;
+  --paper:#faf6ef;--paper2:#f2ead8;--paper3:#e8dcc0;
+  --red:#8b2020;--green:#2d7a4a;--purple:#5a3d8a;
+  --blue:#1a5fa8;--r:10px;
+  --sh:0 2px 12px rgba(26,18,8,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:#f0ece4;color:var(--ink);min-height:100vh;display:flex;}
+
+/* 사이드바 */
+.sidebar{width:220px;min-height:100vh;background:var(--ink);display:flex;flex-direction:column;flex-shrink:0;position:fixed;left:0;top:0;bottom:0;z-index:100;}
+.sb-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sb-logo h1{font-family:'Noto Serif KR',serif;font-size:18px;font-weight:700;color:var(--gold);letter-spacing:3px;}
+.sb-logo p{font-size:11px;color:var(--ink3);margin-top:4px;letter-spacing:1px;}
+.sb-nav{flex:1;padding:16px 0;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:12px 20px;font-size:13px;color:#a09070;cursor:pointer;transition:all .2s;border-left:3px solid transparent;}
+.sb-item:hover{color:var(--goldd);background:rgba(255,255,255,.04);}
+.sb-item.on{color:var(--gold);background:rgba(200,146,42,.1);border-left-color:var(--gold);}
+.sb-item .ico{font-size:16px;flex-shrink:0;}
+.sb-section{font-size:10px;letter-spacing:2px;color:var(--ink3);padding:16px 20px 6px;text-transform:uppercase;}
+.sb-bottom{padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);}
+.sb-user{font-size:12px;color:var(--ink3);margin-bottom:10px;}
+.sb-user strong{color:var(--goldd);display:block;margin-bottom:2px;}
+.btn-logout{width:100%;padding:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--ink3);font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;}
+.btn-logout:hover{background:rgba(255,255,255,.12);color:var(--goldd);}
+
+/* 메인 */
+.main{margin-left:220px;flex:1;padding:28px 32px;min-height:100vh;}
+.page{display:none;}.page.on{display:block;}
+.page-title{font-family:'Noto Serif KR',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+.page-sub{font-size:13px;color:var(--ink3);margin-bottom:28px;}
+
+/* 로그인 화면 */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f0ece4;}
+.login-box{background:#fff;border-radius:var(--r);padding:40px 36px;width:380px;box-shadow:var(--sh);}
+.login-box h2{font-family:'Noto Serif KR',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:4px;}
+.login-box p{font-size:13px;color:var(--ink3);margin-bottom:24px;}
+.inp{width:100%;padding:10px 12px;border:1px solid var(--paper3);border-radius:6px;font-size:14px;font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--ink);outline:none;transition:border-color .2s;margin-top:4px;margin-bottom:12px;}
+.inp:focus{border-color:var(--gold);}
+.inplbl{font-size:12px;color:var(--ink3);}
+.btn-primary{background:var(--ink);color:var(--goldd);padding:12px 24px;border-radius:6px;font-size:14px;font-weight:500;border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;width:100%;}
+.btn-primary:hover{background:var(--gold);color:var(--ink);}
+.err-msg{font-size:12px;color:var(--red);margin-top:-6px;margin-bottom:10px;min-height:18px;}
+
+/* 통계 카드 */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+.stat-card{background:#fff;border-radius:var(--r);padding:20px 22px;box-shadow:var(--sh);border-top:3px solid var(--paper3);}
+.stat-card.gold{border-top-color:var(--gold);}
+.stat-card.green{border-top-color:var(--green);}
+.stat-card.purple{border-top-color:var(--purple);}
+.stat-card.blue{border-top-color:var(--blue);}
+.stat-lbl{font-size:11px;letter-spacing:1px;color:var(--ink3);margin-bottom:8px;}
+.stat-val{font-family:'Noto Serif KR',serif;font-size:28px;font-weight:700;color:var(--ink);line-height:1;}
+.stat-sub{font-size:11px;color:var(--ink3);margin-top:6px;}
+
+/* 테이블 */
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:24px;}
+.card-head{padding:16px 20px;border-bottom:1px solid var(--paper2);display:flex;align-items:center;justify-content:space-between;}
+.card-head h3{font-size:14px;font-weight:600;color:var(--ink);}
+.card-head p{font-size:12px;color:var(--ink3);}
+table{width:100%;border-collapse:collapse;}
+th{font-size:11px;letter-spacing:1px;color:var(--ink3);text-align:left;padding:10px 16px;background:var(--paper);border-bottom:1px solid var(--paper2);font-weight:500;}
+td{font-size:13px;color:var(--ink2);padding:12px 16px;border-bottom:1px solid var(--paper2);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--paper);}
+
+/* 배지 */
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:3px 10px;border-radius:10px;letter-spacing:.5px;}
+.b-pending{background:#fff3cd;color:#856404;}
+.b-done{background:#d1edda;color:#155724;}
+.b-sub{background:#e8e0f8;color:var(--purple);}
+.b-charge{background:#d0e8f8;color:var(--blue);}
+.b-free{background:var(--paper2);color:var(--ink3);}
+.b-admin{background:#f8d0d0;color:var(--red);}
+
+/* 버튼 */
+.btn{padding:6px 14px;border-radius:5px;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;border:none;font-weight:500;transition:all .2s;}
+.btn-ok{background:var(--green);color:#fff;}
+.btn-ok:hover{opacity:.85;}
+.btn-cancel{background:var(--red);color:#fff;}
+.btn-cancel:hover{opacity:.85;}
+.btn-edit{background:var(--paper2);color:var(--ink2);}
+.btn-edit:hover{background:var(--paper3);}
+.btn-sm{padding:5px 10px;font-size:11px;}
+.btn-gold{background:var(--gold);color:var(--ink);}
+.btn-gold:hover{opacity:.85;}
+.btn-refresh{background:var(--paper2);color:var(--ink2);padding:7px 14px;font-size:12px;border-radius:6px;border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+
+/* 검색/필터 바 */
+.filter-bar{display:flex;gap:10px;align-items:center;padding:14px 20px;background:var(--paper);border-bottom:1px solid var(--paper2);}
+.filter-bar input,.filter-bar select{padding:7px 10px;border:1px solid var(--paper3);border-radius:6px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--ink);outline:none;}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--gold);}
+.filter-bar label{font-size:12px;color:var(--ink3);}
+
+/* 모달 */
+.mo{display:none;position:fixed;inset:0;background:rgba(26,18,8,.7);z-index:500;align-items:center;justify-content:center;padding:20px;}
+.mo.on{display:flex;}
+.md{background:#fff;border-radius:var(--r);max-width:500px;width:100%;padding:32px;box-shadow:0 16px 48px rgba(0,0,0,.25);position:relative;}
+.mdx{position:absolute;top:12px;right:16px;background:none;border:none;font-size:18px;color:var(--ink3);cursor:pointer;}
+.md h3{font-family:'Noto Serif KR',serif;font-size:17px;font-weight:600;color:var(--ink);margin-bottom:16px;}
+.md-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--paper2);font-size:13px;}
+.md-row:last-of-type{border-bottom:none;}
+.md-lbl{color:var(--ink3);}
+.md-val{color:var(--ink);font-weight:500;text-align:right;}
+.md-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+
+/* 폼 */
+.form-row{margin-bottom:14px;}
+.form-row label{display:block;font-size:12px;color:var(--ink3);margin-bottom:4px;}
+.form-row input,.form-row select{width:100%;padding:9px 12px;border:1px solid var(--paper3);border-radius:6px;font-size:13px;font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--ink);outline:none;}
+.form-row input:focus,.form-row select:focus{border-color:var(--gold);}
+
+/* 공백 상태 */
+.empty{text-align:center;padding:48px 24px;color:var(--ink3);font-size:13px;}
+.empty .ico{font-size:32px;margin-bottom:12px;}
+
+/* 토스트 */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:var(--goldd);padding:12px 20px;border-radius:6px;font-size:13px;z-index:999;display:none;box-shadow:var(--sh);}
+.toast.on{display:block;}
+
+/* 반응형 */
+@media(max-width:900px){
+  .sidebar{width:60px;}
+  .sb-item span,.sb-logo p,.sb-logo h1,.sb-section,.sb-user,.btn-logout{display:none;}
+  .sb-item{padding:14px;justify-content:center;}
+  .main{margin-left:60px;padding:20px 16px;}
+  .stat-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- 로그인 -->
+<div id="loginWrap" class="login-wrap" style="width:100%;">
+  <div class="login-box">
+    <h2>역易 관리자</h2>
+    <p>관리자 계정으로 로그인하세요.</p>
+    <label class="inplbl">이메일</label>
+    <input class="inp" id="aEmail" type="email" placeholder="admin@example.com">
+    <label class="inplbl">비밀번호</label>
+    <input class="inp" id="aPw" type="password" placeholder="••••••••">
+    <p class="err-msg" id="loginErr"></p>
+    <button class="btn-primary" onclick="doAdminLogin()">로그인</button>
+  </div>
+</div>
+
+<!-- 관리자 UI -->
+<div id="adminWrap" style="display:none;width:100%;display:flex;flex-direction:row;">
+
+  <!-- 사이드바 -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <h1>역易</h1>
+      <p>관리자 패널</p>
+    </div>
+    <nav class="sb-nav">
+      <p class="sb-section">메인</p>
+      <div class="sb-item on" onclick="goPage('dashboard')" id="nav-dashboard">
+        <span class="ico">📊</span><span>대시보드</span>
+      </div>
+      <p class="sb-section">결제 관리</p>
+      <div class="sb-item" onclick="goPage('payments')" id="nav-payments">
+        <span class="ico">💳</span><span>입금 대기</span>
+      </div>
+      <div class="sb-item" onclick="goPage('payhistory')" id="nav-payhistory">
+        <span class="ico">📋</span><span>결제 내역</span>
+      </div>
+      <p class="sb-section">회원 관리</p>
+      <div class="sb-item" onclick="goPage('members')" id="nav-members">
+        <span class="ico">👥</span><span>회원 목록</span>
+      </div>
+      <div class="sb-item" onclick="goPage('records')" id="nav-records">
+        <span class="ico">🔮</span><span>점괘 기록</span>
+      </div>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-user">
+        <strong id="sbAdminName">관리자</strong>
+        <span id="sbAdminEmail"></span>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">로그아웃</button>
+    </div>
+  </aside>
+
+  <!-- 메인 콘텐츠 -->
+  <main class="main">
+
+    <!-- 대시보드 -->
+    <div class="page on" id="page-dashboard">
+      <h1 class="page-title">대시보드</h1>
+      <p class="page-sub" id="dashDate"></p>
+      <div class="stat-grid">
+        <div class="stat-card gold">
+          <p class="stat-lbl">전체 회원</p>
+          <p class="stat-val" id="statTotal">-</p>
+          <p class="stat-sub">가입 회원 수</p>
+        </div>
+        <div class="stat-card green">
+          <p class="stat-lbl">입금 대기</p>
+          <p class="stat-val" id="statPending">-</p>
+          <p class="stat-sub">승인 필요</p>
+        </div>
+        <div class="stat-card purple">
+          <p class="stat-lbl">구독 회원</p>
+          <p class="stat-val" id="statSub">-</p>
+          <p class="stat-sub">월/년 정액</p>
+        </div>
+        <div class="stat-card blue">
+          <p class="stat-lbl">오늘 점괘</p>
+          <p class="stat-val" id="statToday">-</p>
+          <p class="stat-sub">오늘 사용 횟수</p>
+        </div>
+      </div>
+
+      <!-- 입금 대기 요약 -->
+      <div class="card">
+        <div class="card-head">
+          <div><h3>입금 대기 목록</h3><p>승인 대기 중인 결제 신청</p></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-refresh" onclick="loadPending()">새로고침</button>
+            <button class="btn btn-gold" onclick="goPage('payments')">전체 보기</button>
+          </div>
+        </div>
+        <div id="dashPendingTable">
+          <div class="empty"><div class="ico">💳</div><p>대기 중인 입금이 없습니다.</p></div>
+        </div>
+      </div>
+
+      <!-- 최근 가입 -->
+      <div class="card">
+        <div class="card-head">
+          <div><h3>최근 가입 회원</h3><p>최근 5명</p></div>
+          <button class="btn btn-edit" onclick="goPage('members')">전체 보기</button>
+        </div>
+        <div id="dashMemberTable">
+          <div class="empty"><div class="ico">👥</div><p>회원 데이터를 불러오는 중...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 입금 대기 -->
+    <div class="page" id="page-payments">
+      <h1 class="page-title">입금 대기 관리</h1>
+      <p class="page-sub">무통장 입금 신청을 확인하고 승인합니다.</p>
+      <div class="card">
+        <div class="card-head">
+          <div><h3>대기 목록</h3></div>
+          <button class="btn-refresh" onclick="loadPending()">새로고침</button>
+        </div>
+        <div class="filter-bar">
+          <label>상품:</label>
+          <select id="filterProduct" onchange="renderPending()">
+            <option value="">전체</option>
+            <option value="charge5">충전 5,000원</option>
+            <option value="charge10">충전 10,000원</option>
+            <option value="charge30">충전 30,000원</option>
+            <option value="sub_month">월 구독</option>
+            <option value="sub_year">연 구독</option>
+          </select>
+          <input type="text" id="filterName" placeholder="이름 검색..." oninput="renderPending()">
+        </div>
+        <div id="pendingTableWrap">
+          <div class="empty"><div class="ico">⏳</div><p>데이터 로딩 중...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 결제 내역 -->
+    <div class="page" id="page-payhistory">
+      <h1 class="page-title">결제 내역</h1>
+      <p class="page-sub">승인 완료된 모든 결제 내역입니다.</p>
+      <div class="card">
+        <div class="card-head">
+          <div><h3>완료 내역</h3></div>
+          <button class="btn-refresh" onclick="loadPayHistory()">새로고침</button>
+        </div>
+        <div id="payHistoryWrap">
+          <div class="empty"><div class="ico">📋</div><p>데이터 로딩 중...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 회원 목록 -->
+    <div class="page" id="page-members">
+      <h1 class="page-title">회원 관리</h1>
+      <p class="page-sub">전체 회원 목록 및 이용권 수동 조정</p>
+      <div class="card">
+        <div class="card-head">
+          <div><h3>회원 목록</h3></div>
+          <button class="btn-refresh" onclick="loadMembers()">새로고침</button>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="memberSearch" placeholder="이름 또는 이메일 검색..." oninput="renderMembers()">
+          <select id="memberFilter" onchange="renderMembers()">
+            <option value="">전체</option>
+            <option value="subscribed">구독 중</option>
+            <option value="charged">충전 보유</option>
+            <option value="free">무료</option>
+          </select>
+        </div>
+        <div id="memberTableWrap">
+          <div class="empty"><div class="ico">👥</div><p>데이터 로딩 중...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 점괘 기록 -->
+    <div class="page" id="page-records">
+      <h1 class="page-title">점괘 기록</h1>
+      <p class="page-sub">전체 회원의 점괘 사용 기록</p>
+      <div class="card">
+        <div class="card-head">
+          <div><h3>사용 기록</h3></div>
+          <button class="btn-refresh" onclick="loadRecords()">새로고침</button>
+        </div>
+        <div id="recordTableWrap">
+          <div class="empty"><div class="ico">🔮</div><p>데이터 로딩 중...</p></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- 승인 모달 -->
+<div class="mo" id="approveMo">
+  <div class="md">
+    <button class="mdx" onclick="closeMo('approveMo')">✕</button>
+    <h3>결제 승인</h3>
+    <div id="approveDetail"></div>
+    <div class="md-actions">
+      <button class="btn btn-cancel" onclick="closeMo('approveMo')">취소</button>
+      <button class="btn btn-ok" onclick="confirmApprove()">승인 처리</button>
+    </div>
+  </div>
+</div>
+
+<!-- 회원 수정 모달 -->
+<div class="mo" id="memberMo">
+  <div class="md">
+    <button class="mdx" onclick="closeMo('memberMo')">✕</button>
+    <h3>회원 정보 수정</h3>
+    <div id="memberDetail"></div>
+    <div class="form-row" style="margin-top:16px;">
+      <label>횟수 조정 (현재 + 입력값)</label>
+      <input id="cntAdjust" type="number" placeholder="추가: +10, 차감: -5" style="width:100%;padding:9px 12px;border:1px solid var(--paper3);border-radius:6px;font-size:13px;font-family:'Noto Sans KR',sans-serif;">
+    </div>
+    <div class="form-row">
+      <label>구독 상태</label>
+      <select id="subStatus" style="width:100%;padding:9px 12px;border:1px solid var(--paper3);border-radius:6px;font-size:13px;font-family:'Noto Sans KR',sans-serif;">
+        <option value="false">구독 아님</option>
+        <option value="true">구독 중</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>권한</label>
+      <select id="roleStatus" style="width:100%;padding:9px 12px;border:1px solid var(--paper3);border-radius:6px;font-size:13px;font-family:'Noto Sans KR',sans-serif;">
+        <option value="user">일반 회원</option>
+        <option value="admin">관리자</option>
+      </select>
+    </div>
+    <div class="md-actions">
+      <button class="btn btn-cancel btn-sm" onclick="closeMo('memberMo')">취소</button>
+      <button class="btn btn-ok" onclick="saveMember()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══ Firebase ══ */
+const FC={
+  apiKey:"AIzaSyCdJqYpn2oxiCojLjL5AEpulqkvlC_fz_Q",
+  authDomain:"change-time-a7567.firebaseapp.com",
+  databaseURL:"https://change-time-a7567-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"change-time-a7567",
+  storageBucket:"change-time-a7567.firebasestorage.app",
+  messagingSenderId:"732466674309",
+  appId:"1:732466674309:web:3311462f3466f4ab9707ec"
+};
+firebase.initializeApp(FC);
+const auth=firebase.auth();
+const db=firebase.database();
+
+let CU=null;
+let pendingData=[], membersData=[], recordsData=[], payHistoryData=[];
+let selectedPayId=null, selectedUid=null;
+
+/* ══ 인증 ══ */
+auth.onAuthStateChanged(async u=>{
+  if(!u){showLogin();return;}
+  const snap=await db.ref('users/'+u.uid).once('value');
+  const profile=snap.val()||{};
+  if(profile.role!=='admin'){
+    auth.signOut();
+    document.getElementById('loginErr').textContent='관리자 권한이 없습니다.';
+    showLogin();return;
+  }
+  CU=u;
+  document.getElementById('sbAdminName').textContent=u.displayName||'관리자';
+  document.getElementById('sbAdminEmail').textContent=u.email;
+  showAdmin();
+  loadAll();
+});
+
+async function doAdminLogin(){
+  const e=document.getElementById('aEmail').value.trim();
+  const p=document.getElementById('aPw').value;
+  document.getElementById('loginErr').textContent='';
+  if(!e||!p){document.getElementById('loginErr').textContent='이메일과 비밀번호를 입력하세요.';return;}
+  try{await auth.signInWithEmailAndPassword(e,p);}
+  catch(err){document.getElementById('loginErr').textContent='로그인 실패: '+(err.code==='auth/wrong-password'?'비밀번호 오류':err.message);}
+}
+
+async function doLogout(){await auth.signOut();showLogin();}
+
+function showLogin(){
+  document.getElementById('loginWrap').style.display='flex';
+  document.getElementById('adminWrap').style.display='none';
+}
+function showAdmin(){
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('adminWrap').style.display='flex';
+  const d=new Date();
+  document.getElementById('dashDate').textContent=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 기준`;
+}
+
+/* ══ 페이지 전환 ══ */
+function goPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('on'));
+  document.getElementById('page-'+id).classList.add('on');
+  document.getElementById('nav-'+id).classList.add('on');
+  if(id==='payments')loadPending();
+  if(id==='payhistory')loadPayHistory();
+  if(id==='members')loadMembers();
+  if(id==='records')loadRecords();
+}
+
+/* ══ 전체 데이터 로드 ══ */
+async function loadAll(){
+  await Promise.all([loadPending(),loadMembers(),loadRecords()]);
+  updateDash();
+}
+
+/* ══ 입금 대기 ══ */
+async function loadPending(){
+  const snap=await db.ref('payments').orderByChild('status').equalTo('pending').once('value');
+  pendingData=[];
+  if(snap.val()){
+    Object.entries(snap.val()).forEach(([k,v])=>pendingData.push({id:k,...v}));
+    pendingData.sort((a,b)=>b.createdAt-a.createdAt);
+  }
+  renderPending();
+  document.getElementById('statPending').textContent=pendingData.length;
+  renderDashPending();
+}
+
+function renderPending(){
+  const filter=document.getElementById('filterProduct')?.value||'';
+  const search=document.getElementById('filterName')?.value?.toLowerCase()||'';
+  let filtered=pendingData.filter(p=>{
+    if(filter&&p.product!==filter)return false;
+    if(search&&!p.name?.toLowerCase().includes(search)&&!p.phone?.includes(search))return false;
+    return true;
+  });
+  const el=document.getElementById('pendingTableWrap');
+  if(!filtered.length){el.innerHTML='<div class="empty"><div class="ico">✅</div><p>대기 중인 입금이 없습니다.</p></div>';return;}
+  el.innerHTML=`<table>
+    <thead><tr>
+      <th>신청일시</th><th>이름</th><th>전화</th><th>이메일</th><th>상품</th><th>UID</th><th>처리</th>
+    </tr></thead>
+    <tbody>${filtered.map(p=>`<tr>
+      <td>${fmtDate(p.createdAt)}</td>
+      <td><strong>${esc(p.name||'-')}</strong></td>
+      <td>${esc(p.phone||'-')}</td>
+      <td style="font-size:12px;">${esc(p.email||'-')}</td>
+      <td><span class="badge ${prodBadge(p.product)}">${prodName(p.product)}</span></td>
+      <td style="font-size:11px;color:var(--ink3);">${p.uid?p.uid.slice(0,8)+'...':'비회원'}</td>
+      <td>
+        <button class="btn btn-ok btn-sm" onclick="openApprove('${p.id}')">승인</button>
+        <button class="btn btn-cancel btn-sm" style="margin-left:4px;" onclick="rejectPay('${p.id}')">거절</button>
+      </td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function renderDashPending(){
+  const el=document.getElementById('dashPendingTable');
+  const slice=pendingData.slice(0,5);
+  if(!slice.length){el.innerHTML='<div class="empty"><div class="ico">✅</div><p>대기 중인 입금이 없습니다.</p></div>';return;}
+  el.innerHTML=`<table>
+    <thead><tr><th>신청일시</th><th>이름</th><th>상품</th><th>처리</th></tr></thead>
+    <tbody>${slice.map(p=>`<tr>
+      <td>${fmtDate(p.createdAt)}</td>
+      <td><strong>${esc(p.name||'-')}</strong></td>
+      <td><span class="badge ${prodBadge(p.product)}">${prodName(p.product)}</span></td>
+      <td><button class="btn btn-ok btn-sm" onclick="openApprove('${p.id}')">승인</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function openApprove(id){
+  const p=pendingData.find(x=>x.id===id);if(!p)return;
+  selectedPayId=id;
+  document.getElementById('approveDetail').innerHTML=`
+    <div class="md-row"><span class="md-lbl">이름</span><span class="md-val">${esc(p.name||'-')}</span></div>
+    <div class="md-row"><span class="md-lbl">전화</span><span class="md-val">${esc(p.phone||'-')}</span></div>
+    <div class="md-row"><span class="md-lbl">이메일</span><span class="md-val">${esc(p.email||'-')}</span></div>
+    <div class="md-row"><span class="md-lbl">상품</span><span class="md-val"><span class="badge ${prodBadge(p.product)}">${prodName(p.product)}</span></span></div>
+    <div class="md-row"><span class="md-lbl">신청일시</span><span class="md-val">${fmtDate(p.createdAt)}</span></div>
+    <div class="md-row"><span class="md-lbl">회원 UID</span><span class="md-val" style="font-size:12px;">${p.uid||'비회원'}</span></div>
+    <p style="font-size:12px;color:var(--ink3);margin-top:12px;padding:10px;background:var(--paper);border-radius:6px;">
+      승인 시 입금자명(${esc(p.name||'')}+전화 뒤 4자리)을 확인 후 처리하세요.
+    </p>`;
+  openMo('approveMo');
+}
+
+async function confirmApprove(){
+  const p=pendingData.find(x=>x.id===selectedPayId);if(!p)return;
+  const updates={};
+  updates['payments/'+selectedPayId+'/status']='approved';
+  updates['payments/'+selectedPayId+'/approvedAt']=Date.now();
+  updates['payments/'+selectedPayId+'/approvedBy']=CU.uid;
+
+  if(p.uid){
+    const {cnt,isSub,subType}=prodToGrant(p.product);
+    if(isSub){
+      updates['users/'+p.uid+'/subscribed']=true;
+      updates['users/'+p.uid+'/subscribeType']=subType;
+      updates['users/'+p.uid+'/subscribeStart']=Date.now();
+    } else {
+      const uSnap=await db.ref('users/'+p.uid+'/remainCount').once('value');
+      const cur=uSnap.val()||0;
+      updates['users/'+p.uid+'/remainCount']=cur+cnt;
+    }
+  }
+  await db.ref().update(updates);
+  toast('✅ 승인 완료! 회원에게 이용권이 지급되었습니다.');
+  closeMo('approveMo');
+  loadPending();
+}
+
+async function rejectPay(id){
+  if(!confirm('이 신청을 거절하시겠습니까?'))return;
+  await db.ref('payments/'+id+'/status').set('rejected');
+  toast('거절 처리되었습니다.');
+  loadPending();
+}
+
+/* ══ 결제 내역 ══ */
+async function loadPayHistory(){
+  const snap=await db.ref('payments').orderByChild('status').equalTo('approved').once('value');
+  payHistoryData=[];
+  if(snap.val()){
+    Object.entries(snap.val()).forEach(([k,v])=>payHistoryData.push({id:k,...v}));
+    payHistoryData.sort((a,b)=>b.approvedAt-a.approvedAt);
+  }
+  const el=document.getElementById('payHistoryWrap');
+  if(!payHistoryData.length){el.innerHTML='<div class="empty"><div class="ico">📋</div><p>완료된 결제 내역이 없습니다.</p></div>';return;}
+  el.innerHTML=`<table>
+    <thead><tr><th>승인일시</th><th>이름</th><th>전화</th><th>상품</th><th>지급 내용</th></tr></thead>
+    <tbody>${payHistoryData.map(p=>`<tr>
+      <td>${fmtDate(p.approvedAt||p.createdAt)}</td>
+      <td><strong>${esc(p.name||'-')}</strong></td>
+      <td>${esc(p.phone||'-')}</td>
+      <td><span class="badge ${prodBadge(p.product)}">${prodName(p.product)}</span></td>
+      <td style="font-size:12px;color:var(--ink3);">${prodGrant(p.product)}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+/* ══ 회원 목록 ══ */
+async function loadMembers(){
+  const snap=await db.ref('users').once('value');
+  membersData=[];
+  if(snap.val()){
+    Object.entries(snap.val()).forEach(([k,v])=>membersData.push({uid:k,...v}));
+    membersData.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  }
+  document.getElementById('statTotal').textContent=membersData.length;
+  document.getElementById('statSub').textContent=membersData.filter(m=>m.subscribed).length;
+  renderMembers();
+  renderDashMembers();
+}
+
+function renderMembers(){
+  const search=document.getElementById('memberSearch')?.value?.toLowerCase()||'';
+  const filter=document.getElementById('memberFilter')?.value||'';
+  let filtered=membersData.filter(m=>{
+    if(search&&!m.name?.toLowerCase().includes(search)&&!m.email?.toLowerCase().includes(search))return false;
+    if(filter==='subscribed'&&!m.subscribed)return false;
+    if(filter==='charged'&&!(m.remainCount>0&&!m.subscribed))return false;
+    if(filter==='free'&&(m.subscribed||m.remainCount>0))return false;
+    return true;
+  });
+  const el=document.getElementById('memberTableWrap');
+  if(!filtered.length){el.innerHTML='<div class="empty"><div class="ico">👥</div><p>검색 결과가 없습니다.</p></div>';return;}
+  el.innerHTML=`<table>
+    <thead><tr>
+      <th>가입일</th><th>이름</th><th>이메일</th><th>상태</th><th>잔여 횟수</th><th>사주</th><th>관리</th>
+    </tr></thead>
+    <tbody>${filtered.map(m=>`<tr>
+      <td style="font-size:12px;">${fmtDate(m.createdAt)}</td>
+      <td><strong>${esc(m.name||'-')}</strong></td>
+      <td style="font-size:12px;">${esc(m.email||'-')}</td>
+      <td>
+        ${m.role==='admin'?'<span class="badge b-admin">관리자</span>':''}
+        ${m.subscribed?'<span class="badge b-sub">구독 중</span>':''}
+        ${!m.subscribed&&m.remainCount>0?'<span class="badge b-charge">충전 보유</span>':''}
+        ${!m.subscribed&&!(m.remainCount>0)&&m.role!=='admin'?'<span class="badge b-free">무료</span>':''}
+      </td>
+      <td style="font-weight:600;">${m.subscribed?'∞':(m.remainCount||0)+'회'}</td>
+      <td style="font-size:11px;color:var(--ink3);">${m.saju?m.saju.year+'년 '+m.saju.month+'월':'미입력'}</td>
+      <td><button class="btn btn-edit btn-sm" onclick="openMember('${m.uid}')">수정</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function renderDashMembers(){
+  const el=document.getElementById('dashMemberTable');
+  const slice=membersData.slice(0,5);
+  if(!slice.length){el.innerHTML='<div class="empty"><div class="ico">👥</div><p>회원이 없습니다.</p></div>';return;}
+  el.innerHTML=`<table>
+    <thead><tr><th>가입일</th><th>이름</th><th>이메일</th><th>상태</th></tr></thead>
+    <tbody>${slice.map(m=>`<tr>
+      <td style="font-size:12px;">${fmtDate(m.createdAt)}</td>
+      <td><strong>${esc(m.name||'-')}</strong></td>
+      <td style="font-size:12px;">${esc(m.email||'-')}</td>
+      <td>${m.subscribed?'<span class="badge b-sub">구독</span>':'<span class="badge b-free">무료</span>'}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function openMember(uid){
+  const m=membersData.find(x=>x.uid===uid);if(!m)return;
+  selectedUid=uid;
+  document.getElementById('memberDetail').innerHTML=`
+    <div class="md-row"><span class="md-lbl">이름</span><span class="md-val">${esc(m.name||'-')}</span></div>
+    <div class="md-row"><span class="md-lbl">이메일</span><span class="md-val" style="font-size:12px;">${esc(m.email||'-')}</span></div>
+    <div class="md-row"><span class="md-lbl">현재 잔여 횟수</span><span class="md-val">${m.subscribed?'구독(무제한)':(m.remainCount||0)+'회'}</span></div>
+    <div class="md-row"><span class="md-lbl">사주</span><span class="md-val">${m.saju?m.saju.year+'년 '+m.saju.month+'월 '+m.saju.day+'일 '+m.saju.hour:'미입력'}</span></div>`;
+  document.getElementById('cntAdjust').value='';
+  document.getElementById('subStatus').value=m.subscribed?'true':'false';
+  document.getElementById('roleStatus').value=m.role||'user';
+  openMo('memberMo');
+}
+
+async function saveMember(){
+  const adj=parseInt(document.getElementById('cntAdjust').value)||0;
+  const sub=document.getElementById('subStatus').value==='true';
+  const role=document.getElementById('roleStatus').value;
+  const m=membersData.find(x=>x.uid===selectedUid);if(!m)return;
+  const updates={};
+  if(adj!==0) updates['users/'+selectedUid+'/remainCount']=Math.max(0,(m.remainCount||0)+adj);
+  updates['users/'+selectedUid+'/subscribed']=sub;
+  updates['users/'+selectedUid+'/role']=role;
+  await db.ref().update(updates);
+  toast('✅ 회원 정보가 수정되었습니다.');
+  closeMo('memberMo');
+  loadMembers();
+}
+
+/* ══ 점괘 기록 ══ */
+async function loadRecords(){
+  const snap=await db.ref('users').once('value');
+  recordsData=[];
+  let todayCnt=0;
+  const todayStart=new Date();todayStart.setHours(0,0,0,0);
+  if(snap.val()){
+    Object.entries(snap.val()).forEach(([uid,udata])=>{
+      if(udata.records){
+        Object.entries(udata.records).forEach(([rid,r])=>{
+          recordsData.push({id:rid,uid,userName:udata.name||'?',userEmail:udata.email||'?',...r});
+          if(r.date>=todayStart.getTime())todayCnt++;
+        });
+      }
+    });
+    recordsData.sort((a,b)=>b.date-a.date);
+  }
+  document.getElementById('statToday').textContent=todayCnt;
+  const el=document.getElementById('recordTableWrap');
+  if(!recordsData.length){el.innerHTML='<div class="empty"><div class="ico">🔮</div><p>점괘 기록이 없습니다.</p></div>';return;}
+  el.innerHTML=`<table>
+    <thead><tr>
+      <th>일시</th><th>회원</th><th>점괘</th><th>키워드</th><th>질문</th><th>종류</th>
+    </tr></thead>
+    <tbody>${recordsData.slice(0,100).map(r=>`<tr>
+      <td style="font-size:12px;">${fmtDate(r.date)}</td>
+      <td style="font-size:12px;">${esc(r.userName)}</td>
+      <td><strong>${esc(r.guaName||'-')}</strong><br><span style="font-size:11px;color:var(--ink3);">${esc(r.hanja||'')}</span></td>
+      <td><span class="badge b-free">${esc(r.keyword||'-')}</span></td>
+      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(r.question||'-')}</td>
+      <td><span class="badge ${r.divType==='paid'?'b-sub':'b-free'}">${r.divType==='paid'?'사주':'즉석'}</span></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+/* ══ 대시보드 통계 업데이트 ══ */
+function updateDash(){
+  document.getElementById('statTotal').textContent=membersData.length;
+  document.getElementById('statSub').textContent=membersData.filter(m=>m.subscribed).length;
+  document.getElementById('statPending').textContent=pendingData.length;
+}
+
+/* ══ 상품 헬퍼 ══ */
+function prodName(p){
+  const m={charge5:'충전 5천원',charge10:'충전 1만원',charge30:'충전 3만원',sub_month:'월 구독',sub_year:'연 구독'};
+  return m[p]||p||'-';
+}
+function prodBadge(p){
+  if(!p)return 'b-free';
+  if(p.startsWith('sub'))return 'b-sub';
+  return 'b-charge';
+}
+function prodToGrant(p){
+  if(p==='sub_month')return{cnt:0,isSub:true,subType:'month'};
+  if(p==='sub_year')return{cnt:0,isSub:true,subType:'year'};
+  if(p==='charge5')return{cnt:10,isSub:false};
+  if(p==='charge10')return{cnt:25,isSub:false};
+  if(p==='charge30')return{cnt:80,isSub:false};
+  return{cnt:0,isSub:false};
+}
+function prodGrant(p){
+  if(p==='sub_month')return'월 구독 활성화';
+  if(p==='sub_year')return'연 구독 활성화';
+  if(p==='charge5')return'10회 충전';
+  if(p==='charge10')return'25회 충전';
+  if(p==='charge30')return'80회 충전';
+  return'-';
+}
+
+/* ══ 유틸 ══ */
+function fmtDate(ts){
+  if(!ts)return'-';
+  const d=new Date(ts);
+  return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function pad(n){return String(n).padStart(2,'0');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function openMo(id){document.getElementById(id).classList.add('on');}
+function closeMo(id){document.getElementById(id).classList.remove('on');}
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on');}));
+function toast(msg,dur=3000){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),dur);
+}
+</script>
+</body>
+</html>
