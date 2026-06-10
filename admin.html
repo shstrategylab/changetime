@@ -321,9 +321,15 @@ tr:hover td{background:var(--paper);}
     <div class="page" id="page-records">
       <h1 class="page-title">점괘 기록</h1>
       <p class="page-sub">전체 회원의 점괘 사용 기록</p>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-head"><h3>사용 통계</h3></div>
+        <div id="recordStats" style="padding:14px 20px;font-size:13px;color:var(--ink2);display:flex;flex-wrap:wrap;gap:8px;">
+          통계 로딩 중...
+        </div>
+      </div>
       <div class="card">
         <div class="card-head">
-          <div><h3>사용 기록</h3></div>
+          <div><h3>사용 기록</h3><p>최근 200건 표시</p></div>
           <button class="btn-refresh" onclick="loadRecords()">새로고침</button>
         </div>
         <div id="recordTableWrap">
@@ -425,6 +431,14 @@ async function doAdminLogin(){
   try{await auth.signInWithEmailAndPassword(e,p);}
   catch(err){document.getElementById('loginErr').textContent='로그인 실패: '+(err.code==='auth/wrong-password'?'비밀번호 오류':err.message);}
 }
+
+// 엔터키 로그인
+document.addEventListener('DOMContentLoaded',()=>{
+  ['aEmail','aPw'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin();});
+  });
+});
 
 async function doLogout(){await auth.signOut();showLogin();}
 
@@ -573,10 +587,11 @@ async function loadPayHistory(){
   const el=document.getElementById('payHistoryWrap');
   if(!payHistoryData.length){el.innerHTML='<div class="empty"><div class="ico">📋</div><p>완료된 결제 내역이 없습니다.</p></div>';return;}
   el.innerHTML=`<table>
-    <thead><tr><th>승인일시</th><th>이름</th><th>전화</th><th>상품</th><th>지급 내용</th></tr></thead>
+    <thead><tr><th>승인일시</th><th>이름</th><th>이메일</th><th>전화</th><th>상품</th><th>지급 내용</th></tr></thead>
     <tbody>${payHistoryData.map(p=>`<tr>
       <td>${fmtDate(p.approvedAt||p.createdAt)}</td>
       <td><strong>${esc(p.name||'-')}</strong></td>
+      <td style="font-size:12px;">${esc(p.email||'-')}</td>
       <td>${esc(p.phone||'-')}</td>
       <td><span class="badge ${prodBadge(p.product)}">${prodName(p.product)}</span></td>
       <td style="font-size:12px;color:var(--ink3);">${prodGrant(p.product)}</td>
@@ -679,35 +694,72 @@ async function saveMember(){
 async function loadRecords(){
   const snap=await db.ref('users').once('value');
   recordsData=[];
-  let todayCnt=0;
+  let todayCnt=0, totalCnt=0;
   const todayStart=new Date();todayStart.setHours(0,0,0,0);
   if(snap.val()){
     Object.entries(snap.val()).forEach(([uid,udata])=>{
       if(udata.records){
         Object.entries(udata.records).forEach(([rid,r])=>{
-          recordsData.push({id:rid,uid,userName:udata.name||'?',userEmail:udata.email||'?',...r});
+          recordsData.push({
+            id:rid, uid,
+            userName:udata.name||'(탈퇴/미상)',
+            userEmail:udata.email||'-',
+            isMember:true,
+            ...r
+          });
+          totalCnt++;
           if(r.date>=todayStart.getTime())todayCnt++;
         });
       }
     });
-    recordsData.sort((a,b)=>b.date-a.date);
   }
+  // 비회원 기록 (별도 노드에 저장된 경우)
+  const gSnap=await db.ref('guest_records').once('value');
+  if(gSnap.val()){
+    Object.entries(gSnap.val()).forEach(([rid,r])=>{
+      recordsData.push({id:rid,uid:null,userName:'비회원',userEmail:'-',isMember:false,...r});
+      totalCnt++;
+      if(r.date>=todayStart.getTime())todayCnt++;
+    });
+  }
+  recordsData.sort((a,b)=>b.date-a.date);
+
   document.getElementById('statToday').textContent=todayCnt;
+
+  // 통계 업데이트
+  const statsEl=document.getElementById('recordStats');
+  if(statsEl){
+    statsEl.innerHTML=`
+      <span style="margin-right:16px;">전체 사용: <strong>${totalCnt}회</strong></span>
+      <span style="margin-right:16px;">오늘 사용: <strong>${todayCnt}회</strong></span>
+      <span>회원 사용: <strong>${recordsData.filter(r=>r.isMember).length}회</strong></span>
+      <span style="margin-left:16px;">비회원 사용: <strong>${recordsData.filter(r=>!r.isMember).length}회</strong></span>`;
+  }
+
   const el=document.getElementById('recordTableWrap');
   if(!recordsData.length){el.innerHTML='<div class="empty"><div class="ico">🔮</div><p>점괘 기록이 없습니다.</p></div>';return;}
   el.innerHTML=`<table>
     <thead><tr>
-      <th>일시</th><th>회원</th><th>점괘</th><th>키워드</th><th>질문</th><th>종류</th>
+      <th>일시</th><th>구분</th><th>회원</th><th>점괘</th><th>키워드</th><th>질문</th><th>종류</th><th>관리</th>
     </tr></thead>
-    <tbody>${recordsData.slice(0,100).map(r=>`<tr>
+    <tbody>${recordsData.slice(0,200).map(r=>`<tr>
       <td style="font-size:12px;">${fmtDate(r.date)}</td>
-      <td style="font-size:12px;">${esc(r.userName)}</td>
+      <td><span class="badge ${r.isMember?'b-charge':'b-free'}">${r.isMember?'회원':'비회원'}</span></td>
+      <td style="font-size:12px;">${esc(r.userName)}<br><span style="color:var(--ink3);font-size:11px;">${esc(r.userEmail)}</span></td>
       <td><strong>${esc(r.guaName||'-')}</strong><br><span style="font-size:11px;color:var(--ink3);">${esc(r.hanja||'')}</span></td>
       <td><span class="badge b-free">${esc(r.keyword||'-')}</span></td>
-      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(r.question||'-')}</td>
+      <td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(r.question||'')}">${esc(r.question||'-')}</td>
       <td><span class="badge ${r.divType==='paid'?'b-sub':'b-free'}">${r.divType==='paid'?'사주':'즉석'}</span></td>
+      <td>${!r.isMember?`<button class="btn btn-cancel btn-sm" onclick="deleteGuestRecord('${r.id}')">삭제</button>`:'<span style="font-size:11px;color:var(--ink3);">-</span>'}</td>
     </tr>`).join('')}</tbody>
   </table>`;
+}
+
+async function deleteGuestRecord(id){
+  if(!confirm('이 비회원 기록을 삭제하시겠습니까?'))return;
+  await db.ref('guest_records/'+id).remove();
+  toast('삭제되었습니다.');
+  loadRecords();
 }
 
 /* ══ 대시보드 통계 업데이트 ══ */
