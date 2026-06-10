@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>역(易) — 주역 점괘 서비스</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+:root{
+  --ink:#1a1208;--ink2:#3d2e14;--ink3:#7a6040;
+  --gold:#c8922a;--goldl:#e8b84b;--goldd:#f5e8c8;
+  --paper:#faf6ef;--paper2:#f2ead8;--paper3:#e8dcc0;
+  --red:#8b2020;--fg:#2d7a4a;--fb:#eef7f1;--pb:#5a3d8a;--pp:#f0eaf8;
+  --r:12px;--sh:0 2px 16px rgba(26,18,8,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--paper3);display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:60px;}
+.logo{font-family:'Noto Serif KR',serif;font-size:22px;font-weight:700;color:var(--ink);letter-spacing:4px;text-decoration:none;}
+.logo span{color:var(--gold);}
+.nav-r{display:flex;gap:22px;align-items:center;}
+.nav-r a{font-size:13px;color:var(--ink2);text-decoration:none;transition:color .2s;}
+.nav-r a:hover{color:var(--gold);}
+.nbtn{background:var(--gold)!important;color:#fff!important;padding:7px 18px;border-radius:20px;font-size:13px!important;font-weight:500;}
+.nbtn:hover{background:var(--ink)!important;}
+.nu{font-size:12px;color:var(--ink3);display:flex;align-items:center;gap:8px;}
+.ncnt{background:var(--gold);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;}
+
+/* HERO */
+.hero{text-align:center;padding:80px 24px 60px;background:linear-gradient(180deg,var(--paper),var(--paper2));border-bottom:1px solid var(--paper3);position:relative;overflow:hidden;}
+.hero::before{content:'易';position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-family:'Noto Serif KR',serif;font-size:280px;font-weight:700;color:var(--paper3);opacity:.5;pointer-events:none;user-select:none;}
+.eye{font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;position:relative;}
+.hero h1{font-family:'Noto Serif KR',serif;font-size:clamp(32px,6vw,56px);font-weight:700;line-height:1.2;color:var(--ink);margin-bottom:20px;position:relative;}
+.hero h1 em{color:var(--gold);font-style:normal;}
+.hero-sub{font-size:15px;color:var(--ink3);line-height:1.8;max-width:500px;margin:0 auto 36px;position:relative;}
+.hact{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative;}
+.bp{background:var(--ink);color:var(--goldd);padding:14px 32px;border-radius:4px;font-size:14px;font-weight:500;letter-spacing:1px;border:none;cursor:pointer;transition:all .2s;font-family:'Noto Sans KR',sans-serif;text-decoration:none;display:inline-block;}
+.bp:hover{background:var(--gold);color:var(--ink);}
+.bs{background:transparent;color:var(--ink2);padding:14px 32px;border-radius:4px;font-size:14px;letter-spacing:1px;border:1px solid var(--paper3);cursor:pointer;transition:all .2s;font-family:'Noto Sans KR',sans-serif;text-decoration:none;display:inline-block;}
+.bs:hover{border-color:var(--gold);color:var(--gold);}
+
+/* SECTIONS */
+.sec{max-width:820px;margin:0 auto;padding:52px 24px;}
+.secw{max-width:980px;margin:0 auto;padding:52px 24px;}
+.slbl{font-size:11px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
+.stit{font-family:'Noto Serif KR',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:24px;}
+.divr{border:none;border-top:1px solid var(--paper3);margin:0;}
+
+/* DAILY */
+.dcrd{background:var(--ink);color:var(--goldd);border-radius:var(--r);padding:36px;display:flex;gap:32px;align-items:flex-start;}
+.dgua{font-family:'Noto Serif KR',serif;font-size:64px;font-weight:700;color:var(--gold);line-height:1;flex-shrink:0;}
+.dname{font-family:'Noto Serif KR',serif;font-size:20px;font-weight:600;color:var(--goldl);margin-bottom:4px;}
+.dhj{font-size:12px;color:var(--ink3);margin-bottom:14px;letter-spacing:2px;}
+.ddesc{font-size:14px;line-height:1.9;color:#c8b898;margin-bottom:16px;}
+.kw{display:inline-block;background:rgba(200,146,42,.15);border:1px solid rgba(200,146,42,.3);color:var(--goldl);font-size:11px;letter-spacing:2px;padding:4px 12px;border-radius:2px;margin-right:8px;margin-bottom:6px;}
+
+/* ENTRY */
+.egrid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.ec{border-radius:var(--r);padding:32px;border:1px solid var(--paper3);cursor:pointer;transition:all .25s;background:#fff;}
+.ec:hover{border-color:var(--gold);box-shadow:var(--sh);transform:translateY(-2px);}
+.ec.free{border-top:3px solid var(--fg);}
+.ec.paid{border-top:3px solid var(--pb);}
+.ebdg{font-size:10px;letter-spacing:2px;font-weight:500;padding:3px 10px;border-radius:10px;margin-bottom:16px;display:inline-block;}
+.bf{background:var(--fb);color:var(--fg);}.bp2{background:var(--pp);color:var(--pb);}
+.eico{font-size:32px;margin-bottom:12px;}
+.etit{font-family:'Noto Serif KR',serif;font-size:18px;font-weight:600;color:var(--ink);margin-bottom:8px;}
+.edesc{font-size:13px;color:var(--ink3);line-height:1.7;margin-bottom:20px;}
+.efeat{list-style:none;}
+.efeat li{font-size:12px;color:var(--ink2);padding:5px 0;border-bottom:1px solid var(--paper2);display:flex;justify-content:space-between;align-items:center;}
+.efeat li:last-child{border-bottom:none;}
+.ft{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:500;}
+.ftf{background:var(--fb);color:var(--fg);}.ftp{background:var(--pp);color:var(--pb);}
+
+/* CONCEPT */
+.cbg{background:var(--paper2);border-top:1px solid var(--paper3);border-bottom:1px solid var(--paper3);padding:60px 24px;}
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px;}
+.cc{background:#fff;border-radius:var(--r);padding:24px;cursor:pointer;border:1px solid var(--paper3);transition:all .2s;}
+.cc:hover{border-color:var(--gold);box-shadow:var(--sh);}
+.ccnum{font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:8px;}
+.cc h3{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:600;color:var(--ink);margin-bottom:8px;}
+.cc p{font-size:12px;color:var(--ink3);line-height:1.7;}
+
+/* PRICING */
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px;}
+.pc{border-radius:var(--r);padding:28px;border:1px solid var(--paper3);background:#fff;}
+.pc.feat{border-color:var(--gold);background:var(--ink);color:var(--goldd);}
+.pplan{font-size:11px;letter-spacing:2px;margin-bottom:12px;}
+.feat .pplan{color:var(--gold);}.pc:not(.feat) .pplan{color:var(--ink3);}
+.pprice{font-family:'Noto Serif KR',serif;font-size:28px;font-weight:700;margin-bottom:4px;}
+.feat .pprice{color:var(--goldl);}.pc:not(.feat) .pprice{color:var(--ink);}
+.punit{font-size:12px;margin-bottom:20px;color:var(--ink3);}
+.pfeat{list-style:none;margin-bottom:24px;}
+.pfeat li{font-size:13px;padding:7px 0;border-bottom:1px solid;display:flex;gap:8px;align-items:flex-start;}
+.feat .pfeat li{border-color:rgba(255,255,255,.08);color:#c8b898;}
+.pc:not(.feat) .pfeat li{border-color:var(--paper2);color:var(--ink2);}
+.pfeat li::before{content:'·';color:var(--gold);font-size:16px;line-height:1.3;flex-shrink:0;}
+.btnplan{width:100%;padding:12px;border-radius:4px;font-size:13px;letter-spacing:1px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;border:none;transition:all .2s;}
+.feat .btnplan{background:var(--gold);color:var(--ink);}
+.pc:not(.feat) .btnplan{background:var(--ink);color:var(--goldd);}
+
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;background:rgba(26,18,8,.85);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.mo.on{display:flex;}
+.md{background:var(--paper);border-radius:var(--r);max-width:600px;width:100%;max-height:90vh;overflow-y:auto;padding:40px 36px;box-shadow:0 20px 60px rgba(0,0,0,.4);position:relative;}
+.mdx{position:absolute;top:14px;right:18px;background:none;border:none;font-size:20px;color:var(--ink3);cursor:pointer;}
+.ms{display:none;}.ms.on{display:block;}
+.moeye{font-size:11px;letter-spacing:3px;color:var(--gold);margin-bottom:12px;}
+.motit{font-family:'Noto Serif KR',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:8px;line-height:1.4;}
+.modesc{font-size:13px;color:var(--ink3);line-height:1.8;margin-bottom:24px;}
+.prog{height:3px;background:var(--paper3);border-radius:2px;margin-bottom:28px;}
+.progf{height:100%;background:var(--gold);border-radius:2px;transition:width .4s;}
+.qinp{width:100%;padding:14px 16px;border:1px solid var(--paper3);border-radius:8px;font-size:14px;font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--ink);resize:vertical;min-height:80px;margin-bottom:8px;outline:none;transition:border-color .2s;}
+.qinp:focus{border-color:var(--gold);}
+.qhint{font-size:11px;color:var(--ink3);margin-bottom:20px;}
+.breathc{width:120px;height:120px;border-radius:50%;border:2px solid var(--gold);margin:0 auto 24px;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif KR',serif;font-size:13px;color:var(--gold);animation:breathe 4s ease-in-out infinite;}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.6;}50%{transform:scale(1.15);opacity:1;}}
+.tabrow{display:flex;margin-bottom:24px;border:1px solid var(--paper3);border-radius:8px;overflow:hidden;}
+.ctab{flex:1;padding:10px;font-size:13px;text-align:center;background:#fff;border:none;cursor:pointer;color:var(--ink3);transition:all .2s;font-family:'Noto Sans KR',sans-serif;}
+.ctab.on{background:var(--ink);color:var(--goldd);}
+.throwa{background:var(--paper2);border-radius:10px;padding:24px;text-align:center;margin-bottom:20px;}
+.throwcnt{font-size:12px;color:var(--ink3);margin-bottom:16px;letter-spacing:1px;}
+.coinsrow{display:flex;gap:12px;justify-content:center;margin-bottom:20px;}
+.coin{width:52px;height:52px;border-radius:50%;border:2px solid var(--paper3);display:flex;align-items:center;justify-content:center;font-size:18px;background:#fff;transition:all .3s;}
+.coin.front{background:var(--goldd);border-color:var(--gold);}
+.coin.back{background:var(--paper2);border-color:var(--ink3);}
+.btnthrow{background:var(--ink);color:var(--goldd);border:none;padding:12px 32px;border-radius:4px;font-size:14px;cursor:pointer;letter-spacing:1px;font-family:'Noto Sans KR',sans-serif;transition:all .2s;}
+.btnthrow:hover{background:var(--gold);color:var(--ink);}
+.btnthrow:disabled{opacity:.4;cursor:not-allowed;}
+.mrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--paper2);}
+.mlbl{font-size:12px;color:var(--ink3);width:36px;flex-shrink:0;}
+.mbtns{display:flex;gap:5px;flex-wrap:wrap;}
+.mbtn{padding:5px 10px;border-radius:4px;border:1px solid var(--paper3);font-size:11px;cursor:pointer;background:#fff;color:var(--ink2);font-family:'Noto Sans KR',sans-serif;transition:all .15s;}
+.mbtn.sf{background:var(--goldd);border-color:var(--gold);color:var(--ink);}
+.mbtn.sb{background:var(--paper2);border-color:var(--ink3);color:var(--ink);}
+.mscr{font-size:13px;font-weight:500;color:var(--gold);margin-left:auto;flex-shrink:0;}
+.yaow{display:flex;flex-direction:column-reverse;gap:6px;margin:0 auto 20px;width:110px;}
+.yaol{height:12px;display:flex;gap:8px;align-items:center;}
+.yaoseg{height:12px;background:var(--ink);border-radius:2px;transition:all .4s;}
+.yaolbl{font-size:10px;color:var(--ink3);width:20px;text-align:right;flex-shrink:0;}
+.rgua{font-family:'Noto Serif KR',serif;font-size:28px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+.rhj{font-size:13px;color:var(--gold);margin-bottom:6px;letter-spacing:2px;}
+.rkw{display:inline-block;font-size:16px;font-weight:600;color:var(--ink);background:var(--goldd);padding:6px 18px;border-radius:2px;margin-bottom:20px;font-family:'Noto Serif KR',serif;}
+.rstit{font-size:11px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;margin-top:20px;}
+.rtxt{font-size:14px;line-height:1.9;color:var(--ink2);}
+.ract{background:var(--paper2);border-radius:8px;padding:16px;margin-top:16px;border-left:3px solid var(--gold);}
+.paidbox{margin-top:24px;padding:20px;border:1px dashed var(--pb);border-radius:8px;background:var(--pp);text-align:center;}
+.paidbox p{font-size:13px;color:var(--pb);margin-bottom:12px;line-height:1.7;}
+.btnpaid{background:var(--pb);color:#fff;border:none;padding:10px 24px;border-radius:4px;font-size:13px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.promptbox{background:var(--ink);border-radius:8px;padding:16px;margin-top:16px;}
+.promptbox pre{font-size:11px;color:#c8b898;line-height:1.7;white-space:pre-wrap;word-break:break-word;}
+.btncopy{background:var(--gold);color:var(--ink);border:none;padding:8px 20px;border-radius:4px;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-top:10px;}
+.fe{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;}
+.infobox{background:var(--paper2);border-radius:8px;padding:16px;font-size:13px;color:var(--ink2);line-height:1.8;}
+.bankbox{background:var(--paper2);border-radius:8px;padding:16px;margin:20px 0;font-size:13px;color:var(--ink2);line-height:1.8;}
+.inp{width:100%;padding:10px 12px;border:1px solid var(--paper3);border-radius:6px;font-size:14px;font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--ink);outline:none;transition:border-color .2s;margin-top:4px;}
+.inp:focus{border-color:var(--gold);}
+.inplbl{display:block;font-size:12px;color:var(--ink3);margin-top:14px;letter-spacing:.5px;}
+.ccbody{line-height:1.9;}
+.ccbody h4{font-family:'Noto Serif KR',serif;font-size:16px;font-weight:600;color:var(--ink);margin:20px 0 8px;}
+.ccbody p{font-size:14px;color:var(--ink2);margin-bottom:12px;}
+.ccbody .hl{background:var(--goldd);border-left:3px solid var(--gold);padding:12px 16px;border-radius:0 6px 6px 0;margin:12px 0;font-size:13px;color:var(--ink2);}
+.sajugrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--goldd);padding:12px 24px;border-radius:4px;font-size:13px;z-index:999;display:none;max-width:320px;text-align:center;}
+.toast.on{display:block;}
+@media(max-width:680px){
+  .egrid,.cgrid,.pgrid{grid-template-columns:1fr;}
+  .dcrd{flex-direction:column;gap:16px;}
+  nav{padding:0 16px;}
+  .nav-r a:not(.nbtn):not(.nu){display:none;}
+  .md{padding:28px 20px;}
+  .sajugrid{grid-template-columns:1fr;}
+  .mbtns{gap:4px;}
+  .mbtn{padding:4px 8px;font-size:10px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">역<span>易</span></a>
+  <div class="nav-r">
+    <a href="#entry">점괘 보기</a>
+    <a href="#concept">개념 이해</a>
+    <a href="#pricing">요금제</a>
+    <div id="navUser" class="nu" style="display:none;">
+      <span id="navName"></span>
+      <span class="ncnt" id="navCnt">0회</span>
+      <a href="#" onclick="doLogout()" style="font-size:12px;color:var(--ink3);">로그아웃</a>
+    </div>
+    <a href="#" class="nbtn" id="navLoginBtn" onclick="openMo('loginMo')">로그인</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="eye">주역 — 변화의 지혜</p>
+  <h1>지금 나는<br><em>어디에</em> 서 있는가</h1>
+  <p class="hero-sub">미래를 점치는 것이 아니라, 지금 이 순간의 형세를 읽고<br>어떻게 나아갈지 스스로 묻는 3천 년의 지혜</p>
+  <div class="hact">
+    <a href="#entry" class="bp">점괘 보기 시작</a>
+    <a href="#concept" class="bs">주역이란?</a>
+  </div>
+</section>
+
+<!-- DAILY -->
+<section class="sec">
+  <p class="slbl">오늘의 괘</p>
+  <h2 class="stit" id="dailyTitle">오늘의 형세</h2>
+  <div class="dcrd">
+    <div class="dgua">☯</div>
+    <div>
+      <div class="dname" id="dName">수뢰둔 (水雷屯)</div>
+      <div class="dhj" id="dHj">屯 · 어려운 시작</div>
+      <p class="ddesc" id="dDesc">새싹이 단단한 땅을 뚫고 나오려는 시기입니다. 묵묵히 실력을 쌓고 조력자를 구하십시오.</p>
+      <div id="dKws"><span class="kw">신중</span><span class="kw">준비</span><span class="kw">조력자</span></div>
+    </div>
+  </div>
+</section>
+<hr class="divr">
+
+<!-- ENTRY -->
+<section class="secw" id="entry">
+  <p class="slbl">점괘 시스템</p>
+  <h2 class="stit">무엇을 여쭙겠습니까</h2>
+  <div class="egrid">
+    <div class="ec free" onclick="startDiv('free')">
+      <span class="ebdg bf">무료 · 하루 3회</span>
+      <div class="eico">🪙</div>
+      <h3 class="etit">즉석 점괘</h3>
+      <p class="edesc">사주 없이 누구나. 지금 마음속 고민을 가지고 동전을 던져 현재 형세를 읽습니다.</p>
+      <ul class="efeat">
+        <li>괘명 + 핵심 한 줄 <span class="ft ftf">무료</span></li>
+        <li>괘사 해설 (현재 상황) <span class="ft ftf">무료</span></li>
+        <li>행동 지침 <span class="ft ftf">무료</span></li>
+        <li>동효 · 효사 해석 <span class="ft ftp">유료</span></li>
+        <li>지괘 분석 <span class="ft ftp">유료</span></li>
+        <li>AI 해설 프롬프트 <span class="ft ftp">유료</span></li>
+      </ul>
+    </div>
+    <div class="ec paid" onclick="startDiv('paid')">
+      <span class="ebdg bp2">유료 · 회원 전용</span>
+      <div class="eico">☯</div>
+      <h3 class="etit">사주 기반 정밀 점괘</h3>
+      <p class="edesc">생년월일시를 바탕으로 인생 본괘와 현재 시운을 연결한 심층 해석을 제공합니다.</p>
+      <ul class="efeat">
+        <li>즉석 점괘 전체 포함 <span class="ft ftp">유료</span></li>
+        <li>인생 본괘 도출 <span class="ft ftp">유료</span></li>
+        <li>육룡 단계 분석 <span class="ft ftp">유료</span></li>
+        <li>연 · 월 운세 <span class="ft ftp">유료</span></li>
+        <li>사주 맥락 연결 <span class="ft ftp">유료</span></li>
+        <li>AI 심층 프롬프트 <span class="ft ftp">유료</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+<hr class="divr">
+
+<!-- CONCEPT -->
+<section class="cbg" id="concept">
+  <div class="secw" style="padding-top:0;padding-bottom:0;">
+    <p class="slbl">개념 이해</p>
+    <h2 class="stit">서비스를 제대로 쓰기 위한 최소한의 지식</h2>
+    <div class="cgrid">
+      <div class="cc" onclick="openConcept(0)"><div class="ccnum">01</div><h3>주역이란 무엇인가</h3><p>미래 예언서가 아닌 변화의 법칙을 담은 철학서. 음양과 64괘의 세계.</p></div>
+      <div class="cc" onclick="openConcept(1)"><div class="ccnum">02</div><h3>점을 치는 원리</h3><p>동전 던지기가 단순한 우연이 아닌 이유. 칼 융의 동시성 이론과 천인감응.</p></div>
+      <div class="cc" onclick="openConcept(2)"><div class="ccnum">03</div><h3>괘를 읽는 법</h3><p>본괘와 동효, 지괘의 관계. 결과를 내 상황에 어떻게 적용하는가.</p></div>
+      <div class="cc" onclick="openConcept(3)"><div class="ccnum">04</div><h3>사주와 주역의 차이</h3><p>정해진 운명을 보는 사주팔자 vs 지금 이 순간의 형세를 읽는 주역점.</p></div>
+      <div class="cc" onclick="openConcept(4)"><div class="ccnum">05</div><h3>AI 프롬프트 사용법</h3><p>다운로드한 프롬프트를 ChatGPT · Claude · Gemini에서 활용하는 방법.</p></div>
+      <div class="cc" onclick="openConcept(5)"><div class="ccnum">06</div><h3>올바른 마음가짐</h3><p>점을 치기 전 알아야 할 것. 욕심과 기(氣), 처세술로서의 주역.</p></div>
+    </div>
+  </div>
+</section>
+<hr class="divr">
+
+<!-- PRICING -->
+<section class="secw" id="pricing">
+  <p class="slbl" style="text-align:center;">요금제</p>
+  <h2 class="stit" style="text-align:center;">나에게 맞는 방식으로</h2>
+  <div class="pgrid">
+    <div class="pc">
+      <p class="pplan">무료</p>
+      <p class="pprice">0원</p>
+      <p class="punit">하루 3회 제공</p>
+      <ul class="pfeat">
+        <li>즉석 점괘 하루 3회</li>
+        <li>괘명 + 괘사 + 행동 지침</li>
+        <li>오늘의 일일 운세</li>
+        <li>개념 콘텐츠 전체</li>
+      </ul>
+      <button class="btnplan" onclick="startDiv('free')">무료로 시작</button>
+    </div>
+    <div class="pc feat">
+      <p class="pplan">충전형</p>
+      <p class="pprice">5,000원~</p>
+      <p class="punit">충전 금액만큼 횟수 제공</p>
+      <ul class="pfeat">
+        <li>동효 · 효사 · 지괘 해석</li>
+        <li>AI 해설 프롬프트 복사</li>
+        <li>점괘 기록 보관 30일</li>
+        <li>5,000원 = 10회</li>
+        <li>10,000원 = 25회</li>
+      </ul>
+      <button class="btnplan" onclick="openMo('payMo');setPayType('charge')">충전하기</button>
+    </div>
+    <div class="pc">
+      <p class="pplan">구독형</p>
+      <p class="pprice">19,900원</p>
+      <p class="punit">월 정액 / 전 기능 무제한</p>
+      <ul class="pfeat">
+        <li>모든 기능 무제한</li>
+        <li>사주 기반 정밀 점괘</li>
+        <li>연 · 월 운세</li>
+        <li>인생 본괘 + 육룡 분석</li>
+        <li>점괘 기록 전체 보관</li>
+      </ul>
+      <button class="btnplan" onclick="openMo('payMo');setPayType('subscribe')">구독 신청</button>
+    </div>
+  </div>
+</section>
+
+<footer style="background:var(--ink);color:#7a6040;text-align:center;padding:32px 24px;font-size:12px;line-height:2;">
+  <strong style="color:var(--gold);">역易</strong> — 주역 점괘 서비스<br>
+  문의 · 입금 확인: admin@yeokeasy.kr<br>
+  주역의 지혜는 미래를 보여주지 않습니다. 지금 어디에 서 있는지를 보여줄 뿐입니다.
+</footer>
+
+<!-- ═══ 동전 던지기 모달 ═══ -->
+<div class="mo" id="coinMo">
+  <div class="md">
+    <button class="mdx" onclick="closeMo('coinMo')">✕</button>
+    <!-- step1 -->
+    <div class="ms on" id="cs1">
+      <div class="prog"><div class="progf" style="width:20%"></div></div>
+      <p class="moeye">첫 번째 단계</p>
+      <h2 class="motit">무엇을 여쭙겠습니까</h2>
+      <p class="modesc">지금 마음속에 가장 간절한 고민을 적어주세요.</p>
+      <textarea class="qinp" id="userQ" placeholder="예) 지금 이직을 고민하고 있습니다. 이 결정이 옳은 방향인지, 어떤 태도로 임해야 할지 알고 싶습니다."></textarea>
+      <p class="qhint">※ '부자가 될까요?' 보다 '지금 내 태도가 올바른가요?'가 더 나은 질문입니다</p>
+      <div class="fe"><button class="bp" onclick="goCS(2)">다음 →</button></div>
+    </div>
+    <!-- step2 -->
+    <div class="ms" id="cs2">
+      <div class="prog"><div class="progf" style="width:40%"></div></div>
+      <p class="moeye">두 번째 단계</p>
+      <h2 class="motit">마음을 가다듬으십시오</h2>
+      <p class="modesc">눈을 잠시 감고 질문을 떠올리십시오. 욕심과 불안을 내려놓으십시오.</p>
+      <div style="text-align:center;padding:16px 0;">
+        <div class="breathc">호흡</div>
+        <p style="font-size:12px;color:var(--ink3);letter-spacing:1px;">원이 커질 때 들이쉬고, 작아질 때 내쉬십시오</p>
+      </div>
+      <div class="infobox" style="margin-bottom:20px;">
+        <strong>동전 준비:</strong> 동일한 동전 3개를 꺼내십시오.<br>
+        앞면(그림·숫자면) = 양(陽) 3점 &nbsp;/&nbsp; 뒷면(발행연도면) = 음(陰) 2점
+      </div>
+      <div class="tabrow">
+        <button class="ctab on" id="tabR" onclick="setTMode('real')">실제 동전으로 (권장)</button>
+        <button class="ctab" id="tabS" onclick="setTMode('sim')">화면 시뮬레이션</button>
+      </div>
+      <div class="fe">
+        <button class="bs" onclick="goCS(1)">← 이전</button>
+        <button class="bp" onclick="goCS(3)">준비됐습니다 →</button>
+      </div>
+    </div>
+    <!-- step3 -->
+    <div class="ms" id="cs3">
+      <div class="prog"><div class="progf" style="width:65%"></div></div>
+      <p class="moeye">세 번째 단계</p>
+      <h2 class="motit">동전을 던지십시오</h2>
+      <p class="modesc" style="margin-bottom:16px;">밑에서부터 위로 6번 던져 효(爻)를 쌓습니다. 질문을 마음에 품은 채 던지십시오.</p>
+      <div id="realMode"><div id="manualRows"></div></div>
+      <div id="simMode" style="display:none;">
+        <div class="throwa">
+          <p class="throwcnt" id="throwCntTxt">1효 / 6효 — 동전을 던지십시오</p>
+          <div class="coinsrow">
+            <div class="coin" id="c1">○</div>
+            <div class="coin" id="c2">○</div>
+            <div class="coin" id="c3">○</div>
+          </div>
+          <button class="btnthrow" id="throwBtn" onclick="throwSim()">동전 던지기</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:20px;margin-top:16px;">
+        <div class="yaow" id="yaow">
+          <div class="yaol" id="yl6"><span class="yaolbl">6</span><div class="yaoseg" style="background:var(--paper3);width:100%;opacity:.3"></div></div>
+          <div class="yaol" id="yl5"><span class="yaolbl">5</span><div class="yaoseg" style="background:var(--paper3);width:100%;opacity:.3"></div></div>
+          <div class="yaol" id="yl4"><span class="yaolbl">4</span><div class="yaoseg" style="background:var(--paper3);width:100%;opacity:.3"></div></div>
+          <div class="yaol" id="yl3"><span class="yaolbl">3</span><div class="yaoseg" style="background:var(--paper3);width:100%;opacity:.3"></div></div>
+          <div class="yaol" id="yl2"><span class="yaolbl">2</span><div class="yaoseg" style="background:var(--paper3);width:100%;opacity:.3"></div></div>
+          <div class="yaol" id="yl1"><span class="yaolbl">1</span><div class="yaoseg" style="background:var(--paper3);width:100%;opacity:.3"></div></div>
+        </div>
+        <div style="flex:1;">
+          <p style="font-size:11px;color:var(--ink3);line-height:1.9;">
+            <strong style="color:var(--ink);">점수표</strong><br>
+            6점 (뒤+뒤+뒤) → 노음 ╌╌ (변함)<br>
+            7점 (앞+앞+뒤) → 소양 ——<br>
+            8점 (앞+뒤+뒤) → 소음 ╌╌<br>
+            9점 (앞+앞+앞) → 노양 —— (변함)
+          </p>
+          <p id="throwStatus" style="font-size:12px;color:var(--gold);min-height:20px;margin-top:8px;"></p>
+        </div>
+      </div>
+      <div class="fe" style="margin-top:20px;">
+        <button class="bs" onclick="goCS(2)">← 이전</button>
+        <button class="bp" id="seeResBtn" onclick="goCS(4)" disabled>결과 보기 →</button>
+      </div>
+    </div>
+    <!-- step4 -->
+    <div class="ms" id="cs4">
+      <div class="prog"><div class="progf" style="width:100%"></div></div>
+      <p class="moeye">점괘 결과</p>
+      <div id="resultArea"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 사주 입력 모달 ═══ -->
+<div class="mo" id="sajuMo">
+  <div class="md" style="max-width:480px;">
+    <button class="mdx" onclick="closeMo('sajuMo')">✕</button>
+    <p class="moeye">사주 기반 점괘</p>
+    <h2 class="motit">생년월일시를 입력하십시오</h2>
+    <p class="modesc">입력하신 사주 정보는 안전하게 저장되며, 이후에는 다시 입력하지 않아도 됩니다.</p>
+    <div class="sajugrid">
+      <div><label class="inplbl">생년 (예: 1985)</label><input class="inp" id="sYear" type="number" placeholder="1985" min="1900" max="2010"></div>
+      <div><label class="inplbl">생월 (1~12)</label><input class="inp" id="sMonth" type="number" placeholder="3" min="1" max="12"></div>
+      <div><label class="inplbl">생일 (1~31)</label><input class="inp" id="sDay" type="number" placeholder="15" min="1" max="31"></div>
+      <div>
+        <label class="inplbl">생시</label>
+        <select class="inp" id="sHour">
+          <option value="">-- 선택 --</option>
+          <option value="자시">자시(子時) 23~01시</option>
+          <option value="축시">축시(丑時) 01~03시</option>
+          <option value="인시">인시(寅時) 03~05시</option>
+          <option value="묘시">묘시(卯時) 05~07시</option>
+          <option value="진시">진시(辰時) 07~09시</option>
+          <option value="사시">사시(巳時) 09~11시</option>
+          <option value="오시">오시(午時) 11~13시</option>
+          <option value="미시">미시(未時) 13~15시</option>
+          <option value="신시">신시(申時) 15~17시</option>
+          <option value="유시">유시(酉時) 17~19시</option>
+          <option value="술시">술시(戌時) 19~21시</option>
+          <option value="해시">해시(亥時) 21~23시</option>
+          <option value="모름">모름</option>
+        </select>
+      </div>
+    </div>
+    <div class="fe">
+      <button class="bs" onclick="closeMo('sajuMo')">취소</button>
+      <button class="bp" onclick="saveSaju()">저장 후 시작 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 개념 모달 ═══ -->
+<div class="mo" id="conceptMo">
+  <div class="md" style="max-width:680px;">
+    <button class="mdx" onclick="closeMo('conceptMo')">✕</button>
+    <p class="moeye" id="cEye"></p>
+    <h2 class="motit" id="cTit"></h2>
+    <div class="ccbody" style="margin-top:16px;" id="cBody"></div>
+  </div>
+</div>
+
+<!-- ═══ 결제 모달 ═══ -->
+<div class="mo" id="payMo">
+  <div class="md" style="max-width:500px;">
+    <button class="mdx" onclick="closeMo('payMo')">✕</button>
+    <p class="moeye">무통장 입금 신청</p>
+    <h2 class="motit" id="payTit">충전하기</h2>
+    <label class="inplbl">이름</label><input class="inp" id="payName" placeholder="홍길동">
+    <label class="inplbl">전화번호</label><input class="inp" id="payPhone" placeholder="010-0000-0000">
+    <label class="inplbl">이메일</label><input class="inp" id="payEmail" placeholder="example@email.com">
+    <label class="inplbl">상품 선택</label>
+    <select class="inp" id="payProd">
+      <option value="">-- 선택하세요 --</option>
+      <option value="charge5">충전 5,000원 (10회)</option>
+      <option value="charge10">충전 10,000원 (25회)</option>
+      <option value="charge30">충전 30,000원 (80회)</option>
+      <option value="sub_month">월 구독 19,900원</option>
+      <option value="sub_year">연 구독 179,000원 (약 25% 할인)</option>
+    </select>
+    <div class="bankbox">
+      <strong>입금 계좌 안내</strong><br>
+      은행명: 카카오뱅크 &nbsp;|&nbsp; 예금주: 역易 서비스<br>
+      계좌번호: 3333-00-0000000<br><br>
+      입금자명: <strong>이름+전화번호 뒤 4자리</strong> (예: 홍길동1234)<br>
+      <span style="color:var(--red);font-size:12px;">입금 확인 후 영업일 기준 1~2시간 내 처리됩니다.</span>
+    </div>
+    <button class="bp" style="width:100%;text-align:center;" onclick="submitPay()">신청 완료</button>
+  </div>
+</div>
+
+<!-- ═══ 로그인 모달 ═══ -->
+<div class="mo" id="loginMo">
+  <div class="md" style="max-width:420px;">
+    <button class="mdx" onclick="closeMo('loginMo')">✕</button>
+    <div id="loginView">
+      <p class="moeye">회원</p>
+      <h2 class="motit">로그인</h2>
+      <p class="modesc">점괘 기록 · 사주 저장 · 유료 서비스를 이용하려면 로그인하세요.</p>
+      <label class="inplbl">이메일</label><input class="inp" id="lEmail" type="email" placeholder="example@email.com">
+      <label class="inplbl">비밀번호</label><input class="inp" id="lPw" type="password" placeholder="••••••••">
+      <div class="fe">
+        <button class="bs" onclick="showSU()">회원가입</button>
+        <button class="bp" onclick="doLogin()">로그인</button>
+      </div>
+      <p style="text-align:center;font-size:12px;color:var(--ink3);margin-top:16px;">
+        <a href="#" onclick="doReset()" style="color:var(--gold);">비밀번호 재설정</a>
+      </p>
+    </div>
+    <div id="signupView" style="display:none;">
+      <p class="moeye">회원가입</p>
+      <h2 class="motit">새 계정 만들기</h2>
+      <label class="inplbl">이름</label><input class="inp" id="sName" placeholder="홍길동">
+      <label class="inplbl">이메일</label><input class="inp" id="sEmail" type="email" placeholder="example@email.com">
+      <label class="inplbl">비밀번호 (6자 이상)</label><input class="inp" id="sPw" type="password" placeholder="••••••••">
+      <div class="fe">
+        <button class="bs" onclick="showLI()">로그인으로</button>
+        <button class="bp" onclick="doSignup()">가입하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══ Firebase 초기화 ══ */
+const FC = {
+  apiKey:"AIzaSyCdJqYpn2oxiCojLjL5AEpulqkvlC_fz_Q",
+  authDomain:"change-time-a7567.firebaseapp.com",
+  databaseURL:"https://change-time-a7567-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"change-time-a7567",
+  storageBucket:"change-time-a7567.firebasestorage.app",
+  messagingSenderId:"732466674309",
+  appId:"1:732466674309:web:3311462f3466f4ab9707ec"
+};
+firebase.initializeApp(FC);
+const auth = firebase.auth();
+const db   = firebase.database();
+
+let CU = null; // currentUser
+let UP = null; // userProfile
+
+auth.onAuthStateChanged(async u => {
+  CU = u;
+  if(u){
+    document.getElementById('navLoginBtn').style.display='none';
+    document.getElementById('navUser').style.display='flex';
+    document.getElementById('navName').textContent = u.displayName || u.email.split('@')[0];
+    await loadUP(u.uid);
+    closeMo('loginMo');
+  } else {
+    document.getElementById('navLoginBtn').style.display='inline-block';
+    document.getElementById('navUser').style.display='none';
+    UP=null;
+  }
+});
+
+async function loadUP(uid){
+  const s = await db.ref('users/'+uid).once('value');
+  UP = s.val()||{};
+  updateCnt();
+}
+function updateCnt(){
+  const sub = UP?.subscribed||false;
+  const cnt = UP?.remainCount||0;
+  document.getElementById('navCnt').textContent = sub?'무제한':cnt+'회';
+}
+
+/* ══ 인증 ══ */
+function showSU(){document.getElementById('loginView').style.display='none';document.getElementById('signupView').style.display='block';}
+function showLI(){document.getElementById('signupView').style.display='none';document.getElementById('loginView').style.display='block';}
+
+async function doLogin(){
+  const e=document.getElementById('lEmail').value.trim();
+  const p=document.getElementById('lPw').value;
+  if(!e||!p) return toast('이메일과 비밀번호를 입력하세요.');
+  try{ await auth.signInWithEmailAndPassword(e,p); toast('로그인되었습니다.'); }
+  catch(err){ toast('로그인 실패: '+(err.code==='auth/wrong-password'?'비밀번호 오류':err.message)); }
+}
+
+async function doSignup(){
+  const n=document.getElementById('sName').value.trim();
+  const e=document.getElementById('sEmail').value.trim();
+  const p=document.getElementById('sPw').value;
+  if(!n||!e||!p) return toast('모든 항목을 입력하세요.');
+  try{
+    const c=await auth.createUserWithEmailAndPassword(e,p);
+    await c.user.updateProfile({displayName:n});
+    await db.ref('users/'+c.user.uid).set({
+      name:n, email:e, role:'user',
+      remainCount:3, subscribed:false,
+      freeUsedToday:0, freeResetDate:todayStr(),
+      createdAt:Date.now()
+    });
+    toast('가입 완료! 환영합니다, '+n+'님.');
+  } catch(err){ toast('가입 실패: '+err.message); }
+}
+
+async function doReset(){
+  const e=document.getElementById('lEmail').value.trim();
+  if(!e) return toast('이메일을 먼저 입력하세요.');
+  await auth.sendPasswordResetEmail(e);
+  toast('재설정 이메일을 발송했습니다.');
+}
+
+async function doLogout(){ await auth.signOut(); toast('로그아웃되었습니다.'); }
+
+/* ══ 64괘 전체 데이터 ══ */
+const G64=[
+  {id:1,name:"중천건",hanja:"重天乾",meaning:"하늘",keyword:"강건함",desc:"하늘의 기운이 가득합니다. 강건하고 굳세게 나아갈 때입니다. 다만 극에 달하면 기우는 법을 잊지 마십시오.",action:"자신의 능력을 믿고 당당히 나아가십시오. 정점에서의 겸손이 다음 상승을 만듭니다."},
+  {id:2,name:"중지곤",hanja:"重地坤",meaning:"땅",keyword:"유순함",desc:"대지의 기운입니다. 스스로 앞서지 말고 뒤를 따르십시오. 부드러움이 강함을 이깁니다.",action:"지금은 주도보다 협력과 포용을 택하십시오. 묵묵히 맡은 바를 다하면 반드시 결실이 옵니다."},
+  {id:3,name:"수뢰둔",hanja:"水雷屯",meaning:"풀",keyword:"어려운 시작",desc:"새싹이 단단한 땅을 뚫고 나오려는 시기입니다. 시작은 힘들지만 성장의 필연입니다.",action:"억지로 밀고 나가지 마십시오. 묵묵히 실력을 쌓고 조력자를 구하십시오. 기다림이 지혜입니다."},
+  {id:4,name:"산수몽",hanja:"山水蒙",meaning:"산 아래 물",keyword:"배움",desc:"어린 싹이 자라나는 때입니다. 모르는 것을 부끄러워 말고 스승을 찾아 배우십시오.",action:"지금은 배울 때입니다. 아는 척하지 말고 먼저 배움을 청하십시오."},
+  {id:5,name:"수천수",hanja:"水天需",meaning:"구름 위 비",keyword:"기다림",desc:"저 멀리서 기회가 오고 있습니다. 조급해하지 말고 꼿꼿하게 기다리십시오.",action:"지금 당장 결과를 내려 하지 마십시오. 때가 되면 반드시 기회가 옵니다."},
+  {id:6,name:"천수송",hanja:"天水訟",meaning:"하늘 위 물",keyword:"다툼",desc:"다툼과 갈등의 형세입니다. 끝까지 싸워 이기려 하면 흉합니다.",action:"지금은 소송이나 분쟁을 피하십시오. 반만 이기고 물러서는 것이 지혜입니다."},
+  {id:7,name:"지수사",hanja:"地水師",meaning:"땅 속 물",keyword:"통솔",desc:"군대를 이끄는 형세입니다. 강직한 지도자가 정의롭게 이끌면 길합니다.",action:"원칙과 규율이 필요한 때입니다. 각자의 역할을 명확히 나누어 이끄십시오."},
+  {id:8,name:"수지비",hanja:"水地比",meaning:"물 위 땅",keyword:"친밀",desc:"사람들과 가까워지고 돕는 형세입니다. 진심 어린 유대가 행운을 부릅니다.",action:"지금은 혼자보다 함께가 힘이 셉니다. 진심으로 돕고 의지하십시오."},
+  {id:9,name:"풍천소축",hanja:"風天小畜",meaning:"바람 위 하늘",keyword:"소축",desc:"작은 것을 모아 큰 것을 이루는 때입니다. 서두르지 말고 조금씩 쌓아가십시오.",action:"작은 것 하나하나에 충실하십시오. 작은 노력이 쌓여 큰 결실을 맺습니다."},
+  {id:10,name:"천택리",hanja:"天澤履",meaning:"하늘 아래 연못",keyword:"조심스러운 발걸음",desc:"호랑이 꼬리를 밟는 것처럼 위험한 상황입니다. 예의 바르게 조심하면 화를 면합니다.",action:"매우 조심스럽게 행동하십시오. 예의를 갖추고 순서와 격식을 지키면 위험을 넘깁니다."},
+  {id:11,name:"지천태",hanja:"地天泰",meaning:"땅 위 하늘",keyword:"평화",desc:"하늘과 땅이 소통하는 번영과 평화의 때입니다. 모든 일이 순조롭습니다.",action:"적극적으로 나아갈 때입니다. 다만 평화로울수록 미래를 대비하십시오."},
+  {id:12,name:"천지비",hanja:"天地否",meaning:"하늘 위 땅",keyword:"막힘",desc:"하늘과 땅이 막혀 소통이 되지 않는 형세입니다. 정체와 어려움의 시기입니다.",action:"억지로 추진하지 마십시오. 내실을 다지며 때를 기다리십시오."},
+  {id:13,name:"천화동인",hanja:"天火同人",meaning:"하늘 위 불",keyword:"동지",desc:"뜻이 맞는 사람들과 함께하는 형세입니다. 공개적이고 정의로운 협력이 길합니다.",action:"혼자가 아닌 동지들과 함께하십시오. 공동의 목표를 앞세우십시오."},
+  {id:14,name:"화천대유",hanja:"火天大有",meaning:"불 위 하늘",keyword:"크게 소유",desc:"크게 소유하는 풍요의 때입니다. 하늘의 뜻에 따라 정의롭게 베풀면 더욱 크게 됩니다.",action:"지금의 풍요에 감사하고 주변과 나누십시오. 덕으로 다스리면 더 큰 번영이 옵니다."},
+  {id:15,name:"지산겸",hanja:"地山謙",meaning:"산 아래 땅",keyword:"겸손",desc:"산이 땅 아래에 있는 형세입니다. 겸손함이 모든 것을 이깁니다.",action:"지금은 낮추고 비우십시오. 겸손한 자에게 하늘은 더 큰 것을 채워줍니다."},
+  {id:16,name:"뇌지예",hanja:"雷地豫",meaning:"땅 위 우레",keyword:"기쁨과 대비",desc:"우레가 땅에서 솟구치는 생동의 형세입니다. 기쁨으로 움직이되 미리 대비하십시오.",action:"즐겁고 활기차게 나아갈 때입니다. 흥겨움에 도취되지 말고 준비를 게을리하지 마십시오."},
+  {id:17,name:"택뢰수",hanja:"澤雷隨",meaning:"연못 위 우레",keyword:"순응",desc:"때를 따르고 순응하는 형세입니다. 강을 거슬러 오르지 말고 흐름에 맡기십시오.",action:"고집을 내려놓고 상황의 흐름에 따르십시오. 유연함이 승리를 만듭니다."},
+  {id:18,name:"산풍고",hanja:"山風蠱",meaning:"산 아래 바람",keyword:"혁신",desc:"부패가 곪아 있는 형세입니다. 과감히 혁신하고 바로잡아야 합니다.",action:"쌓인 문제를 더 이상 미루지 마십시오. 원인을 파악하고 과감히 개혁하면 크게 길합니다."},
+  {id:19,name:"지택임",hanja:"地澤臨",meaning:"땅 위 연못",keyword:"다가감",desc:"위에서 아래를 돌보는 형세입니다. 진심으로 다가가고 돌보는 것이 길합니다.",action:"적극적으로 다가가십시오. 진심 어린 관심과 돌봄이 신뢰를 만듭니다."},
+  {id:20,name:"풍지관",hanja:"風地觀",meaning:"바람 위 땅",keyword:"관찰",desc:"높은 곳에서 세상을 내려다보는 형세입니다. 먼저 잘 살펴보고 믿음을 주십시오.",action:"행동보다 관찰이 먼저입니다. 상황을 충분히 파악한 후 신중하게 움직이십시오."},
+  {id:21,name:"화뢰서합",hanja:"火雷噬嗑",meaning:"불 위 우레",keyword:"결단",desc:"입안의 장애물을 씹어 없애는 형세입니다. 방해하는 것을 과감히 제거해야 합니다.",action:"지금 가로막는 장애물을 명확히 파악하고 단호하게 해결하십시오."},
+  {id:22,name:"산화비",hanja:"山火賁",meaning:"산 아래 불",keyword:"꾸밈",desc:"아름답게 꾸미는 형세입니다. 외양을 갖추되 실질을 잃지 마십시오.",action:"형식과 예의를 갖추는 것이 중요합니다. 겉모습에만 치중하지 말고 내실도 다지십시오."},
+  {id:23,name:"산지박",hanja:"山地剝",meaning:"산 아래 땅",keyword:"무너짐",desc:"깎이고 무너지는 형세입니다. 억지로 나아가면 더 크게 손실을 입습니다.",action:"지금은 물러서야 할 때입니다. 작은 것을 지키며 때를 기다리십시오."},
+  {id:24,name:"지뢰복",hanja:"地雷復",meaning:"땅 아래 우레",keyword:"회복",desc:"양의 기운이 돌아오는 회복의 형세입니다. 새로운 시작의 싹이 트고 있습니다.",action:"조용히 쉬며 힘을 비축하십시오. 서두르지 않아도 자연히 좋아집니다."},
+  {id:25,name:"천뢰무망",hanja:"天雷無妄",meaning:"하늘 위 우레",keyword:"진실",desc:"하늘의 뜻에 따른 진실한 행동의 형세입니다. 거짓이나 억측 없이 자연스럽게 행동하십시오.",action:"욕심이나 계략 없이 진실하게 행동하십시오. 하늘의 뜻에 어긋나는 일은 반드시 화를 부릅니다."},
+  {id:26,name:"산천대축",hanja:"山天大畜",meaning:"하늘 아래 산",keyword:"큰 축적",desc:"덕과 지혜를 크게 축적하는 형세입니다. 때를 기다리며 크게 쌓아야 합니다.",action:"나아가기보다 배우고 쌓는 시기입니다. 더 많이 공부하고 준비할수록 미래가 빛납니다."},
+  {id:27,name:"산뢰이",hanja:"山雷頤",meaning:"산 아래 우레",keyword:"기름",desc:"입을 바르게 기르는 형세입니다. 무엇을 먹고 무슨 말을 하는지가 운명을 결정합니다.",action:"몸과 마음을 바르게 기르십시오. 말을 삼가고 좋은 것을 가까이 하십시오."},
+  {id:28,name:"택풍대과",hanja:"澤風大過",meaning:"연못 위 바람",keyword:"큰 과실",desc:"감당하기 힘든 위기의 형세입니다. 대들보가 휘어지는 것처럼 극한의 상황입니다.",action:"비상한 결단이 필요합니다. 혼자 감당하려 하지 말고 과감히 도움을 구하십시오."},
+  {id:29,name:"중수감",hanja:"重水坎",meaning:"물 거듭",keyword:"험난함",desc:"겹겹이 쌓인 험난함의 형세입니다. 구덩이가 거듭됩니다.",action:"포기하지 마십시오. 험난함 속에서도 믿음을 잃지 않으면 반드시 빠져나오는 길이 생깁니다."},
+  {id:30,name:"중화리",hanja:"重火離",meaning:"불 거듭",keyword:"밝음",desc:"빛과 지혜가 거듭하는 형세입니다. 올바른 것에 붙어 빛나십시오.",action:"지혜롭게 판단하고 올바른 것을 따르십시오. 밝음이 어둠을 이깁니다."},
+  {id:31,name:"택산함",hanja:"澤山咸",meaning:"연못 아래 산",keyword:"감응",desc:"느낌과 소통의 형세입니다. 순수한 감응이 길합니다.",action:"진심으로 느끼고 소통하십시오. 계산 없는 순수한 마음이 상대를 움직입니다."},
+  {id:32,name:"뇌풍항",hanja:"雷風恒",meaning:"우레 아래 바람",keyword:"항상함",desc:"지속성과 일관성의 형세입니다. 오래도록 변하지 않는 것이 길합니다.",action:"지금 하는 일을 꾸준히 지속하십시오. 자주 바꾸지 말고 한 길을 걸어가십시오."},
+  {id:33,name:"천산둔",hanja:"天山遯",meaning:"하늘 아래 산",keyword:"물러남",desc:"물러나고 은둔하는 형세입니다. 때로는 후퇴가 최선입니다.",action:"물러나는 것이 지혜입니다. 작은 것을 챙기면서 세력을 보존하십시오."},
+  {id:34,name:"뇌천대장",hanja:"雷天大壯",meaning:"우레 아래 하늘",keyword:"크게 굳셈",desc:"크게 굳세고 강한 형세입니다. 그러나 힘만 믿으면 꺾입니다.",action:"강한 힘이 있을 때일수록 예의와 도리를 지키십시오. 힘과 덕을 함께 갖출 때 비로소 대장입니다."},
+  {id:35,name:"화지진",hanja:"火地晉",meaning:"땅 위 불",keyword:"나아감",desc:"태양이 떠오르는 진취적인 형세입니다. 밝게 나아갈 때입니다.",action:"적극적으로 자신을 드러내고 나아가십시오. 밝고 당당하게 전진할 때입니다."},
+  {id:36,name:"지화명이",hanja:"地火明夷",meaning:"땅 아래 불",keyword:"지혜 감춤",desc:"빛이 땅 아래 감춰진 어두운 형세입니다. 지혜를 감추고 때를 기다리십시오.",action:"능력을 드러내지 말고 조용히 인내하십시오. 어두운 시기일수록 내면을 더욱 밝게 하십시오."},
+  {id:37,name:"풍화가인",hanja:"風火家人",meaning:"불 아래 바람",keyword:"가정",desc:"집안과 가족의 형세입니다. 각자의 역할을 지키면 길합니다.",action:"가까운 사람들과의 관계를 돌아보십시오. 질서와 역할을 바로잡으면 모든 것이 안정됩니다."},
+  {id:38,name:"화택규",hanja:"火澤睽",meaning:"불 아래 연못",keyword:"어긋남",desc:"서로 어긋나고 다른 형세입니다. 큰 일은 어렵고 작은 일은 가능합니다.",action:"큰 일보다 작은 일에 집중하십시오. 다름을 인정하고 조화의 지점을 찾으십시오."},
+  {id:39,name:"수산건",hanja:"水山蹇",meaning:"물 아래 산",keyword:"험난",desc:"앞도 막히고 뒤도 막힌 극한의 험난함입니다.",action:"혼자 해결하려 하지 마십시오. 지금은 사람을 구하고 방향을 돌아볼 때입니다."},
+  {id:40,name:"뇌수해",hanja:"雷水解",meaning:"우레 아래 물",keyword:"풀림",desc:"막힌 것이 풀리는 형세입니다. 겨울이 가고 봄이 옵니다.",action:"묵은 것을 내려놓고 새롭게 출발할 때입니다. 용서하고 관용을 베풀면 더욱 크게 풀립니다."},
+  {id:41,name:"산택손",hanja:"山澤損",meaning:"산 아래 연못",keyword:"덜어냄",desc:"아래를 덜어 위를 채우는 형세입니다. 지금의 손실이 미래의 이익이 됩니다.",action:"아끼고 절약하십시오. 과도함을 줄이고 진실함으로 임하면 반드시 길합니다."},
+  {id:42,name:"풍뢰익",hanja:"風雷益",meaning:"바람 아래 우레",keyword:"더함",desc:"위를 덜어 아래에 더해주는 이로운 형세입니다. 지금은 나아가면 길합니다.",action:"베풀고 선한 일을 할 때입니다. 이로운 방향으로 과감히 나아가십시오."},
+  {id:43,name:"택천쾌",hanja:"澤天夬",meaning:"연못 아래 하늘",keyword:"결단",desc:"결단하고 쳐내는 형세입니다. 부정적인 것을 과감히 제거해야 합니다.",action:"결단해야 할 때입니다. 올바른 명분으로 당당하게 나아가십시오."},
+  {id:44,name:"천풍구",hanja:"天風姤",meaning:"하늘 아래 바람",keyword:"만남",desc:"예상치 못한 만남의 형세입니다. 음의 기운이 스며드니 경계하십시오.",action:"새로운 만남에 신중하십시오. 겉보기에 좋아 보이는 것이 해로울 수 있습니다."},
+  {id:45,name:"택지췌",hanja:"澤地萃",meaning:"연못 아래 땅",keyword:"모임",desc:"사람과 물자가 모이는 형세입니다. 진심과 예의로 임하면 큰 힘이 만들어집니다.",action:"사람들을 모으고 결속할 때입니다. 진심과 예의로 임하면 큰 힘이 만들어집니다."},
+  {id:46,name:"지풍승",hanja:"地風升",meaning:"땅 아래 나무",keyword:"오름",desc:"나무가 땅에서 자라 올라가는 형세입니다. 꾸준히 성장하면 반드시 높이 오릅니다.",action:"묵묵히 오르는 시기입니다. 서두르지 않고 한 단계씩 올라가십시오."},
+  {id:47,name:"택수곤",hanja:"澤水困",meaning:"연못 아래 물",keyword:"곤경",desc:"물이 없는 연못처럼 진이 빠진 곤경의 형세입니다.",action:"말로는 해결되지 않습니다. 행동으로 보여주십시오. 어려울수록 뜻을 굽히지 마십시오."},
+  {id:48,name:"수풍정",hanja:"水風井",meaning:"물 아래 나무",keyword:"우물",desc:"우물처럼 한결같이 나누는 형세입니다. 자신을 채워 주변에 베푸는 것이 길합니다.",action:"자신의 능력을 갈고닦아 세상에 도움이 되십시오. 한결같은 나눔이 복을 부릅니다."},
+  {id:49,name:"택화혁",hanja:"澤火革",meaning:"연못 아래 불",keyword:"혁명",desc:"변혁과 개혁의 형세입니다. 때가 무르익었을 때의 혁명은 길합니다.",action:"낡은 것을 과감히 바꿀 때입니다. 명분 없는 변혁은 오히려 해가 되니 신중하십시오."},
+  {id:50,name:"화풍정",hanja:"火風鼎",meaning:"불 아래 나무",keyword:"솥",desc:"솥으로 음식을 조리하는 새로운 그릇의 형세입니다. 새로운 시작이 가능합니다.",action:"새로운 것을 만들어낼 때입니다. 인재를 기르고 새로운 조직을 만들면 큰 성과를 냅니다."},
+  {id:51,name:"중뢰진",hanja:"重雷震",meaning:"우레 거듭",keyword:"놀람",desc:"우레가 거듭하는 충격의 형세입니다. 놀라움 속에서 각성하십시오.",action:"두려운 일이 오더라도 흔들리지 마십시오. 충격을 계기로 자신을 돌아보면 오히려 성장합니다."},
+  {id:52,name:"중산간",hanja:"重山艮",meaning:"산 거듭",keyword:"그침",desc:"산이 거듭하는 형세입니다. 멈춰야 할 때를 알고 멈추는 것이 지혜입니다.",action:"멈추십시오. 과도한 욕심과 행동을 내려놓고 고요히 자신을 바라보십시오."},
+  {id:53,name:"풍산점",hanja:"風山漸",meaning:"산 아래 나무",keyword:"점진",desc:"기러기가 차례로 나아가는 점진적인 형세입니다. 순서를 지켜 나아가면 길합니다.",action:"서두르지 마십시오. 자연의 순서처럼 하나씩 차근차근 나아가면 반드시 목적에 이릅니다."},
+  {id:54,name:"뇌택귀매",hanja:"雷澤歸妹",meaning:"우레 아래 연못",keyword:"귀매",desc:"분수와 역할을 지켜야 하는 형세입니다. 주제를 넘으면 흉합니다.",action:"자신의 위치와 역할을 분명히 하십시오. 처음에 신중하면 나중에 후회가 없습니다."},
+  {id:55,name:"뇌화풍",hanja:"雷火豊",meaning:"우레 아래 불",keyword:"풍성함",desc:"풍성하고 빛나는 최전성기의 형세입니다. 지금이 정점입니다.",action:"지금의 풍요를 즐기되, 가득 차면 기우는 법을 잊지 마십시오. 베풀고 나누면 더 오래 지속됩니다."},
+  {id:56,name:"화산려",hanja:"火山旅",meaning:"산 아래 불",keyword:"나그네",desc:"낯선 곳에 있는 나그네의 형세입니다. 낯선 땅에서는 분수를 지켜야 합니다.",action:"낯선 환경에서 처신을 조심하십시오. 가볍게 다투거나 큰 일을 벌이지 마십시오."},
+  {id:57,name:"중풍손",hanja:"重風巽",meaning:"바람 거듭",keyword:"겸손",desc:"바람처럼 부드럽게 스며드는 겸손의 형세입니다.",action:"강하게 밀어붙이지 말고 부드럽게 침투하십시오. 겸손하게 따르는 것이 결국 더 멀리 갑니다."},
+  {id:58,name:"중택태",hanja:"重澤兌",meaning:"연못 거듭",keyword:"기쁨",desc:"기쁨과 즐거움이 넘치는 형세입니다. 진심 어린 소통이 모든 것을 부드럽게 합니다.",action:"기쁘게 소통하십시오. 진심 어린 기쁨이 사람을 모으고 일을 이루게 합니다."},
+  {id:59,name:"풍수환",hanja:"風水渙",meaning:"바람 아래 물",keyword:"흩어짐",desc:"얼음이 녹아 흩어지는 형세입니다. 막힌 것이 풀리고 위기가 극복됩니다.",action:"굳어진 것들을 녹여 흩어지게 하십시오. 공동체의 힘을 빌리면 더욱 효과적입니다."},
+  {id:60,name:"수택절",hanja:"水澤節",meaning:"연못 아래 물",keyword:"절제",desc:"절제와 기준을 세우는 형세입니다. 알맞은 절도가 행복을 만듭니다.",action:"과함을 줄이고 기준을 세우십시오. 지나친 절제는 오히려 해가 되니 균형을 찾으십시오."},
+  {id:61,name:"풍택중부",hanja:"風澤中孚",meaning:"바람 아래 연못",keyword:"믿음",desc:"진실한 믿음의 형세입니다. 마음속 진실함이 모든 것을 움직입니다.",action:"진심으로 임하십시오. 계략이나 거짓 없이 진실한 마음이 상대의 마음을 열고 일을 이룹니다."},
+  {id:62,name:"뇌산소과",hanja:"雷山小過",meaning:"우레 아래 산",keyword:"작게 지나침",desc:"조금 지나치는 형세입니다. 큰 일은 어렵고 작은 일은 가능합니다.",action:"큰 것을 바라지 마십시오. 작고 낮은 것에 집중하고 겸손하게 임해야 할 때입니다."},
+  {id:63,name:"수화기제",hanja:"水火旣濟",meaning:"물 아래 불",keyword:"완성",desc:"이미 건넌 완성의 형세입니다. 모든 것이 제자리를 찾았지만 경계해야 합니다.",action:"완성에 방심하지 마십시오. 끝까지 긴장을 늦추지 마십시오."},
+  {id:64,name:"화수미제",hanja:"火水未濟",meaning:"불 아래 물",keyword:"미완성",desc:"아직 건너지 못한 미완성의 형세입니다. 혼란 속에서도 새로운 시작이 준비됩니다.",action:"포기하지 말고 신중하게 다음 발걸음을 준비하십시오. 새로운 시작이 옵니다."}
+];
+
+function getGua(key){
+  // 이진 키 → 괘 번호 매핑 (선천팔괘 기준 간이 계산)
+  const upper = key.slice(3); // 상괘 (4~6효)
+  const lower = key.slice(0,3); // 하괘 (1~3효)
+  const triMap={'111':0,'011':1,'101':2,'001':3,'110':4,'010':5,'100':6,'000':7};
+  const u=triMap[upper]??0, l=triMap[lower]??0;
+  const idx=(u*8+l)%64;
+  return G64[idx]||G64[2];
+}
+
+/* ══ 오늘의 괘 ══ */
+function initDaily(){
+  const n=new Date();
+  const ds=`${n.getFullYear()}년 ${n.getMonth()+1}월 ${n.getDate()}일`;
+  document.getElementById('dailyTitle').textContent=ds+'의 형세';
+  const seed=(n.getFullYear()*10000+(n.getMonth()+1)*100+n.getDate())%64;
+  const g=G64[seed];
+  document.getElementById('dName').textContent=g.name+' ('+g.hanja+')';
+  document.getElementById('dHj').textContent=g.hanja+' · '+g.keyword;
+  document.getElementById('dDesc').textContent=g.desc;
+  document.getElementById('dKws').innerHTML='<span class="kw">'+g.keyword+'</span>';
+}
+initDaily();
+
+/* ══ 모달 유틸 ══ */
+function openMo(id){document.getElementById(id).classList.add('on');}
+function closeMo(id){document.getElementById(id).classList.remove('on');}
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on');}));
+
+/* ══ 점괘 시작 ══ */
+let divType='free';
+let throws=[], simIdx=0, tMode='real';
+
+function startDiv(type){
+  divType=type;
+  if(type==='paid'){
+    if(!CU){openMo('loginMo');toast('유료 서비스는 로그인이 필요합니다.');return;}
+    if(!(UP?.subscribed||(UP?.remainCount>0))){openMo('payMo');setPayType('charge');toast('이용권이 없습니다. 충전 후 이용하세요.');return;}
+    if(UP?.saju){startCoin();}else{openMo('sajuMo');}
+    return;
+  }
+  // 무료 횟수 체크
+  if(CU){
+    const today=todayStr();
+    if((UP?.freeResetDate||'')!==today){
+      db.ref('users/'+CU.uid).update({freeUsedToday:0,freeResetDate:today});
+      if(UP){UP.freeUsedToday=0;UP.freeResetDate=today;}
+    }
+    if((UP?.freeUsedToday||0)>=3&&!UP?.subscribed){
+      toast('오늘 무료 횟수(3회)를 모두 사용했습니다.');openMo('payMo');return;
+    }
+  }
+  startCoin();
+}
+
+function startCoin(){throws=[];simIdx=0;openMo('coinMo');goCS(1);}
+
+/* ══ 단계 이동 ══ */
+function goCS(n){
+  document.querySelectorAll('.ms').forEach(s=>s.classList.remove('on'));
+  document.getElementById('cs'+n).classList.add('on');
+  if(n===3)initCS3();
+  if(n===4)showResult();
+}
+
+function setTMode(m){
+  tMode=m;
+  document.getElementById('tabR').classList.toggle('on',m==='real');
+  document.getElementById('tabS').classList.toggle('on',m==='sim');
+}
+
+function initCS3(){
+  throws=[];simIdx=0;resetYao();
+  document.getElementById('seeResBtn').disabled=true;
+  document.getElementById('throwStatus').textContent='';
+  if(tMode==='real'){
+    document.getElementById('realMode').style.display='block';
+    document.getElementById('simMode').style.display='none';
+    buildMRows();
+  }else{
+    document.getElementById('realMode').style.display='none';
+    document.getElementById('simMode').style.display='block';
+    document.getElementById('throwCntTxt').textContent='1효 / 6효 — 동전을 던지십시오';
+    document.getElementById('throwBtn').disabled=false;
+    resetCoins();
+  }
+}
+
+function buildMRows(){
+  const c=document.getElementById('manualRows');c.innerHTML='';
+  for(let i=1;i<=6;i++){
+    c.innerHTML+=`<div class="mrow"><span class="mlbl">${i}효</span>
+    <div class="mbtns">
+      <button class="mbtn" onclick="selM(${i},6,this)">뒤뒤뒤(6)</button>
+      <button class="mbtn" onclick="selM(${i},7,this)">앞앞뒤(7)</button>
+      <button class="mbtn" onclick="selM(${i},8,this)">앞뒤뒤(8)</button>
+      <button class="mbtn" onclick="selM(${i},9,this)">앞앞앞(9)</button>
+    </div>
+    <span class="mscr" id="ms${i}">—</span></div>`;
+  }
+}
+
+function selM(yao,score,btn){
+  btn.closest('.mbtns').querySelectorAll('.mbtn').forEach(b=>b.classList.remove('sf','sb'));
+  btn.classList.add(score>=7?'sf':'sb');
+  document.getElementById('ms'+yao).textContent=score+'점';
+  throws[yao-1]=score;
+  drawYao(yao,score);
+  if(throws.filter(Boolean).length===6)document.getElementById('seeResBtn').disabled=false;
+}
+
+function throwSim(){
+  if(simIdx>=6)return;
+  const r=[r2(),r2(),r2()],tot=r[0]+r[1]+r[2];
+  ['c1','c2','c3'].forEach((id,i)=>{
+    const el=document.getElementById(id);el.className='coin';
+    setTimeout(()=>{el.classList.add(r[i]===3?'front':'back');el.textContent=r[i]===3?'앞':'뒤';},i*100);
+  });
+  setTimeout(()=>{
+    simIdx++;throws[simIdx-1]=tot;drawYao(simIdx,tot);
+    const sm={6:'노음(변함)',7:'소양',8:'소음',9:'노양(변함)'};
+    document.getElementById('throwStatus').textContent=simIdx+'효: '+tot+'점 → '+sm[tot];
+    if(simIdx<6){document.getElementById('throwCntTxt').textContent=(simIdx+1)+'효 / 6효 — 다시 던지십시오';}
+    else{document.getElementById('throwCntTxt').textContent='6효 완성!';document.getElementById('throwBtn').disabled=true;document.getElementById('seeResBtn').disabled=false;}
+  },400);
+}
+function r2(){return Math.random()<.5?2:3;}
+
+function resetYao(){
+  for(let i=1;i<=6;i++)document.getElementById('yl'+i).innerHTML=`<span class="yaolbl">${i}</span><div class="yaoseg" style="background:var(--paper3);width:100%;opacity:.3"></div>`;
+}
+function drawYao(idx,score){
+  const el=document.getElementById('yl'+idx);
+  const isY=score===7||score===9,isM=score===6||score===9;
+  const lbl=`<span class="yaolbl">${idx}</span>`;
+  const col=isM?'var(--gold)':'var(--ink)';
+  const op=isM?.7:1;
+  if(isY){el.innerHTML=lbl+`<div class="yaoseg" style="width:86px;background:${col};opacity:${op}"></div>`;}
+  else{el.innerHTML=lbl+`<div class="yaoseg" style="width:36px;background:${col};opacity:${op}"></div><div style="width:10px"></div><div class="yaoseg" style="width:36px;background:${col};opacity:${op}"></div>`;}
+}
+function resetCoins(){['c1','c2','c3'].forEach(id=>{const e=document.getElementById(id);e.className='coin';e.textContent='○';});}
+
+/* ══ 결과 ══ */
+async function showResult(){
+  const key=throws.map(s=>(s===7||s===9)?'1':'0').join('');
+  const moving=throws.map((s,i)=>(s===6||s===9)?i+1:null).filter(Boolean);
+  const gua=getGua(key);
+  const q=document.getElementById('userQ').value||'(질문 없음)';
+  const isPaid=CU&&(UP?.subscribed||(UP?.remainCount>0));
+
+  const movHtml=moving.length>0
+    ?`<p class="rstit">동효 (변하는 자리)</p><p class="rtxt">${moving.map(y=>y+'효').join(', ')} — 상황이 변화를 예고합니다. <span style="color:var(--pb);font-size:12px;">(효사 상세해석 유료)</span></p>`:'';
+
+  let paidHtml='';
+  if(isPaid){
+    const prompt=buildPrompt(q,gua,moving);
+    paidHtml=`<p class="rstit" style="margin-top:20px;">AI 해설 프롬프트</p>
+    <p style="font-size:12px;color:var(--ink3);margin-bottom:8px;">아래 전체를 복사하여 ChatGPT · Claude · Gemini에 붙여넣으세요.</p>
+    <div class="promptbox"><pre id="promptTxt">${escHtml(prompt)}</pre>
+    <button class="btncopy" onclick="copyPrompt()">📋 복사하기</button></div>`;
+    if(!UP?.subscribed&&CU){
+      const nc=Math.max(0,(UP?.remainCount||0)-1);
+      await db.ref('users/'+CU.uid).update({remainCount:nc});
+      if(UP)UP.remainCount=nc;updateCnt();
+    }
+  }else{
+    paidHtml=`<div class="paidbox">
+      <p>동효·효사 해석, 지괘 분석, AI 해설 프롬프트는 유료 기능입니다.<br>프롬프트를 복사하여 ChatGPT · Claude · Gemini에서 심층 보고서를 받아보실 수 있습니다.</p>
+      <button class="btnpaid" onclick="openMo('payMo')">심층 해석 이용하기</button></div>`;
+  }
+
+  document.getElementById('resultArea').innerHTML=`
+    <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;">
+      <div style="font-family:'Noto Serif KR',serif;font-size:48px;color:var(--gold);line-height:1;flex-shrink:0;">☯</div>
+      <div>
+        <div class="rgua">${gua.name}</div>
+        <div class="rhj">${gua.hanja} · ${gua.meaning}</div>
+        <span class="rkw">${gua.keyword}</span>
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--ink3);margin-bottom:4px;">당신의 질문</p>
+    <p style="font-size:13px;background:var(--paper2);padding:10px 14px;border-radius:6px;margin-bottom:16px;line-height:1.7;color:var(--ink2);">${escHtml(q)}</p>
+    <p class="rstit">괘사 — 지금의 형세</p>
+    <p class="rtxt">${gua.desc}</p>
+    ${movHtml}
+    <p class="rstit" style="margin-top:16px;">행동 지침</p>
+    <div class="ract"><p>${gua.action}</p></div>
+    ${paidHtml}
+    <div style="margin-top:20px;text-align:center;">
+      <button class="bs" style="font-size:13px;" onclick="goCS(1)">다시 점괘 보기</button>
+    </div>`;
+
+  if(CU){
+    await db.ref('users/'+CU.uid+'/records').push({
+      date:Date.now(),key,guaName:gua.name,hanja:gua.hanja,
+      keyword:gua.keyword,question:q,moving,divType
+    });
+    if(!UP?.subscribed){
+      const used=(UP?.freeUsedToday||0)+1;
+      await db.ref('users/'+CU.uid).update({freeUsedToday:used,freeResetDate:todayStr()});
+      if(UP)UP.freeUsedToday=used;
+    }
+  }
+}
+
+function buildPrompt(q,gua,moving){
+  const d=new Date();
+  const saju=UP?.saju?`생년: ${UP.saju.year}년 / 생월: ${UP.saju.month}월 / 생일: ${UP.saju.day}일 / 생시: ${UP.saju.hour}`:'사주 정보 없음';
+  return `[주역 점괘 심층 해석 요청]
+
+날짜: ${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일
+사주 정보: ${saju}
+
+[나의 질문]
+${q}
+
+[나온 점괘]
+괘명: ${gua.name} (${gua.hanja})
+의미: ${gua.meaning} / 키워드: ${gua.keyword}
+동효(변하는 자리): ${moving.length>0?moving.map(y=>y+'효').join(', '):'없음'}
+
+[해석 요청 사항]
+1. 위 점괘(${gua.name})가 내 질문 맥락에서 어떤 의미를 가지는지 주역 관점에서 상세히 해석해주세요.
+2. 동효가 있다면 해당 효사(爻辭)의 의미와 내 상황에 대한 시사점을 설명해주세요.
+3. 지괘(동효가 변한 후의 괘)를 도출하고 앞으로의 변화 방향을 알려주세요.
+4. 지금 내가 취해야 할 구체적인 행동 지침을 처세술 관점에서 3가지로 정리해주세요.
+5. 주역의 철학적 관점에서 어떤 태도로 임해야 하는가를 중심으로 결론을 내려주세요.
+
+※ 단순한 미래 예언이 아닌, 지금 내 상황을 냉정하게 비추는 거울로서 해석해주세요.`;
+}
+
+function copyPrompt(){
+  const t=document.getElementById('promptTxt').textContent;
+  navigator.clipboard.writeText(t).then(()=>toast('프롬프트가 복사되었습니다. AI에 붙여넣기 하세요.'));
+}
+
+/* ══ 사주 저장 ══ */
+async function saveSaju(){
+  if(!CU)return;
+  const y=document.getElementById('sYear').value;
+  const m=document.getElementById('sMonth').value;
+  const d=document.getElementById('sDay').value;
+  const h=document.getElementById('sHour').value;
+  if(!y||!m||!d)return toast('생년월일을 입력하세요.');
+  const saju={year:y,month:m,day:d,hour:h||'모름'};
+  await db.ref('users/'+CU.uid+'/saju').set(saju);
+  if(UP)UP.saju=saju;
+  toast('사주 정보가 저장되었습니다.');
+  closeMo('sajuMo');
+  startCoin();
+}
+
+/* ══ 결제 ══ */
+function setPayType(t){
+  document.getElementById('payTit').textContent=t==='subscribe'?'구독 신청':'충전하기';
+  if(t==='subscribe')document.getElementById('payProd').value='sub_month';
+}
+
+async function submitPay(){
+  const n=document.getElementById('payName').value.trim();
+  const ph=document.getElementById('payPhone').value.trim();
+  const em=document.getElementById('payEmail').value.trim();
+  const pr=document.getElementById('payProd').value;
+  if(!n||!ph||!em||!pr)return toast('모든 항목을 입력해주세요.');
+  await db.ref('payments').push({
+    name:n,phone:ph,email:em,product:pr,
+    uid:CU?.uid||null,status:'pending',createdAt:Date.now()
+  });
+  const sel=document.getElementById('payProd');
+  alert(`신청이 완료되었습니다!\n\n이름: ${n}\n상품: ${sel.options[sel.selectedIndex].text}\n\n입금자명: ${n}${ph.slice(-4)}\n입금 확인 후 1~2시간 내에 처리됩니다.`);
+  closeMo('payMo');
+}
+
+/* ══ 개념 콘텐츠 ══ */
+const CONC=[
+  {e:'01 · 기초',t:'주역이란 무엇인가',b:`<p>주역(周易)은 동양 철학의 뿌리이자 3천 년을 내려온 고전입니다. 서양에서는 '변화의 책(Book of Changes, I Ching)'이라 부릅니다.</p><div class="hl">핵심: 미래가 어떻게 정해져 있는지를 보는 것이 아니라, 지금 내가 처한 형세를 파악하고 어떻게 행동해야 하는지를 배우는 것입니다.</div><h4>역(易)의 세 가지 뜻</h4><p>변역(變易) — 세상의 모든 것은 끊임없이 변한다.<br>불역(不易) — 그 변화에는 변하지 않는 법칙이 있다.<br>간역(簡易) — 복잡한 우주의 원리가 음과 양, 단 두 가지로 설명된다.</p><h4>64괘란</h4><p>음(╌╌)과 양(—)을 세 줄로 쌓으면 8괘, 두 개를 합치면 64괘가 됩니다. 인간사에서 일어날 수 있는 64가지 전형적인 상황을 나타냅니다.</p>`},
+  {e:'02 · 원리',t:'점을 치는 원리',b:`<p>동전 던지기는 단순한 확률 게임이 아닙니다. 인간의 마음과 우주의 기운이 서로 통한다는 천인감응(天人感應)의 원리가 작동합니다.</p><div class="hl">칼 융(Carl Jung)은 이를 '동시성(Synchronicity) 원리'로 설명했습니다. 인간의 내면(무의식)과 외부 사건(동전의 결과)은 비인과적 동시성으로 연결됩니다.</div><h4>왜 간절할 때 더 잘 맞는가</h4><p>인간의 마음도 기(氣)이고 동전도 기(氣)입니다. 극도로 집중한 마음의 기가 동전이라는 기와 공명할 때, 우주의 법칙인 이(理)가 그 결과를 통해 드러납니다.</p>`},
+  {e:'03 · 독법',t:'괘를 읽는 법',b:`<h4>본괘와 지괘</h4><p>6번 던져 나온 효를 읽으면 본괘(本卦)입니다. 동효(6점이나 9점)를 반대로 뒤집어 만들어지는 괘가 지괘(之卦)입니다.</p><div class="hl">본괘는 지금 현재의 형세, 지괘는 앞으로 변해갈 방향을 보여줍니다.</div><h4>올바른 독법</h4><p>결과를 '맞다/틀리다'로 검증하지 마십시오. 괘의 메시지를 거울 삼아 지금 나의 상태와 태도를 점검하는 것이 올바른 방법입니다.</p>`},
+  {e:'04 · 비교',t:'사주팔자와 주역의 차이',b:`<h4>사주팔자 — 타고난 기운의 설계도</h4><p>태어난 연·월·일·시의 기운을 분석해 타고난 기질과 시기별 운세를 봅니다.</p><h4>주역점 — 지금 이 순간의 형세</h4><p>생년월일은 필요 없습니다. "지금 이 고민에 대해 어떤 태도를 취해야 하는가"를 묻습니다.</p><div class="hl">사주가 인생 기상청의 장기 예보라면, 주역은 오늘 우산을 들어야 할지 말지를 알려주는 현재의 나침반입니다.</div>`},
+  {e:'05 · 활용',t:'AI 프롬프트 사용법',b:`<p>유료 기능으로 제공되는 AI 해설 프롬프트는 점괘를 AI에게 깊이 해석받을 수 있도록 만들어진 맞춤 질문서입니다.</p><h4>사용 방법</h4><p>1. 점괘 결과 화면에서 프롬프트 전체 복사<br>2. ChatGPT, Claude, 또는 Gemini 대화창에 붙여넣기<br>3. AI가 주역 관점의 심층 해설 보고서를 제공합니다</p><div class="hl"><strong>Claude</strong> — 맥락 파악과 철학적 해석에 강합니다. 주역 텍스트 해석에 특히 잘 맞습니다.<br><strong>ChatGPT</strong> — 가장 많이 사용되며 접근성이 높습니다.<br><strong>Gemini</strong> — Google 계정만 있으면 바로 사용 가능합니다.</div>`},
+  {e:'06 · 마음가짐',t:'올바른 마음가짐',b:`<h4>세 가지 원칙</h4><p><strong>초서불재(初筮不再)</strong> — 처음 나온 괘가 답입니다. 마음에 들지 않는다고 다시 던지면 정확도는 0이 됩니다.</p><p><strong>욕심보다 태도를 물어라</strong> — "부자가 될까요?"가 아니라 "지금 내 태도가 올바른가요?"가 좋은 질문입니다.</p><p><strong>거울로 삼아라</strong> — 점괘는 내 무의식의 거울입니다. 맞다/틀리다로 검증하지 말고 스스로를 점검하십시오.</p><div class="hl">"길하면 자만하지 말고, 흉하면 낙담하지 않고 대비하라." — 주역의 핵심 처세술</div>`}
+];
+
+function openConcept(i){
+  const c=CONC[i];
+  document.getElementById('cEye').textContent=c.e;
+  document.getElementById('cTit').textContent=c.t;
+  document.getElementById('cBody').innerHTML=c.b;
+  openMo('conceptMo');
+}
+
+/* ══ 유틸 ══ */
+function todayStr(){const d=new Date();return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;}
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(msg,dur=3200){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),dur);
+}
+</script>
+</body>
+</html>
