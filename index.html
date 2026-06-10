@@ -333,7 +333,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
 
 <footer style="background:var(--ink);color:#7a6040;text-align:center;padding:32px 24px;font-size:12px;line-height:2;">
   <strong style="color:var(--gold);">역易</strong> — 주역 점괘 서비스<br>
-  문의 · 입금 확인: shstrategylab@gmail.com<br>
+  문의 · 입금 확인: admin@yeokeasy.kr<br>
   주역의 지혜는 미래를 보여주지 않습니다. 지금 어디에 서 있는지를 보여줄 뿐입니다.
 </footer>
 
@@ -433,6 +433,20 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
     <p class="moeye">사주 기반 점괘</p>
     <h2 class="motit">생년월일시를 입력하십시오</h2>
     <p class="modesc">입력하신 사주 정보는 안전하게 저장되며, 이후에는 다시 입력하지 않아도 됩니다.</p>
+    <div class="form-row" style="margin-bottom:14px;">
+      <label class="inplbl">양력 / 음력 구분</label>
+      <div style="display:flex;gap:0;margin-top:6px;border:1px solid var(--paper3);border-radius:6px;overflow:hidden;">
+        <button id="calSolar" onclick="setCalType('solar')"
+          style="flex:1;padding:9px;font-size:13px;background:var(--ink);color:var(--goldd);border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:500;">
+          양력 (陽曆)
+        </button>
+        <button id="calLunar" onclick="setCalType('lunar')"
+          style="flex:1;padding:9px;font-size:13px;background:#fff;color:var(--ink3);border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;border-left:1px solid var(--paper3);">
+          음력 (陰曆)
+        </button>
+      </div>
+      <p id="calNote" style="font-size:11px;color:var(--ink3);margin-top:6px;">양력 기준으로 입력하세요. 음력으로 아시는 경우 음력을 선택하세요.</p>
+    </div>
     <div class="sajugrid">
       <div><label class="inplbl">생년 (예: 1985)</label><input class="inp" id="sYear" type="number" placeholder="1985" min="1900" max="2010"></div>
       <div><label class="inplbl">생월 (1~12)</label><input class="inp" id="sMonth" type="number" placeholder="3" min="1" max="12"></div>
@@ -745,13 +759,16 @@ function startDiv(type){
     return;
   }
 
-  // 무료 횟수 체크 (로그인 회원만)
+  // 무료 횟수 체크
   const today=todayStr();
+  // 날짜가 바뀌면 오늘 사용횟수 초기화
   if((UP?.freeResetDate||'')!==today){
-    db.ref('users/'+CU.uid).update({freeUsedToday:0,freeResetDate:today});
+    await db.ref('users/'+CU.uid).update({freeUsedToday:0,freeResetDate:today});
     if(UP){UP.freeUsedToday=0;UP.freeResetDate=today;}
   }
-  if((UP?.freeUsedToday||0)>=3&&!UP?.subscribed){
+  const usedToday = UP?.freeUsedToday||0;
+  // 3회 이상 사용했으면 차단 (0,1,2 → 허용 / 3 이상 → 차단)
+  if(usedToday>=3&&!UP?.subscribed){
     toast('오늘 무료 횟수(3회)를 모두 사용했습니다. 충전 후 이용하세요.');
     openMo('payMo');setPayType('charge');return;
   }
@@ -968,7 +985,7 @@ function buildPrompt(q,gua,moving){
   const d=new Date();
   const dateStr=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
   const saju=UP?.saju
-    ?`${UP.saju.year}년 ${UP.saju.month}월 ${UP.saju.day}일 ${UP.saju.hour}`
+    ?`${UP.saju.year}년 ${UP.saju.month}월 ${UP.saju.day}일 ${UP.saju.hour} (${UP.saju.calType==='lunar'?'음력':'양력'})`
     :'미입력';
   const movStr=moving.length>0?moving.map(y=>y+'효').join(', '):'없음';
 
@@ -1020,6 +1037,24 @@ function copyPrompt(){
   navigator.clipboard.writeText(t).then(()=>toast('✅ 프롬프트가 복사되었습니다. AI 대화창에 붙여넣기 하세요.'));
 }
 
+/* ══ 양력/음력 토글 ══ */
+let calType='solar';
+function setCalType(type){
+  calType=type;
+  const solar=document.getElementById('calSolar');
+  const lunar=document.getElementById('calLunar');
+  const note=document.getElementById('calNote');
+  if(type==='solar'){
+    solar.style.background='var(--ink)';solar.style.color='var(--goldd)';
+    lunar.style.background='#fff';lunar.style.color='var(--ink3)';
+    note.textContent='양력 기준으로 입력하세요.';
+  } else {
+    lunar.style.background='var(--ink)';lunar.style.color='var(--goldd)';
+    solar.style.background='#fff';solar.style.color='var(--ink3)';
+    note.textContent='음력으로 아시는 생년월일을 그대로 입력하세요. 음력 기준으로 저장됩니다.';
+  }
+}
+
 /* ══ 사주 저장 ══ */
 async function saveSaju(){
   if(!CU)return;
@@ -1028,10 +1063,10 @@ async function saveSaju(){
   const d=document.getElementById('sDay').value;
   const h=document.getElementById('sHour').value;
   if(!y||!m||!d)return toast('생년월일을 입력하세요.');
-  const saju={year:y,month:m,day:d,hour:h||'모름'};
+  const saju={year:y,month:m,day:d,hour:h||'모름',calType:calType};
   await db.ref('users/'+CU.uid+'/saju').set(saju);
   if(UP)UP.saju=saju;
-  toast('사주 정보가 저장되었습니다.');
+  toast('사주 정보가 저장되었습니다. ('+( calType==='solar'?'양력':'음력')+')');
   closeMo('sajuMo');
   startCoin();
 }
