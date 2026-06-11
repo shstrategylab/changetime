@@ -617,7 +617,7 @@ async function doSignup(){
     await c.user.updateProfile({displayName:n});
     await db.ref('users/'+c.user.uid).set({
       name:n, email:e, role:'user',
-      remainCount:3, subscribed:false,
+      remainCount:0, subscribed:false,
       freeUsedToday:0, freeResetDate:todayStr(),
       createdAt:Date.now()
     });
@@ -868,14 +868,19 @@ async function showResult(){
   const moving=throws.map((s,i)=>(s===6||s===9)?i+1:null).filter(Boolean);
   const gua=getGua(key);
   const q=document.getElementById('userQ').value||'(질문 없음)';
-  const isPaid=CU&&(UP?.subscribed||(UP?.remainCount>0));
 
-  // 지괘 계산
+  // 유료 여부: 구독 중이거나 충전 잔여횟수가 있는 경우
+  const isSub = UP?.subscribed||false;
+  const hasCharge = (UP?.remainCount||0)>0;
+  const isPaid = CU && (isSub || hasCharge);
+
+  // 지괘 계산 (유료)
   let jiGuaHtml='';
   if(moving.length>0&&isPaid){
-    const jiKey=throws.map((s,i)=>{
-      if(s===6)return'1'; if(s===9)return'0';
-      return (s===7||s===9)?'1':'0';
+    const jiKey=throws.map((s)=>{
+      if(s===6)return'1';
+      if(s===9)return'0';
+      return (s===7)?'1':'0';
     }).join('');
     const jiGua=getGua(jiKey);
     jiGuaHtml=`
@@ -886,19 +891,19 @@ async function showResult(){
       </div>`;
   }
 
-  // 동효 해석 (유료)
+  // 동효 해석
   const movHtml = moving.length>0 ? `
     <div style="margin-top:20px;">
       <p class="rstit">동효 (動爻) — 변화를 예고하는 자리</p>
       <p class="rtxt">${moving.map(y=>y+'효').join(', ')}에서 변화의 기운이 감지됩니다.
       ${isPaid
-        ? `이 자리는 지금 상황에서 가장 역동적으로 움직이는 지점입니다. 변화를 두려워하지 말되, 그 변화가 어떤 방향으로 흘러가는지를 냉정하게 읽어야 합니다.`
-        : `<span style="color:var(--pb);font-size:12px;">(효사 상세 해석은 유료 기능입니다)</span>`}
+        ? '이 자리는 지금 상황에서 가장 역동적으로 움직이는 지점입니다. 변화를 두려워하지 말되, 그 변화가 어떤 방향으로 흘러가는지를 냉정하게 읽어야 합니다.'
+        : '<span style="color:var(--pb);font-size:12px;">(효사 상세 해석은 유료 기능입니다)</span>'}
       </p>
       ${isPaid ? jiGuaHtml : ''}
     </div>` : '';
 
-  // 유료 AI 프롬프트 (훅+카드 보고서 형태)
+  // 유료 AI 프롬프트
   let paidHtml='';
   if(isPaid){
     const prompt=buildPrompt(q,gua,moving);
@@ -917,22 +922,15 @@ async function showResult(){
           </div>
         </div>
       </div>`;
-    // 횟수 차감
-    if(!UP?.subscribed&&CU){
-      const nc=Math.max(0,(UP?.remainCount||0)-1);
-      await db.ref('users/'+CU.uid).update({remainCount:nc});
-      if(UP)UP.remainCount=nc;updateCnt();
-    }
   } else {
     paidHtml=`
       <div class="paidbox" style="margin-top:24px;">
-        <p>동효·효사 해석, 지괘 분석,<br>AI 심층 해설 프롬프트(훅+카드 1페이지 보고서)는 유료 기능입니다.</p>
+        <p>동효·효사 해석, 지괘 분석,<br>AI 심층 해설 프롬프트는 유료 기능입니다.</p>
         <button class="btnpaid" onclick="openMo('payMo')">유료 기능 이용하기</button>
       </div>`;
   }
 
   document.getElementById('resultArea').innerHTML=`
-    <!-- 괘 헤더 -->
     <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--paper3);">
       <div style="font-family:'Noto Serif KR',serif;font-size:52px;color:var(--gold);line-height:1;flex-shrink:0;">☯</div>
       <div>
@@ -941,41 +939,41 @@ async function showResult(){
         <span class="rkw">${gua.keyword}</span>
       </div>
     </div>
-
-    <!-- 질문 -->
     <p style="font-size:10px;letter-spacing:2px;color:var(--ink3);margin-bottom:6px;">당신의 질문</p>
     <p style="font-size:13px;background:var(--paper2);padding:10px 14px;border-radius:6px;margin-bottom:20px;line-height:1.8;color:var(--ink2);font-style:italic;">"${escHtml(q)}"</p>
-
-    <!-- 형세 해석 (서술형) -->
     <p class="rstit">지금의 형세</p>
     <p class="rtxt" style="margin-bottom:12px;">${gua.desc}</p>
     <p class="rtxt">이 괘가 나온 것은 우연이 아닙니다. 지금 당신이 처한 상황은 <strong>${gua.keyword}</strong>의 기운 안에 있습니다. 이 형세를 거스르려 하면 더 큰 저항을 만나게 됩니다. 흐름을 읽고 그 안에서 가장 현명한 자리를 찾는 것이 지금 할 일입니다.</p>
-
     ${movHtml}
-
-    <!-- 행동 지침 (서술형) -->
     <p class="rstit" style="margin-top:20px;">지금 당신이 취해야 할 태도</p>
     <div class="ract">
       <p style="line-height:1.9;">${gua.action}</p>
       <p style="margin-top:10px;font-size:12px;color:var(--ink3);line-height:1.7;">주역은 결과를 예언하지 않습니다. 당신이 이 지침을 어떻게 받아들이고 실천하느냐에 따라 앞으로의 형세는 얼마든지 달라질 수 있습니다.</p>
     </div>
-
     ${paidHtml}
-
     <div style="margin-top:24px;text-align:center;">
       <button class="bs" style="font-size:13px;" onclick="goCS(1)">다시 점괘 보기</button>
     </div>`;
 
-  // 기록 저장
+  // 사용 기록 저장 및 횟수 처리
   if(CU){
+    // 점괘 기록 저장
     await db.ref('users/'+CU.uid+'/records').push({
-      date:Date.now(),key,guaName:gua.name,hanja:gua.hanja,
-      keyword:gua.keyword,question:q,moving,divType
+      date:Date.now(), key, guaName:gua.name, hanja:gua.hanja,
+      keyword:gua.keyword, question:q, moving, divType
     });
-    if(!UP?.subscribed){
+
+    if(isPaid && hasCharge && !isSub){
+      // 충전 횟수 차감 (구독 아닌 유료 충전 회원)
+      const nc = Math.max(0,(UP?.remainCount||0)-1);
+      await db.ref('users/'+CU.uid).update({remainCount:nc});
+      if(UP) UP.remainCount=nc;
+      updateCnt();
+    } else if(!isPaid){
+      // 무료 사용 횟수 증가
       const used=(UP?.freeUsedToday||0)+1;
-      await db.ref('users/'+CU.uid).update({freeUsedToday:used,freeResetDate:todayStr()});
-      if(UP)UP.freeUsedToday=used;
+      await db.ref('users/'+CU.uid).update({freeUsedToday:used, freeResetDate:todayStr()});
+      if(UP) UP.freeUsedToday=used;
     }
   }
 }
