@@ -234,7 +234,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
   <h2 class="stit" style="margin-bottom:16px;">무엇을 여쭙겠습니까</h2>
   <div class="egrid">
     <div class="ec free" onclick="startDiv('free')">
-      <span class="ebdg bf">무료 · 하루 3회</span>
+      <span class="ebdg bf">무료 · 하루 1회</span>
       <div class="eico">🪙</div>
       <h3 class="etit">즉석 점괘</h3>
       <p class="edesc">사주 없이 누구나. 지금 마음속 고민을 가지고 동전을 던져 현재 형세를 읽습니다.</p>
@@ -290,9 +290,9 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
     <div class="pc">
       <p class="pplan">무료</p>
       <p class="pprice">0원</p>
-      <p class="punit">하루 3회 제공</p>
+      <p class="punit">하루 1회 제공</p>
       <ul class="pfeat">
-        <li>즉석 점괘 하루 3회</li>
+        <li>즉석 점괘 하루 1회</li>
         <li>괘명 + 괘사 + 행동 지침</li>
         <li>오늘의 일일 운세</li>
         <li>개념 콘텐츠 전체</li>
@@ -603,7 +603,7 @@ function updateCnt(){
   const sub = UP?.subscribed||false;
   const cnt = UP?.remainCount||0;
   const usedToday = UP?.freeUsedToday||0;
-  const freeLeft = Math.max(0, 3 - usedToday);
+  const freeLeft = Math.max(0, 1 - usedToday);
   let label;
   if(sub) label = '무제한';
   else if(cnt > 0) label = cnt+'회';
@@ -771,9 +771,9 @@ async function startDiv(type){
     if(UP){UP.freeUsedToday=0;UP.freeResetDate=today;}
   }
   const usedToday = UP?.freeUsedToday||0;
-  // 3회 이상 사용했으면 차단 (0,1,2 → 허용 / 3 이상 → 차단)
-  if(usedToday>=3&&!UP?.subscribed){
-    toast('오늘 무료 횟수(3회)를 모두 사용했습니다. 충전 후 이용하세요.');
+  // 1회 이상 사용했으면 차단 (0 → 허용 / 1 이상 → 차단)
+  if(usedToday>=1&&!UP?.subscribed){
+    toast('오늘 무료 횟수(1회)를 사용했습니다. 충전 후 이용하세요.');
     openMo('payMo');setPayType('charge');return;
   }
   startCoin();
