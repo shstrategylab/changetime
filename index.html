@@ -575,7 +575,13 @@ async function loadUP(uid){
 function updateCnt(){
   const sub = UP?.subscribed||false;
   const cnt = UP?.remainCount||0;
-  document.getElementById('navCnt').textContent = sub?'무제한':cnt+'회';
+  const usedToday = UP?.freeUsedToday||0;
+  const freeLeft = Math.max(0, 3 - usedToday);
+  let label;
+  if(sub) label = '무제한';
+  else if(cnt > 0) label = cnt+'회';
+  else label = '무료 '+freeLeft+'회';
+  document.getElementById('navCnt').textContent = label;
 }
 
 /* ══ 인증 ══ */
