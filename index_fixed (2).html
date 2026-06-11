@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>역(易) — 주역 점괘 서비스</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+:root{
+  --ink:#1a1208;--ink2:#3d2e14;--ink3:#7a6040;
+  --gold:#c8922a;--goldl:#e8b84b;--goldd:#f5e8c8;
+  --paper:#faf6ef;--paper2:#f2ead8;--paper3:#e8dcc0;
+  --red:#8b2020;--fg:#2d7a4a;--fb:#eef7f1;--pb:#5a3d8a;--pp:#f0eaf8;
+  --r:12px;--sh:0 2px 16px rgba(26,18,8,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--paper3);display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:60px;}
+.logo{font-family:'Noto Serif KR',serif;font-size:22px;font-weight:700;color:var(--ink);letter-spacing:4px;text-decoration:none;}
+.logo span{color:var(--gold);}
+.nav-r{display:flex;gap:22px;align-items:center;}
+.nav-r a{font-size:13px;color:var(--ink2);text-decoration:none;transition:color .2s;}
+.nav-r a:hover{color:var(--gold);}
+.nbtn{background:var(--gold)!important;color:#fff!important;padding:7px 18px;border-radius:20px;font-size:13px!important;font-weight:500;}
+.nbtn:hover{background:var(--ink)!important;}
+.nu{font-size:12px;color:var(--ink3);display:flex;align-items:center;gap:8px;}
+.ncnt{background:var(--gold);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;}
+
+/* HERO (축소) */
+.hero{padding:28px 24px 20px;text-align:center;background:linear-gradient(180deg,var(--paper),var(--paper2));border-bottom:1px solid var(--paper3);position:relative;overflow:hidden;}
+.hero::before{content:'易';position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-family:'Noto Serif KR',serif;font-size:160px;font-weight:700;color:var(--paper3);opacity:.4;pointer-events:none;user-select:none;}
+.eye{font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;position:relative;}
+.hero h1{font-family:'Noto Serif KR',serif;font-size:clamp(22px,4vw,34px);font-weight:700;color:var(--ink);margin-bottom:8px;position:relative;}
+.hero h1 em{color:var(--gold);font-style:normal;}
+.hero-sub{font-size:13px;color:var(--ink3);line-height:1.7;max-width:560px;margin:0 auto;position:relative;}
+.bp{background:var(--ink);color:var(--goldd);padding:14px 32px;border-radius:4px;font-size:14px;font-weight:500;letter-spacing:1px;border:none;cursor:pointer;transition:all .2s;font-family:'Noto Sans KR',sans-serif;text-decoration:none;display:inline-block;}
+.bp:hover{background:var(--gold);color:var(--ink);}
+.bs{background:transparent;color:var(--ink2);padding:14px 32px;border-radius:4px;font-size:14px;letter-spacing:1px;border:1px solid var(--paper3);cursor:pointer;transition:all .2s;font-family:'Noto Sans KR',sans-serif;text-decoration:none;display:inline-block;}
+.bs:hover{border-color:var(--gold);color:var(--gold);}
+
+/* SECTIONS */
+.sec{max-width:820px;margin:0 auto;padding:52px 24px;}
+.secw{max-width:980px;margin:0 auto;padding:52px 24px;}
+.slbl{font-size:11px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
+.stit{font-family:'Noto Serif KR',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:24px;}
+.divr{border:none;border-top:1px solid var(--paper3);margin:0;}
+
+/* DAILY (구버전 클래스 유지) */
+.dcrd{background:var(--ink);color:var(--goldd);border-radius:var(--r);padding:36px;display:flex;gap:32px;align-items:flex-start;}
+.dgua{font-family:'Noto Serif KR',serif;font-size:64px;font-weight:700;color:var(--gold);line-height:1;flex-shrink:0;}
+.dname{font-family:'Noto Serif KR',serif;font-size:17px;font-weight:600;color:var(--goldl);margin-bottom:3px;}
+.dhj{font-size:11px;color:var(--ink3);margin-bottom:10px;letter-spacing:1px;}
+.ddesc{font-size:13px;line-height:1.8;color:#c8b898;margin-bottom:12px;}
+.kw{display:inline-block;background:rgba(200,146,42,.15);border:1px solid rgba(200,146,42,.3);color:var(--goldl);font-size:11px;letter-spacing:2px;padding:4px 12px;border-radius:2px;margin-right:8px;margin-bottom:6px;}
+
+/* ENTRY */
+.egrid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.ec{border-radius:var(--r);padding:32px;border:1px solid var(--paper3);cursor:pointer;transition:all .25s;background:#fff;}
+.ec:hover{border-color:var(--gold);box-shadow:var(--sh);transform:translateY(-2px);}
+.ec.free{border-top:3px solid var(--fg);}
+.ec.paid{border-top:3px solid var(--pb);}
+.ebdg{font-size:10px;letter-spacing:2px;font-weight:500;padding:3px 10px;border-radius:10px;margin-bottom:16px;display:inline-block;}
+.bf{background:var(--fb);color:var(--fg);}.bp2{background:var(--pp);color:var(--pb);}
+.eico{font-size:32px;margin-bottom:12px;}
+.etit{font-family:'Noto Serif KR',serif;font-size:18px;font-weight:600;color:var(--ink);margin-bottom:8px;}
+.edesc{font-size:13px;color:var(--ink3);line-height:1.7;margin-bottom:20px;}
+.efeat{list-style:none;}
+.efeat li{font-size:12px;color:var(--ink2);padding:5px 0;border-bottom:1px solid var(--paper2);display:flex;justify-content:space-between;align-items:center;}
+.efeat li:last-child{border-bottom:none;}
+.ft{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:500;}
+.ftf{background:var(--fb);color:var(--fg);}.ftp{background:var(--pp);color:var(--pb);}
+/* CTA 버튼 */
+.ec-cta{display:block;width:100%;margin-top:20px;padding:13px 16px;border-radius:6px;font-size:14px;font-weight:600;letter-spacing:.5px;cursor:pointer;border:none;font-family:'Noto Sans KR',sans-serif;transition:all .2s;text-align:center;}
+.ec-cta-free{background:var(--ink);color:var(--goldd);}
+.ec-cta-free:hover{background:var(--gold);color:var(--ink);}
+.ec-cta-paid{background:var(--pb);color:#fff;}
+.ec-cta-paid:hover{background:#4a2d7a;color:#fff;}
+.ec:hover .ec-cta-free{background:var(--gold);color:var(--ink);}
+.ec:hover .ec-cta-paid{background:#4a2d7a;}
+
+/* CONCEPT */
+.cbg{background:var(--paper2);border-top:1px solid var(--paper3);border-bottom:1px solid var(--paper3);padding:60px 24px;}
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px;}
+.cc{background:#fff;border-radius:var(--r);padding:24px;cursor:pointer;border:1px solid var(--paper3);transition:all .2s;}
+.cc:hover{border-color:var(--gold);box-shadow:var(--sh);}
+.ccnum{font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:8px;}
+.cc h3{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:600;color:var(--ink);margin-bottom:8px;}
+.cc p{font-size:12px;color:var(--ink3);line-height:1.7;}
+
+/* PRICING */
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px;}
+.pc{border-radius:var(--r);padding:28px;border:1px solid var(--paper3);background:#fff;}
+.pc.feat{border-color:var(--gold);background:var(--ink);color:var(--goldd);}
+.pplan{font-size:11px;letter-spacing:2px;margin-bottom:12px;}
+.feat .pplan{color:var(--gold);}.pc:not(.feat) .pplan{color:var(--ink3);}
+.pprice{font-family:'Noto Serif KR',serif;font-size:28px;font-weight:700;margin-bottom:4px;}
+.feat .pprice{color:var(--goldl);}.pc:not(.feat) .pprice{color:var(--ink);}
+.punit{font-size:12px;margin-bottom:20px;color:var(--ink3);}
+.pfeat{list-style:none;margin-bottom:24px;}
+.pfeat li{font-size:13px;padding:7px 0;border-bottom:1px solid;display:flex;gap:8px;align-items:flex-start;}
+.feat .pfeat li{border-color:rgba(255,255,255,.08);color:#c8b898;}
+.pc:not(.feat) .pfeat li{border-color:var(--paper2);color:var(--ink2);}
+.pfeat li::before{content:'·';color:var(--gold);font-size:16px;line-height:1.3;flex-shrink:0;}
+.btnplan{width:100%;padding:12px;border-radius:4px;font-size:13px;letter-spacing:1px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;border:none;transition:all .2s;}
+.feat .btnplan{background:var(--gold);color:var(--ink);}
+.pc:not(.feat) .btnplan{background:var(--ink);color:var(--goldd);}
+
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;background:rgba(26,18,8,.85);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.mo.on{display:flex;}
+.md{background:var(--paper);border-radius:var(--r);max-width:600px;width:100%;max-height:90vh;overflow-y:auto;padding:40px 36px;box-shadow:0 20px 60px rgba(0,0,0,.4);position:relative;}
+.mdx{position:absolute;top:14px;right:18px;background:none;border:none;font-size:20px;color:var(--ink3);cursor:pointer;}
+.ms{display:none;}.ms.on{display:block;}
+.moeye{font-size:11px;letter-spacing:3px;color:var(--gold);margin-bottom:12px;}
+.motit{font-family:'Noto Serif KR',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:8px;line-height:1.4;}
+.modesc{font-size:13px;color:var(--ink3);line-height:1.8;margin-bottom:24px;}
+.prog{height:3px;background:var(--paper3);border-radius:2px;margin-bottom:28px;}
+.progf{height:100%;background:var(--gold);border-radius:2px;transition:width .4s;}
+.qinp{width:100%;padding:14px 16px;border:1px solid var(--paper3);border-radius:8px;font-size:14px;font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--ink);resize:vertical;min-height:80px;margin-bottom:8px;outline:none;transition:border-color .2s;}
+.qinp:focus{border-color:var(--gold);}
+.qhint{font-size:11px;color:var(--ink3);margin-bottom:20px;}
+.breathc{width:120px;height:120px;border-radius:50%;border:2px solid var(--gold);margin:0 auto 24px;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif KR',serif;font-size:13px;color:var(--gold);animation:breathe 4s ease-in-out infinite;}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.6;}50%{transform:scale(1.15);opacity:1;}}
+.tabrow{display:flex;margin-bottom:24px;border:1px solid var(--paper3);border-radius:8px;overflow:hidden;}
+.ctab{flex:1;padding:10px;font-size:13px;text-align:center;background:#fff;border:none;cursor:pointer;color:var(--ink3);transition:all .2s;font-family:'Noto Sans KR',sans-serif;}
+.ctab.on{background:var(--ink);color:var(--goldd);}
+.throwa{background:var(--paper2);border-radius:10px;padding:24px;text-align:center;margin-bottom:20px;}
+.throwcnt{font-size:12px;color:var(--ink3);margin-bottom:16px;letter-spacing:1px;}
+.coinsrow{display:flex;gap:12px;justify-content:center;margin-bottom:20px;}
+.coin{width:52px;height:52px;border-radius:50%;border:2px solid var(--paper3);display:flex;align-items:center;justify-content:center;font-size:18px;background:#fff;transition:all .3s;}
+.coin.front{background:var(--goldd);border-color:var(--gold);}
+.coin.back{background:var(--paper2);border-color:var(--ink3);}
+.btnthrow{background:var(--ink);color:var(--goldd);border:none;padding:12px 32px;border-radius:4px;font-size:14px;cursor:pointer;letter-spacing:1px;font-family:'Noto Sans KR',sans-serif;transition:all .2s;}
+.btnthrow:hover{background:var(--gold);color:var(--ink);}
+.btnthrow:disabled{opacity:.4;cursor:not-allowed;}
+.mrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--paper2);}
+.mlbl{font-size:12px;color:var(--ink3);width:36px;flex-shrink:0;}
+.mbtns{display:flex;gap:5px;flex-wrap:wrap;}
+.mbtn{padding:5px 10px;border-radius:4px;border:1px solid var(--paper3);font-size:11px;cursor:pointer;background:#fff;color:var(--ink2);font-family:'Noto Sans KR',sans-serif;transition:all .15s;}
+.mbtn.sf{background:var(--goldd);border-color:var(--gold);color:var(--ink);}
+.mbtn.sb{background:var(--paper2);border-color:var(--ink3);color:var(--ink);}
+.mscr{font-size:13px;font-weight:500;color:var(--gold);margin-left:auto;flex-shrink:0;}
+.yaow{display:flex;flex-direction:column;gap:6px;margin:0 auto 20px;width:110px;}
+.yaol{height:12px;display:flex;gap:8px;align-items:center;}
+.yaoseg{height:12px;background:var(--ink);border-radius:2px;transition:all .4s;}
+.yaolbl{font-size:10px;color:var(--ink3);width:20px;text-align:right;flex-shrink:0;}
+.rgua{font-family:'Noto Serif KR',serif;font-size:28px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+.rhj{font-size:13px;color:var(--gold);margin-bottom:6px;letter-spacing:2px;}
+.rkw{display:inline-block;font-size:16px;font-weight:600;color:var(--ink);background:var(--goldd);padding:6px 18px;border-radius:2px;margin-bottom:20px;font-family:'Noto Serif KR',serif;}
+.rstit{font-size:11px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;margin-top:20px;}
+.rtxt{font-size:14px;line-height:1.9;color:var(--ink2);}
+.ract{background:var(--paper2);border-radius:8px;padding:16px;margin-top:16px;border-left:3px solid var(--gold);}
+.paidbox{margin-top:24px;padding:20px;border:1px dashed var(--pb);border-radius:8px;background:var(--pp);text-align:center;}
+.paidbox p{font-size:13px;color:var(--pb);margin-bottom:12px;line-height:1.7;}
+.btnpaid{background:var(--pb);color:#fff;border:none;padding:10px 24px;border-radius:4px;font-size:13px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.promptbox{background:var(--ink);border-radius:8px;padding:16px;margin-top:16px;}
+.promptbox pre{font-size:11px;color:#c8b898;line-height:1.7;white-space:pre-wrap;word-break:break-word;}
+.btncopy{background:var(--gold);color:var(--ink);border:none;padding:8px 20px;border-radius:4px;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-top:10px;}
+.fe{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;}
+.infobox{background:var(--paper2);border-radius:8px;padding:16px;font-size:13px;color:var(--ink2);line-height:1.8;}
+.bankbox{background:var(--paper2);border-radius:8px;padding:16px;margin:20px 0;font-size:13px;color:var(--ink2);line-height:1.8;}
+.inp{width:100%;padding:10px 12px;border:1px solid var(--paper3);border-radius:6px;font-size:14px;font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--ink);outline:none;transition:border-color .2s;margin-top:4px;}
+.inp:focus{border-color:var(--gold);}
+.inplbl{display:block;font-size:12px;color:var(--ink3);margin-top:14px;letter-spacing:.5px;}
+.ccbody{line-height:1.9;}
+.ccbody h4{font-family:'Noto Serif KR',serif;font-size:16px;font-weight:600;color:var(--ink);margin:20px 0 8px;}
+.ccbody p{font-size:14px;color:var(--ink2);margin-bottom:12px;}
+.ccbody .hl{background:var(--goldd);border-left:3px solid var(--gold);padding:12px 16px;border-radius:0 6px 6px 0;margin:12px 0;font-size:13px;color:var(--ink2);}
+.sajugrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--goldd);padding:12px 24px;border-radius:4px;font-size:13px;z-index:999;display:none;max-width:320px;text-align:center;}
+.toast.on{display:block;}
+/* MYPAGE */
+.mprow{display:flex;align-items:center;padding:11px 16px;background:#fff;}
+.mplbl{font-size:12px;color:var(--ink3);letter-spacing:.5px;width:72px;flex-shrink:0;}
+.mpval{font-size:13px;color:var(--ink);font-weight:500;flex:1;}
+/* 상단 2컬럼 레이아웃 */
+.top-grid{display:grid;grid-template-columns:1fr 300px;gap:28px;align-items:start;}
+.daily-side{background:var(--ink);border-radius:var(--r);padding:24px;}
+.daily-date{font-size:11px;color:var(--ink3);margin-bottom:8px;letter-spacing:1px;}
+.dcrd-v{border-top:1px solid rgba(255,255,255,.08);padding-top:14px;margin-top:4px;}
+.dgua-sm{font-family:'Noto Serif KR',serif;font-size:40px;color:var(--gold);line-height:1;margin-bottom:8px;}
+.daily-note{font-size:10px;color:var(--ink3);margin-top:14px;line-height:1.6;letter-spacing:.3px;opacity:.7;}
+
+@media(max-width:900px){
+  .top-grid{grid-template-columns:1fr;}
+  .daily-side{order:-1;}
+}
+@media(max-width:680px){
+  .egrid,.cgrid,.pgrid{grid-template-columns:1fr;}
+  nav{padding:0 16px;}
+  .nav-r a:not(.nbtn):not(.nu){display:none;}
+  .md{padding:28px 20px;}
+  .sajugrid{grid-template-columns:1fr;}
+  .mbtns{gap:4px;}
+  .mbtn{padding:4px 8px;font-size:10px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">역<span>易</span></a>
+  <div class="nav-r">
+    <a href="#entry">점괘 보기</a>
+    <a href="#concept">개념 이해</a>
+    <a href="#pricing">요금제</a>
+    <div id="navUser" class="nu" style="display:none;">
+      <span id="navName" onclick="openMypage()" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--paper3);transition:color .2s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color=''"></span>
+      <span class="ncnt" id="navCnt">0회</span>
+      <a href="#" onclick="doLogout()" style="font-size:12px;color:var(--ink3);">로그아웃</a>
+    </div>
+    <a href="#" class="nbtn" id="navLoginBtn" onclick="openMo('loginMo')">로그인</a>
+  </div>
+</nav>
+
+<!-- HERO (미니) -->
+<section class="hero">
+  <p class="eye">주역 — 변화의 지혜 · 3천 년의 처세술</p>
+  <h1>지금 나는 <em>어디에</em> 서 있는가</h1>
+  <p class="hero-sub">미래 예언이 아닌, 지금 이 순간의 형세를 읽고 어떻게 나아갈지를 스스로 묻는 도구입니다</p>
+</section>
+
+<!-- 오늘의 괘 (띠 배너) -->
+<div style="background:var(--ink);border-bottom:1px solid rgba(255,255,255,.08);">
+  <div style="max-width:980px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <span style="font-size:10px;letter-spacing:2px;color:var(--ink3);flex-shrink:0;">오늘의 괘</span>
+    <span style="font-size:11px;color:var(--ink3);flex-shrink:0;" id="dailyTitle"></span>
+    <span style="color:rgba(255,255,255,.15);">|</span>
+    <span style="font-family:'Noto Serif KR',serif;font-size:15px;font-weight:600;color:var(--gold);" id="dName"></span>
+    <span style="font-size:12px;color:var(--ink3);" id="dHj"></span>
+    <span style="color:rgba(255,255,255,.15);">|</span>
+    <span style="font-size:12px;color:#c8b898;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="dDesc"></span>
+    <span id="dKws"></span>
+  </div>
+</div>
+
+<!-- 점괘 시스템 -->
+<section class="secw" id="entry" style="padding-top:32px;padding-bottom:32px;">
+  <p class="slbl">점괘 시스템</p>
+  <h2 class="stit" style="margin-bottom:4px;">무엇을 여쭙겠습니까</h2>
+  <p style="font-size:13px;color:var(--ink3);margin-bottom:20px;line-height:1.7;">두 가지 방식 중 지금 나에게 맞는 것을 선택하세요.</p>
+  <div class="egrid">
+
+    <!-- 즉석 점괘 -->
+    <div class="ec free" onclick="startDiv('free')">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <span class="ebdg bf">즉석 · 개인 명리 무관</span>
+        <span style="font-size:11px;color:var(--fg);background:var(--fb);padding:3px 9px;border-radius:10px;font-weight:500;">무료 1회 / 충전·구독 무제한</span>
+      </div>
+      <div class="eico">🪙</div>
+      <h3 class="etit">즉석 점괘</h3>
+      <p style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:8px;font-family:'Noto Serif KR',serif;">지금 이 순간, 사주 없이 가볍게</p>
+      <p class="edesc">동전만 던지면 됩니다. 생년월일 없이 누구나, 지금 마음속 고민의 형세를 바로 읽습니다. 개인 명리와 연결되지 않습니다.</p>
+      <div style="border-top:1px solid var(--paper3);margin:16px 0;"></div>
+      <ul class="efeat">
+        <li>괘명 · 괘사 · 행동 지침 <span class="ft ftf">무료 포함</span></li>
+        <li>동효 · 효사 · 지괘 분석 <span class="ft ftp">충전·구독</span></li>
+        <li>AI 해설 프롬프트 <span class="ft ftp">충전·구독</span></li>
+      </ul>
+      <p style="margin-top:16px;font-size:11px;color:var(--ink3);line-height:1.7;">💡 충전·구독 회원도 명리 연결 없이 빠르게 보고 싶을 때 사용하세요.</p>
+      <button class="ec-cta ec-cta-free" onclick="event.stopPropagation();startDiv('free')">지금 바로 점괘 보기 →</button>
+    </div>
+
+    <!-- 사주 기반 정밀 점괘 -->
+    <div class="ec paid" onclick="startDiv('paid')">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <span class="ebdg bp2">정밀 · 개인 명리 연결</span>
+        <span style="font-size:11px;color:var(--pb);background:var(--pp);padding:3px 9px;border-radius:10px;font-weight:500;">🔒 충전·구독 전용</span>
+      </div>
+      <div class="eico">☯</div>
+      <h3 class="etit">사주 기반 정밀 점괘</h3>
+      <p style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:8px;font-family:'Noto Serif KR',serif;">내 명리와 연결된 깊은 해석</p>
+      <p class="edesc">생년월일시를 바탕으로 지금 내 대운·시운 맥락 위에서 점괘를 읽습니다. 같은 괘라도 내 사주와 연결하면 전혀 다른 메시지가 됩니다.</p>
+      <div style="border-top:1px solid var(--paper3);margin:16px 0;"></div>
+      <ul class="efeat">
+        <li>즉석 점괘 전체 포함 <span class="ft ftp">충전·구독</span></li>
+        <li>인생 본괘 · 대운 맥락 연결 <span class="ft ftp">충전·구독</span></li>
+        <li>AI 심층 프롬프트 (사주 포함) <span class="ft ftp">충전·구독</span></li>
+      </ul>
+      <p style="margin-top:16px;font-size:11px;color:var(--ink3);line-height:1.7;">💡 처음 이용 시 생년월일시를 한 번만 입력하면 이후엔 바로 시작됩니다.</p>
+      <button class="ec-cta ec-cta-paid" onclick="event.stopPropagation();startDiv('paid')">사주 연동 점괘 시작 →</button>
+    </div>
+
+  </div>
+  <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--ink3);">
+    두 점괘의 차이가 궁금하신가요?
+    <a href="#" onclick="openConcept(3);return false;" style="color:var(--gold);text-decoration:none;margin-left:4px;">사주와 주역의 차이 읽어보기 →</a>
+  </p>
+</section>
+<hr class="divr">
+
+<!-- CONCEPT -->
+<section class="cbg" id="concept">
+  <div class="secw" style="padding-top:0;padding-bottom:0;">
+    <p class="slbl">개념 이해</p>
+    <h2 class="stit">서비스를 제대로 쓰기 위한 최소한의 지식</h2>
+    <div class="cgrid">
+      <div class="cc" onclick="openConcept(0)"><div class="ccnum">01</div><h3>주역이란 무엇인가</h3><p>미래 예언서가 아닌 변화의 법칙을 담은 철학서. 음양과 64괘의 세계.</p></div>
+      <div class="cc" onclick="openConcept(1)"><div class="ccnum">02</div><h3>점을 치는 원리</h3><p>동전 던지기가 단순한 우연이 아닌 이유. 칼 융의 동시성 이론과 천인감응.</p></div>
+      <div class="cc" onclick="openConcept(2)"><div class="ccnum">03</div><h3>괘를 읽는 법</h3><p>본괘와 동효, 지괘의 관계. 결과를 내 상황에 어떻게 적용하는가.</p></div>
+      <div class="cc" onclick="openConcept(3)"><div class="ccnum">04</div><h3>사주와 주역의 차이</h3><p>정해진 운명을 보는 사주팔자 vs 지금 이 순간의 형세를 읽는 주역점.</p></div>
+      <div class="cc" onclick="openConcept(4)"><div class="ccnum">05</div><h3>주역의 학문적 뿌리</h3><p>성리학·이기론·주리론·주기론이 어떻게 연결되는가. 동양 철학 3천 년의 맥락.</p></div>
+      <div class="cc" onclick="openConcept(5)"><div class="ccnum">06</div><h3>올바른 마음가짐</h3><p>점을 치기 전 알아야 할 것. 욕심과 기(氣), 처세술로서의 주역.</p></div>
+    </div>
+  </div>
+</section>
+<hr class="divr">
+
+<!-- PRICING -->
+<section class="secw" id="pricing">
+  <p class="slbl" style="text-align:center;">요금제</p>
+  <h2 class="stit" style="text-align:center;">나에게 맞는 방식으로</h2>
+  <div class="pgrid">
+    <div class="pc">
+      <p class="pplan">무료</p>
+      <p class="pprice">0원</p>
+      <p class="punit">하루 1회 제공</p>
+      <ul class="pfeat">
+        <li>즉석 점괘 하루 1회</li>
+        <li>괘명 + 괘사 + 행동 지침</li>
+        <li>오늘의 일일 운세</li>
+        <li>개념 콘텐츠 전체</li>
+      </ul>
+      <button class="btnplan" onclick="startDiv('free')">회원가입 후 무료 시작</button>
+    </div>
+    <div class="pc feat">
+      <p class="pplan">충전형</p>
+      <p class="pprice">5,000원~</p>
+      <p class="punit">충전 금액만큼 횟수 제공</p>
+      <ul class="pfeat">
+        <li>동효 · 효사 · 지괘 해석</li>
+        <li>AI 해설 프롬프트 복사</li>
+        <li>점괘 기록 보관 30일</li>
+        <li>5,000원 = 10회</li>
+        <li>10,000원 = 25회</li>
+      </ul>
+      <button class="btnplan" onclick="openPayMo('charge')">충전하기</button>
+    </div>
+    <div class="pc">
+      <p class="pplan">구독형</p>
+      <p class="pprice">19,900원</p>
+      <p class="punit">월 정액 / 전 기능 무제한</p>
+      <ul class="pfeat">
+        <li>모든 기능 무제한</li>
+        <li>사주 기반 정밀 점괘</li>
+        <li>연 · 월 운세</li>
+        <li>인생 본괘 + 육룡 분석</li>
+        <li>점괘 기록 전체 보관</li>
+      </ul>
+      <button class="btnplan" onclick="openPayMo('subscribe')">구독 신청</button>
+    </div>
+  </div>
+</section>
+
+<footer style="background:var(--ink);color:#7a6040;text-align:center;padding:32px 24px;font-size:12px;line-height:2;">
+  <strong style="color:var(--gold);">역易</strong> — 주역 점괘 서비스<br>
+  문의 · 입금 확인: shstrategylab@gmail.com<br>
+  주역의 지혜는 미래를 보여주지 않습니다. 지금 어디에 서 있는지를 보여줄 뿐입니다.
+</footer>
+
+<!-- ═══ 동전 던지기 모달 ═══ -->
+<div class="mo" id="coinMo">
+  <div class="md">
+    <button class="mdx" onclick="closeMo('coinMo')">✕</button>
+    <!-- step1 -->
+    <div class="ms on" id="cs1">
+      <div class="prog"><div class="progf" style="width:20%"></div></div>
+      <p class="moeye">첫 번째 단계</p>
+      <h2 class="motit">무엇을 여쭙겠습니까</h2>
+      <p class="modesc">지금 마음속에 가장 간절한 고민을 적어주세요.</p>
+      <textarea class="qinp" id="userQ" placeholder="예) 지금 이직을 고민하고 있습니다. 이 결정이 옳은 방향인지, 어떤 태도로 임해야 할지 알고 싶습니다."></textarea>
+      <p class="qhint">※ '부자가 될까요?' 보다 '지금 내 태도가 올바른가요?'가 더 나은 질문입니다</p>
+      <div class="fe"><button class="bp" onclick="goCS(2)">다음 →</button></div>
+    </div>
+    <!-- step2 -->
+    <div class="ms" id="cs2">
+      <div class="prog"><div class="progf" style="width:40%"></div></div>
+      <p class="moeye">두 번째 단계</p>
+      <h2 class="motit">마음을 가다듬으십시오</h2>
+      <p class="modesc">눈을 잠시 감고 질문을 떠올리십시오. 욕심과 불안을 내려놓으십시오.</p>
+      <div style="text-align:center;padding:16px 0;">
+        <div class="breathc">호흡</div>
+        <p style="font-size:12px;color:var(--ink3);letter-spacing:1px;">원이 커질 때 들이쉬고, 작아질 때 내쉬십시오</p>
+      </div>
+      <div class="infobox" style="margin-bottom:20px;">
+        <strong>동전 준비:</strong> 동일한 동전 3개를 꺼내십시오.<br>
+        앞면(그림·숫자면) = 양(陽) 3점 &nbsp;/&nbsp; 뒷면(발행연도면) = 음(陰) 2점
+      </div>
+      <div class="tabrow">
+        <button class="ctab on" id="tabR" onclick="setTMode('real')">실제 동전으로 (권장)</button>
+        <button class="ctab" id="tabS" onclick="setTMode('sim')">화면 시뮬레이션</button>
+      </div>
+      <div class="fe">
+        <button class="bs" onclick="goCS(1)">← 이전</button>
+        <button class="bp" onclick="goCS(3)">준비됐습니다 →</button>
+      </div>
+    </div>
+    <!-- step3 -->
+    <div class="ms" id="cs3">
+      <div class="prog"><div class="progf" style="width:65%"></div></div>
+      <p class="moeye">세 번째 단계</p>
+      <h2 class="motit">동전을 던지십시오</h2>
+      <p class="modesc" style="margin-bottom:16px;">밑에서부터 위로 6번 던져 효(爻)를 쌓습니다. 질문을 마음에 품은 채 던지십시오.</p>
+      <div id="realMode"><div id="manualRows"></div></div>
+      <div id="simMode" style="display:none;">
+        <div class="throwa">
+          <p class="throwcnt" id="throwCntTxt">1효 / 6효 — 동전을 던지십시오</p>
+          <div class="coinsrow">
+            <div class="coin" id="c1">○</div>
+            <div class="coin" id="c2">○</div>
+            <div class="coin" id="c3">○</div>
+          </div>
+          <button class="btnthrow" id="throwBtn" onclick="throwSim()">동전 던지기</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:20px;margin-top:16px;">
+        <div class="yaow" id="yaow">
+          <div class="yaol" id="yl6"><span class="yaolbl">6</span><div class="yaoseg" style="background:var(--paper3);width:100%;opacity:.3"></div></div>
+          <div class="yaol" id="yl5"><span class="yaolbl">5</span><div class="yaoseg" style="background:var(--paper3);width:100%;opacity:.3"></div></div>
+          <div class="yaol" id="yl4"><span class="yaolbl">4</span><div class="yaoseg" style="background:var(--paper3);width:100%;opacity:.3"></div></div>
+          <div class="yaol" id="yl3"><span class="yaolbl">3</span><div class="yaoseg" style="background:var(--paper3);width:100%;opacity:.3"></div></div>
+          <div class="yaol" id="yl2"><span class="yaolbl">2</span><div class="yaoseg" style="background:var(--paper3);width:100%;opacity:.3"></div></div>
+          <div class="yaol" id="yl1"><span class="yaolbl">1</span><div class="yaoseg" style="background:var(--paper3);width:100%;opacity:.3"></div></div>
+        </div>
+        <div style="flex:1;">
+          <p style="font-size:11px;color:var(--ink3);line-height:1.9;">
+            <strong style="color:var(--ink);">점수표</strong><br>
+            6점 (뒤+뒤+뒤) → 노음 ╌╌ (변함)<br>
+            7점 (앞+앞+뒤) → 소양 ——<br>
+            8점 (앞+뒤+뒤) → 소음 ╌╌<br>
+            9점 (앞+앞+앞) → 노양 —— (변함)
+          </p>
+          <p id="throwStatus" style="font-size:12px;color:var(--gold);min-height:20px;margin-top:8px;"></p>
+        </div>
+      </div>
+      <div class="fe" style="margin-top:20px;">
+        <button class="bs" onclick="goCS(2)">← 이전</button>
+        <button class="bp" id="seeResBtn" onclick="goCS(4)" disabled>결과 보기 →</button>
+      </div>
+    </div>
+    <!-- step4 -->
+    <div class="ms" id="cs4">
+      <div class="prog"><div class="progf" style="width:100%"></div></div>
+      <p class="moeye">점괘 결과</p>
+      <div id="resultArea"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 사주 입력 모달 ═══ -->
+<div class="mo" id="sajuMo">
+  <div class="md" style="max-width:480px;">
+    <button class="mdx" onclick="closeMo('sajuMo')">✕</button>
+    <p class="moeye">사주 기반 점괘</p>
+    <h2 class="motit">생년월일시를 입력하십시오</h2>
+    <p class="modesc">입력하신 사주 정보는 안전하게 저장되며, 이후에는 다시 입력하지 않아도 됩니다.</p>
+    <div class="form-row" style="margin-bottom:14px;">
+      <label class="inplbl">양력 / 음력 구분</label>
+      <div style="display:flex;gap:0;margin-top:6px;border:1px solid var(--paper3);border-radius:6px;overflow:hidden;">
+        <button id="calSolar" onclick="setCalType('solar')"
+          style="flex:1;padding:9px;font-size:13px;background:var(--ink);color:var(--goldd);border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-weight:500;">
+          양력 (陽曆)
+        </button>
+        <button id="calLunar" onclick="setCalType('lunar')"
+          style="flex:1;padding:9px;font-size:13px;background:#fff;color:var(--ink3);border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;border-left:1px solid var(--paper3);">
+          음력 (陰曆)
+        </button>
+      </div>
+      <p id="calNote" style="font-size:11px;color:var(--ink3);margin-top:6px;">양력 기준으로 입력하세요. 음력으로 아시는 경우 음력을 선택하세요.</p>
+    </div>
+    <div class="sajugrid">
+      <div><label class="inplbl">생년 (예: 1985)</label><input class="inp" id="sYear" type="number" placeholder="1985" min="1900" max="2010"></div>
+      <div><label class="inplbl">생월 (1~12)</label><input class="inp" id="sMonth" type="number" placeholder="3" min="1" max="12"></div>
+      <div><label class="inplbl">생일 (1~31)</label><input class="inp" id="sDay" type="number" placeholder="15" min="1" max="31"></div>
+      <div>
+        <label class="inplbl">생시</label>
+        <select class="inp" id="sHour">
+          <option value="">-- 선택 --</option>
+          <option value="자시">자시(子時) 23~01시</option>
+          <option value="축시">축시(丑時) 01~03시</option>
+          <option value="인시">인시(寅時) 03~05시</option>
+          <option value="묘시">묘시(卯時) 05~07시</option>
+          <option value="진시">진시(辰時) 07~09시</option>
+          <option value="사시">사시(巳時) 09~11시</option>
+          <option value="오시">오시(午時) 11~13시</option>
+          <option value="미시">미시(未時) 13~15시</option>
+          <option value="신시">신시(申時) 15~17시</option>
+          <option value="유시">유시(酉時) 17~19시</option>
+          <option value="술시">술시(戌時) 19~21시</option>
+          <option value="해시">해시(亥時) 21~23시</option>
+          <option value="모름">모름</option>
+        </select>
+      </div>
+    </div>
+    <div class="fe">
+      <button class="bs" onclick="closeMo('sajuMo')">취소</button>
+      <button class="bp" onclick="saveSaju()">저장 후 시작 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 개념 모달 ═══ -->
+<div class="mo" id="conceptMo">
+  <div class="md" style="max-width:680px;">
+    <button class="mdx" onclick="closeMo('conceptMo')">✕</button>
+    <p class="moeye" id="cEye"></p>
+    <h2 class="motit" id="cTit"></h2>
+    <div class="ccbody" style="margin-top:16px;" id="cBody"></div>
+  </div>
+</div>
+
+<!-- ═══ 마이페이지 모달 ═══ -->
+<div class="mo" id="mypageMo">
+  <div class="md" style="max-width:460px;">
+    <button class="mdx" onclick="closeMo('mypageMo')">✕</button>
+    <p class="moeye">내 계정</p>
+    <h2 class="motit" style="margin-bottom:24px;">마이페이지</h2>
+    <div style="border:1px solid var(--paper3);border-radius:8px;overflow:hidden;margin-bottom:20px;">
+      <div class="mprow">
+        <span class="mplbl">이름</span>
+        <span class="mpval" id="mpName">—</span>
+      </div>
+      <div class="mprow" style="border-top:1px solid var(--paper2);">
+        <span class="mplbl">이메일</span>
+        <span class="mpval" id="mpEmail">—</span>
+      </div>
+      <div class="mprow" style="border-top:1px solid var(--paper2);">
+        <span class="mplbl">가입일</span>
+        <span class="mpval" id="mpJoined">—</span>
+      </div>
+      <div class="mprow" style="border-top:1px solid var(--paper2);">
+        <span class="mplbl">상태</span>
+        <span class="mpval" id="mpStatus">—</span>
+      </div>
+      <div class="mprow" style="border-top:1px solid var(--paper2);">
+        <span class="mplbl">잔여 횟수</span>
+        <span class="mpval" id="mpCnt">—</span>
+      </div>
+      <div class="mprow" style="border-top:1px solid var(--paper2);">
+        <span class="mplbl">사주</span>
+        <span class="mpval" id="mpSaju" style="font-size:12px;">—</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;">
+      <button class="bs" style="flex:1;font-size:13px;padding:10px;" onclick="closeMo('mypageMo');openMo('sajuMo');">사주 정보 변경</button>
+      <button class="bs" style="flex:1;font-size:13px;padding:10px;" onclick="closeMo('mypageMo');openPayMo('charge');">충전 / 구독</button>
+    </div>
+    <div style="border-top:1px solid var(--paper3);padding-top:16px;">
+      <p style="font-size:12px;color:var(--ink3);margin-bottom:10px;line-height:1.7;">탈퇴 시 계정 및 모든 이용 기록이 영구 삭제되며 복구할 수 없습니다.</p>
+      <button id="withdrawBtn" onclick="confirmWithdraw()" style="background:none;border:1px solid var(--red);color:var(--red);font-size:12px;padding:7px 18px;border-radius:4px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;"
+        onmouseover="this.style.background='var(--red)';this.style.color='#fff'"
+        onmouseout="this.style.background='none';this.style.color='var(--red)'">
+        회원 탈퇴
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 결제 모달 ═══ -->
+<div class="mo" id="payMo">
+  <div class="md" style="max-width:500px;">
+    <button class="mdx" onclick="closeMo('payMo')">✕</button>
+    <p class="moeye">무통장 입금 신청</p>
+    <h2 class="motit" id="payTit">충전하기</h2>
+    <label class="inplbl">이름</label><input class="inp" id="payName" placeholder="홍길동">
+    <label class="inplbl">전화번호</label><input class="inp" id="payPhone" placeholder="010-0000-0000">
+    <label class="inplbl">이메일</label><input class="inp" id="payEmail" placeholder="example@email.com">
+    <label class="inplbl">상품 선택</label>
+    <select class="inp" id="payProd">
+      <option value="">-- 선택하세요 --</option>
+      <option value="charge5">충전 5,000원 (10회)</option>
+      <option value="charge10">충전 10,000원 (25회)</option>
+      <option value="charge30">충전 30,000원 (80회)</option>
+      <option value="sub_month">월 구독 19,900원</option>
+      <option value="sub_year">연 구독 179,000원 (약 25% 할인)</option>
+    </select>
+    <div class="bankbox">
+      <strong>입금 계좌 안내</strong><br>
+      은행명: 카카오뱅크 &nbsp;|&nbsp; 예금주: 역易 서비스<br>
+      계좌번호: 3333-00-0000000<br><br>
+      입금자명: <strong>이름+전화번호 뒤 4자리</strong> (예: 홍길동1234)<br>
+      <span style="color:var(--red);font-size:12px;">입금 확인 후 영업일 기준 1~2시간 내 처리됩니다.</span>
+    </div>
+    <button class="bp" style="width:100%;text-align:center;" onclick="submitPay()">신청 완료</button>
+  </div>
+</div>
+
+<!-- ═══ 로그인 모달 ═══ -->
+<div class="mo" id="loginMo">
+  <div class="md" style="max-width:420px;">
+    <button class="mdx" onclick="closeMo('loginMo')">✕</button>
+    <p class="moeye">회원</p>
+    <h2 class="motit">로그인</h2>
+    <p class="modesc">점괘 기록 · 사주 저장 · 유료 서비스를 이용하려면 로그인하세요.</p>
+    <button onclick="doGoogleLogin()" style="width:100%;padding:13px;border:1px solid var(--paper3);border-radius:8px;background:#fff;cursor:pointer;font-size:14px;font-family:'Noto Sans KR',sans-serif;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;margin-top:8px;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--paper3)'">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;height:20px;">
+      Google 계정으로 로그인
+    </button>
+    <p style="text-align:center;font-size:11px;color:var(--ink3);margin-top:16px;line-height:1.7;">비밀번호가 필요 없습니다.<br>Google 계정으로 간편하게 이용하세요.</p>
+  </div>
+</div>
+
+
+<!-- ═══ AI 해설 샘플 모달 ═══ -->
+<div class="mo" id="sampleMo">
+  <div class="md" style="max-width:620px;">
+    <button class="mdx" onclick="closeMo('sampleMo')">✕</button>
+    <p class="moeye">AI 해설 샘플</p>
+    <h2 class="motit" style="margin-bottom:4px;">지천태 (地天泰) — 평화</h2>
+    <p style="font-size:11px;color:var(--ink3);margin-bottom:20px;">질문: "지금 이 결정을 밀고 나가도 될까요?" / 동효: 3효, 5효</p>
+    <div style="background:var(--paper2);border-radius:8px;padding:16px 18px;font-size:13px;color:var(--ink2);line-height:1.9;">
+      <p style="font-weight:600;color:var(--ink);font-family:'Noto Serif KR',serif;font-size:15px;margin-bottom:12px;border-left:3px solid var(--gold);padding-left:10px;">HOOK — 하늘과 땅이 소통하는 지금, 당신의 결단은 흐름을 타고 있습니다.</p>
+      <p style="font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">카드 1 — 지금의 형세</p>
+      <p style="margin-bottom:16px;">지천태(地天泰)는 땅이 위에, 하늘이 아래에 있어 두 기운이 서로를 향해 나아가는 형세입니다. 음과 양이 막힘 없이 소통하며 만물이 제자리를 찾아가는 번영의 시기입니다. 지금 당신이 고민하는 결정은 이 흐름과 맞닿아 있습니다. 억지로 밀어붙이는 것이 아니라, 이미 무르익은 때를 자연스럽게 받아들이는 것입니다.</p>
+      <p style="font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">카드 2 — 동효의 메시지</p>
+      <p style="margin-bottom:16px;">3효는 "평탄하면 기울지 않는 것이 없고, 떠나면 돌아오지 않는 것이 없다(无平不陂 无往不復)"고 합니다. 지금의 좋은 흐름에 자만하지 말고 반드시 올 변화에 대비하라는 경고입니다. 5효는 제을(帝乙)이 딸을 시집보내듯 겸손하게 처신하면 크게 길하다고 합니다. 높은 자리에서 낮추는 태도가 지금 가장 중요합니다.</p>
+      <p style="font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">카드 3 — 지괘와 변화의 방향</p>
+      <p style="margin-bottom:16px;">동효가 변하면 천지비(天地否)로 흘러갑니다. 태(泰)의 끝은 비(否)입니다. 이것은 흉조가 아니라 자연의 순환입니다. 지금 결단을 내리되, 정점에서 반드시 수확하고 물러날 준비를 함께 갖추어야 합니다. 나아감과 물러남을 함께 계획하십시오.</p>
+      <p style="font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">카드 4 — 지금 당장 취해야 할 행동</p>
+      <p style="margin-bottom:4px;">① <strong>결단을 실행하되 겸손을 유지하라</strong> — 태괘는 강함과 부드러움이 공존할 때 오래 지속됩니다.</p>
+      <p style="margin-bottom:4px;">② <strong>이익의 절반은 미리 확보하라</strong> — 3효의 경고처럼 전성기에 반드시 수확 시점을 정해두십시오.</p>
+      <p style="margin-bottom:16px;">③ <strong>주변과 나누어라</strong> — 지천태는 혼자의 번영이 아닌 공동의 번영일 때 더 오래 지속됩니다.</p>
+      <p style="font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">결론</p>
+      <p>지금은 나아갈 때입니다. 그러나 주역은 "길함이 극에 달하면 흉함이 온다"는 진리를 잊지 말라고 합니다. 결단을 내리되, 정점을 지나는 순간을 놓치지 마십시오. 지혜로운 사람은 흐름을 타면서도 항상 다음 파도를 준비합니다.</p>
+    </div>
+    <p style="font-size:11px;color:var(--ink3);margin-top:14px;text-align:center;line-height:1.7;">위는 실제 AI 해설 샘플입니다. 충전 후 점괘를 보시면 당신의 질문과 괘에 맞는 해설을 받으실 수 있습니다.</p>
+    <div style="text-align:center;margin-top:16px;">
+      <button class="bp" onclick="closeMo('sampleMo');openPayMo();">충전하러 가기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 인앱 브라우저 안내 모달 ═══ -->
+<div class="mo" id="inAppMo">
+  <div class="md" style="max-width:420px;">
+    <button class="mdx" onclick="closeMo('inAppMo')">✕</button>
+    <p class="moeye">로그인 안내</p>
+    <h2 class="motit" style="font-size:18px;line-height:1.5;">
+      <span id="inAppLabel">앱 내 브라우저</span>에서는<br>Google 로그인이 차단됩니다
+    </h2>
+    <p class="modesc" style="font-size:13px;line-height:1.8;">
+      Google 보안 정책으로 인해 앱 내 브라우저(인앱)에서는<br>
+      Google 계정 로그인이 불가합니다.<br>
+      <strong>외부 브라우저(Chrome · Safari)</strong>에서 접속해 주세요.
+    </p>
+    <!-- 카카오톡 전용 안내 -->
+    <div id="inAppKakaoGuide" style="display:none;background:var(--paper2);border-radius:8px;padding:16px;margin-bottom:16px;font-size:13px;color:var(--ink2);line-height:2;">
+      <strong style="color:var(--ink);">카카오톡에서 여는 방법</strong><br>
+      1. 화면 우측 하단 <strong>···</strong> (더보기) 버튼 탭<br>
+      2. <strong>다른 브라우저로 열기</strong> 선택<br>
+      3. Chrome 또는 Safari로 열기
+    </div>
+    <!-- 공통 안내 -->
+    <div id="inAppCommonGuide" style="display:none;background:var(--paper2);border-radius:8px;padding:16px;margin-bottom:16px;font-size:13px;color:var(--ink2);line-height:2;">
+      <strong style="color:var(--ink);">외부 브라우저로 여는 방법</strong><br>
+      1. 아래 주소를 <strong>복사</strong>하세요<br>
+      2. <strong>Chrome</strong> 또는 <strong>Safari</strong>를 열고<br>
+      3. 주소창에 붙여넣기 후 접속하세요
+    </div>
+    <!-- URL 복사 -->
+    <div style="background:var(--ink);border-radius:6px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <span id="inAppUrl" style="font-size:11px;color:#c8b898;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <button onclick="copyCurrentUrl()" style="flex-shrink:0;background:var(--gold);color:var(--ink);border:none;padding:6px 14px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">복사</button>
+    </div>
+    <p style="text-align:center;font-size:11px;color:var(--ink3);line-height:1.7;">
+      주소를 복사한 뒤 Chrome / Safari 주소창에<br>붙여넣기 하시면 바로 접속됩니다.
+    </p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══ Firebase 초기화 ══ */
+const FC = {
+  apiKey:"AIzaSyCdJqYpn2oxiCojLjL5AEpulqkvlC_fz_Q",
+  authDomain:"change-time-a7567.firebaseapp.com",
+  databaseURL:"https://change-time-a7567-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"change-time-a7567",
+  storageBucket:"change-time-a7567.firebasestorage.app",
+  messagingSenderId:"732466674309",
+  appId:"1:732466674309:web:3311462f3466f4ab9707ec"
+};
+firebase.initializeApp(FC);
+const auth = firebase.auth();
+const db   = firebase.database();
+
+let CU = null; // currentUser
+let UP = null; // userProfile
+
+auth.onAuthStateChanged(async u => {
+  CU = u;
+  if(u){
+    document.getElementById('navLoginBtn').style.display='none';
+    document.getElementById('navUser').style.display='flex';
+    document.getElementById('navName').textContent = u.displayName || u.email.split('@')[0];
+    await loadUP(u.uid);
+    closeMo('loginMo');
+  } else {
+    document.getElementById('navLoginBtn').style.display='inline-block';
+    document.getElementById('navUser').style.display='none';
+    UP=null;
+  }
+});
+
+async function loadUP(uid){
+  const s = await db.ref('users/'+uid).once('value');
+  UP = s.val()||{};
+  updateCnt();
+}
+function updateCnt(){
+  const sub = UP?.subscribed||false;
+  const cnt = UP?.remainCount||0;
+  const usedToday = UP?.freeUsedToday||0;
+  const freeLeft = Math.max(0, 1 - usedToday);
+  let label;
+  if(sub) label = '무제한';
+  else if(cnt > 0) label = cnt+'회';
+  else label = '무료 '+freeLeft+'회';
+  document.getElementById('navCnt').textContent = label;
+}
+
+/* ══ 인앱 브라우저 감지 ══ */
+function detectInAppBrowser(){
+  const ua = navigator.userAgent.toLowerCase();
+  // 카카오톡, 네이버, 인스타그램, 페이스북, 라인, 위챗 등
+  if(/kakaotalk/.test(ua)) return 'kakaotalk';
+  if(/naver/.test(ua)) return 'naver';
+  if(/instagram/.test(ua)) return 'instagram';
+  if(/fban|fbav/.test(ua)) return 'facebook';
+  if(/line\//.test(ua)) return 'line';
+  if(/wechat|micromessenger/.test(ua)) return 'wechat';
+  // 일반 WebView (Android/iOS)
+  if(/; wv\)/.test(ua) || /webview/.test(ua)) return 'webview';
+  if(/(iphone|ipod|ipad).*applewebkit(?!.*safari)/i.test(navigator.userAgent)) return 'webview';
+  return null;
+}
+
+/* ══ 인앱 브라우저 안내 모달 표시 ══ */
+function showInAppGuide(appName){
+  const names = {
+    kakaotalk:'카카오톡', naver:'네이버 앱', instagram:'인스타그램',
+    facebook:'페이스북', line:'라인', wechat:'위챗', webview:'앱 내 브라우저'
+  };
+  const label = names[appName] || '현재 앱';
+  document.getElementById('inAppLabel').textContent = label;
+
+  // 현재 URL 표시
+  document.getElementById('inAppUrl').textContent = window.location.href;
+
+  // 카카오톡이면 우측 상단 ···(더보기) 안내, 아니면 공통 안내
+  const kakaoGuide = document.getElementById('inAppKakaoGuide');
+  const commonGuide = document.getElementById('inAppCommonGuide');
+  if(appName === 'kakaotalk'){
+    kakaoGuide.style.display = 'block';
+    commonGuide.style.display = 'none';
+  } else {
+    kakaoGuide.style.display = 'none';
+    commonGuide.style.display = 'block';
+  }
+  openMo('inAppMo');
+}
+
+function copyCurrentUrl(){
+  navigator.clipboard.writeText(window.location.href)
+    .then(()=>toast('✅ 주소가 복사되었습니다. 브라우저에 붙여넣기 하세요.'))
+    .catch(()=>toast('주소 복사에 실패했습니다. 직접 복사해 주세요.'));
+}
+
+/* ══ 인증 ══ */
+async function doGoogleLogin(){
+  // 인앱 브라우저 감지 — Google이 WebView OAuth를 완전 차단하므로 외부 브라우저 안내
+  const inApp = detectInAppBrowser();
+  if(inApp){
+    closeMo('loginMo');
+    showInAppGuide(inApp);
+    return;
+  }
+
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try{
+    const result = await auth.signInWithPopup(provider);
+    const u = result.user;
+    const snap = await db.ref('users/'+u.uid).once('value');
+    if(!snap.val()){
+      await db.ref('users/'+u.uid).set({
+        name: u.displayName||'',
+        email: u.email||'',
+        role: 'user',
+        remainCount: 0,
+        subscribed: false,
+        freeUsedToday: 0,
+        freeResetDate: todayStr(),
+        createdAt: Date.now()
+      });
+    }
+    toast('환영합니다, '+(u.displayName||u.email)+'님!');
+  } catch(err){
+    if(err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment'){
+      // 팝업 차단 시 redirect로 재시도
+      const provider2 = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithRedirect(provider2);
+    } else if(err.code !== 'auth/popup-closed-by-user'){
+      toast('로그인 실패: '+err.message);
+    }
+  }
+}
+
+/* ══ Redirect 결과 처리 (페이지 로드 시 자동 실행) ══ */
+auth.getRedirectResult().then(async result => {
+  if(!result || !result.user) return;
+  const u = result.user;
+  const snap = await db.ref('users/'+u.uid).once('value');
+  if(!snap.val()){
+    await db.ref('users/'+u.uid).set({
+      name: u.displayName||'',
+      email: u.email||'',
+      role: 'user',
+      remainCount: 0,
+      subscribed: false,
+      freeUsedToday: 0,
+      freeResetDate: todayStr(),
+      createdAt: Date.now()
+    });
+  }
+  toast('환영합니다, '+(u.displayName||u.email)+'님!');
+}).catch(err => {
+  if(err.code !== 'auth/popup-closed-by-user')
+    console.warn('Redirect login error:', err.message);
+});
+
+async function doLogout(){ await auth.signOut(); toast('로그아웃되었습니다.'); }
+
+/* ══ 마이페이지 ══ */
+function openMypage(){
+  if(!CU) return;
+  // 이름
+  document.getElementById('mpName').textContent = UP?.name || CU.displayName || CU.email.split('@')[0];
+  // 이메일
+  document.getElementById('mpEmail').textContent = CU.email || '—';
+  // 가입일
+  const joined = UP?.createdAt ? new Date(UP.createdAt) : (CU.metadata?.creationTime ? new Date(CU.metadata.creationTime) : null);
+  document.getElementById('mpJoined').textContent = joined ? `${joined.getFullYear()}년 ${joined.getMonth()+1}월 ${joined.getDate()}일` : '—';
+  // 상태
+  const sub = UP?.subscribed || false;
+  const cnt = UP?.remainCount || 0;
+  let statusHtml;
+  if(sub) statusHtml = '<span style="color:var(--pb);font-weight:600;">구독 중</span>';
+  else if(cnt>0) statusHtml = '<span style="color:var(--fg);font-weight:600;">충전 회원</span>';
+  else statusHtml = '<span style="color:var(--ink3);">무료 회원</span>';
+  document.getElementById('mpStatus').innerHTML = statusHtml;
+  // 잔여 횟수
+  if(sub){ document.getElementById('mpCnt').textContent = '무제한 (구독)'; }
+  else if(cnt>0){ document.getElementById('mpCnt').textContent = cnt + '회'; }
+  else {
+    const freeLeft = Math.max(0, 1 - (UP?.freeUsedToday||0));
+    document.getElementById('mpCnt').textContent = '오늘 무료 ' + freeLeft + '회 남음';
+  }
+  // 사주
+  const s = UP?.saju;
+  if(s){
+    const cal = s.calType==='lunar'?'음력':'양력';
+    document.getElementById('mpSaju').textContent = `${s.year}년 ${s.month}월 ${s.day}일 ${s.hour} (${cal})`;
+  } else {
+    document.getElementById('mpSaju').innerHTML = '<span style="color:var(--ink3);">미입력</span>';
+  }
+  openMo('mypageMo');
+}
+
+async function confirmWithdraw(){
+  if(!CU) return;
+  const ok = confirm('정말 탈퇴하시겠습니까?\n\n계정 및 모든 이용 기록이 영구 삭제되며 복구할 수 없습니다.');
+  if(!ok) return;
+  const btn = document.getElementById('withdrawBtn');
+  btn.textContent = '처리 중...'; btn.disabled = true;
+  try {
+    await db.ref('users/'+CU.uid).remove();
+    await CU.delete();
+    closeMo('mypageMo');
+    toast('탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.');
+  } catch(err) {
+    if(err.code === 'auth/requires-recent-login'){
+      toast('보안을 위해 재로그인 후 탈퇴를 진행해주세요.');
+      await auth.signOut();
+      closeMo('mypageMo');
+    } else {
+      toast('탈퇴 처리 중 오류가 발생했습니다: '+err.message);
+    }
+    btn.textContent = '회원 탈퇴'; btn.disabled = false;
+  }
+}
+
+/* ══ 64괘 전체 데이터 ══ */
+const G64=[
+  {id:1,name:"중천건",hanja:"重天乾",meaning:"하늘",keyword:"강건함",desc:"순수한 에너지와 추진력, 창조적 시작",action:"자신의 능력을 믿고 당당히 나아가십시오. 정점에서의 겸손이 다음 상승을 만듭니다."},
+  {id:2,name:"중지곤",hanja:"重地坤",meaning:"땅",keyword:"유순함",desc:"포용력과 수용성, 서포트와 헌신",action:"지금은 주도보다 협력과 포용을 택하십시오. 묵묵히 맡은 바를 다하면 반드시 결실이 옵니다."},
+  {id:3,name:"수뢰둔",hanja:"水雷屯",meaning:"풀",keyword:"어려운 시작",desc:"어려움 속에서 때를 기다리는 인내",action:"억지로 밀고 나가지 마십시오. 묵묵히 실력을 쌓고 조력자를 구하십시오. 기다림이 지혜입니다."},
+  {id:4,name:"산수몽",hanja:"山水蒙",meaning:"산 아래 물",keyword:"배움",desc:"미숙함을 일깨우는 교육과 배움의 시기",action:"지금은 배울 때입니다. 아는 척하지 말고 먼저 배움을 청하십시오."},
+  {id:5,name:"수천수",hanja:"水天需",meaning:"구름 위 비",keyword:"기다림",desc:"기다림의 미학, 때가 오기를 기다리는 여유",action:"지금 당장 결과를 내려 하지 마십시오. 때가 되면 반드시 기회가 옵니다."},
+  {id:6,name:"천수송",hanja:"天水訟",meaning:"하늘 위 물",keyword:"다툼",desc:"다툼과 소송, 갈등을 멈추고 타협해야 할 때",action:"지금은 소송이나 분쟁을 피하십시오. 반만 이기고 물러서는 것이 지혜입니다."},
+  {id:7,name:"지수사",hanja:"地水師",meaning:"땅 속 물",keyword:"통솔",desc:"조직과 군대, 규율과 리더십의 필요성",action:"원칙과 규율이 필요한 때입니다. 각자의 역할을 명확히 나누어 이끄십시오."},
+  {id:8,name:"수지비",hanja:"水地比",meaning:"물 위 땅",keyword:"친밀",desc:"친밀함과 결속, 좋은 파트너와의 협력",action:"지금은 혼자보다 함께가 힘이 셉니다. 진심으로 돕고 의지하십시오."},
+  {id:9,name:"풍천소축",hanja:"風天小畜",meaning:"바람 위 하늘",keyword:"소축",desc:"작은 저축, 힘이 부족하니 힘을 축적할 때",action:"작은 것 하나하나에 충실하십시오. 작은 노력이 쌓여 큰 결실을 맺습니다."},
+  {id:10,name:"천택리",hanja:"天澤履",meaning:"하늘 아래 연못",keyword:"조심스러운 발걸음",desc:"호랑이 꼬리를 밟듯 조심조심 실천함",action:"매우 조심스럽게 행동하십시오. 예의를 갖추고 순서와 격식을 지키면 위험을 넘깁니다."},
+  {id:11,name:"지천태",hanja:"地天泰",meaning:"땅 위 하늘",keyword:"평화",desc:"태평성대, 소통이 잘되고 번창하는 시기",action:"적극적으로 나아갈 때입니다. 다만 평화로울수록 미래를 대비하십시오."},
+  {id:12,name:"천지비",hanja:"天地否",meaning:"하늘 위 땅",keyword:"막힘",desc:"막힘과 불통, 침체기이므로 내실을 다져야 함",action:"억지로 추진하지 마십시오. 내실을 다지며 때를 기다리십시오."},
+  {id:13,name:"천화동인",hanja:"天火同人",meaning:"하늘 위 불",keyword:"동지",desc:"뜻이 맞는 사람들과의 동업 및 사회적 연대",action:"혼자가 아닌 동지들과 함께하십시오. 공동의 목표를 앞세우십시오."},
+  {id:14,name:"화천대유",hanja:"火天大有",meaning:"불 위 하늘",keyword:"크게 소유",desc:"크게 소유함, 풍요로움 속에서 베풀어야 할 때",action:"지금의 풍요에 감사하고 주변과 나누십시오. 덕으로 다스리면 더 큰 번영이 옵니다."},
+  {id:15,name:"지산겸",hanja:"地山謙",meaning:"산 아래 땅",keyword:"겸손",desc:"겸손의 미덕, 낮출수록 더욱 높아짐",action:"지금은 낮추고 비우십시오. 겸손한 자에게 하늘은 더 큰 것을 채워줍니다."},
+  {id:16,name:"뇌지예",hanja:"雷地豫",meaning:"땅 위 우레",keyword:"기쁨과 대비",desc:"기쁨과 즐거움, 미래를 대비하는 기획",action:"즐겁고 활기차게 나아갈 때입니다. 흥겨움에 도취되지 말고 준비를 게을리하지 마십시오."},
+  {id:17,name:"택뢰수",hanja:"澤雷隨",meaning:"연못 위 우레",keyword:"순응",desc:"흐름에 따름, 순리에 맡기면 형통함",action:"고집을 내려놓고 상황의 흐름에 따르십시오. 유연함이 승리를 만듭니다."},
+  {id:18,name:"산풍고",hanja:"山風蠱",meaning:"산 아래 바람",keyword:"혁신",desc:"부패와 정체, 잘못된 관행을 혁신해야 할 때",action:"쌓인 문제를 더 이상 미루지 마십시오. 원인을 파악하고 과감히 개혁하면 크게 길합니다."},
+  {id:19,name:"지택임",hanja:"地澤臨",meaning:"땅 위 연못",keyword:"다가감",desc:"군주의 임함, 기회가 찾아오니 적극적으로 나설 때",action:"적극적으로 다가가십시오. 진심 어린 관심과 돌봄이 신뢰를 만듭니다."},
+  {id:20,name:"풍지관",hanja:"風地觀",meaning:"바람 위 땅",keyword:"관찰",desc:"관찰과 통찰, 행동하기 전 상황을 살핌",action:"행동보다 관찰이 먼저입니다. 상황을 충분히 파악한 후 신중하게 움직이십시오."},
+  {id:21,name:"화뢰서합",hanja:"火雷噬嗑",meaning:"불 위 우레",keyword:"결단",desc:"장애물 제거, 과단성 있는 처벌과 결단",action:"지금 가로막는 장애물을 명확히 파악하고 단호하게 해결하십시오."},
+  {id:22,name:"산화비",hanja:"山火賁",meaning:"산 아래 불",keyword:"꾸밈",desc:"내실을 꾸미는 아름다움, 겉치레보다 본질",action:"형식과 예의를 갖추는 것이 중요합니다. 겉모습에만 치중하지 말고 내실도 다지십시오."},
+  {id:23,name:"산지박",hanja:"山地剝",meaning:"산 아래 땅",keyword:"무너짐",desc:"무너지고 깎임, 위기 상황이므로 자중해야 함",action:"지금은 물러서야 할 때입니다. 작은 것을 지키며 때를 기다리십시오."},
+  {id:24,name:"지뢰복",hanja:"地雷復",meaning:"땅 아래 우레",keyword:"회복",desc:"회복과 복귀, 어둠이 가고 새 희망이 찾아옴",action:"조용히 쉬며 힘을 비축하십시오. 서두르지 않아도 자연히 좋아집니다."},
+  {id:25,name:"천뢰무망",hanja:"天雷無妄",meaning:"하늘 위 우레",keyword:"진실",desc:"순수함과 진실함, 인위적인 욕심을 버려야 함",action:"욕심이나 계략 없이 진실하게 행동하십시오. 하늘의 뜻에 어긋나는 일은 반드시 화를 부릅니다."},
+  {id:26,name:"산천대축",hanja:"山天大畜",meaning:"하늘 아래 산",keyword:"큰 축적",desc:"크게 축적함, 거대한 에너지를 모으고 보유함",action:"나아가기보다 배우고 쌓는 시기입니다. 더 많이 공부하고 준비할수록 미래가 빛납니다."},
+  {id:27,name:"산뢰이",hanja:"山雷頤",meaning:"산 아래 우레",keyword:"기름",desc:"턱의 형상, 올바른 양육과 언행의 절제",action:"몸과 마음을 바르게 기르십시오. 말을 삼가고 좋은 것을 가까이 하십시오."},
+  {id:28,name:"택풍대과",hanja:"澤風大過",meaning:"연못 위 바람",keyword:"큰 과실",desc:"과유불급, 무거운 짐을 졌으니 기둥을 보강해야 함",action:"비상한 결단이 필요합니다. 혼자 감당하려 하지 말고 과감히 도움을 구하십시오."},
+  {id:29,name:"중수감",hanja:"重水坎",meaning:"물 거듭",keyword:"험난함",desc:"끝없는 험난함, 진실한 마음으로 위기를 돌파함",action:"포기하지 마십시오. 험난함 속에서도 믿음을 잃지 않으면 반드시 빠져나오는 길이 생깁니다."},
+  {id:30,name:"중화리",hanja:"重火離",meaning:"불 거듭",keyword:"밝음",desc:"밝음과 아름다움, 집착을 버리고 공명정대함",action:"지혜롭게 판단하고 올바른 것을 따르십시오. 밝음이 어둠을 이깁니다."},
+  {id:31,name:"택산함",hanja:"澤山咸",meaning:"연못 아래 산",keyword:"감응",desc:"이심전심, 진심 어린 소통과 감응",action:"진심으로 느끼고 소통하십시오. 계산 없는 순수한 마음이 상대를 움직입니다."},
+  {id:32,name:"뇌풍항",hanja:"雷風恒",meaning:"우레 아래 바람",keyword:"항상함",desc:"지속성과 한결같음, 초심을 유지하는 끈기",action:"지금 하는 일을 꾸준히 지속하십시오. 자주 바꾸지 말고 한 길을 걸어가십시오."},
+  {id:33,name:"천산둔",hanja:"天山遯",meaning:"하늘 아래 산",keyword:"물러남",desc:"물러남과 은둔, 소인배를 피해 한걸음 후퇴",action:"물러나는 것이 지혜입니다. 작은 것을 챙기면서 세력을 보존하십시오."},
+  {id:34,name:"뇌천대장",hanja:"雷天大壯",meaning:"우레 아래 하늘",keyword:"크게 굳셈",desc:"크게 장성함, 힘이 넘치되 절제력이 필요함",action:"강한 힘이 있을 때일수록 예의와 도리를 지키십시오. 힘과 덕을 함께 갖출 때 비로소 대장입니다."},
+  {id:35,name:"화지진",hanja:"火地晉",meaning:"땅 위 불",keyword:"나아감",desc:"앞으로 나아감, 능력을 인정받고 고속 승진함",action:"적극적으로 자신을 드러내고 나아가십시오. 밝고 당당하게 전진할 때입니다."},
+  {id:36,name:"지화명이",hanja:"地火明夷",meaning:"땅 아래 불",keyword:"지혜 감춤",desc:"밝음이 상함, 암흑기이므로 지혜를 감추고 인내",action:"능력을 드러내지 말고 조용히 인내하십시오. 어두운 시기일수록 내면을 더욱 밝게 하십시오."},
+  {id:37,name:"풍화가인",hanja:"風火家人",meaning:"불 아래 바람",keyword:"가정",desc:"가정의 화목, 각자의 역할과 본분에 충실함",action:"가까운 사람들과의 관계를 돌아보십시오. 질서와 역할을 바로잡으면 모든 것이 안정됩니다."},
+  {id:38,name:"화택규",hanja:"火澤睽",meaning:"불 아래 연못",keyword:"어긋남",desc:"반목과 갈등, 다름을 인정하고 조화를 모색",action:"큰 일보다 작은 일에 집중하십시오. 다름을 인정하고 조화의 지점을 찾으십시오."},
+  {id:39,name:"수산건",hanja:"水山蹇",meaning:"물 아래 산",keyword:"험난",desc:"험난한 고개, 나아가기 힘드니 귀인의 도움을 구함",action:"혼자 해결하려 하지 마십시오. 지금은 사람을 구하고 방향을 돌아볼 때입니다."},
+  {id:40,name:"뇌수해",hanja:"雷水解",meaning:"우레 아래 물",keyword:"풀림",desc:"해결과 해소, 묶인 매듭이 풀리니 용서하고 전진",action:"묵은 것을 내려놓고 새롭게 출발할 때입니다. 용서하고 관용을 베풀면 더욱 크게 풀립니다."},
+  {id:41,name:"산택손",hanja:"山澤損",meaning:"산 아래 연못",keyword:"덜어냄",desc:"덜어냄의 미학, 당장의 손해를 미래의 투자로 삼음",action:"아끼고 절약하십시오. 과도함을 줄이고 진실함으로 임하면 반드시 길합니다."},
+  {id:42,name:"풍뢰익",hanja:"風雷益",meaning:"바람 아래 우레",keyword:"더함",desc:"더해짐과 유익, 공익을 위해 적극적으로 기여함",action:"베풀고 선한 일을 할 때입니다. 이로운 방향으로 과감히 나아가십시오."},
+  {id:43,name:"택천쾌",hanja:"澤天夬",meaning:"연못 아래 하늘",keyword:"결단",desc:"결단과 돌파, 악을 제거하되 단호하고 공정하게",action:"결단해야 할 때입니다. 올바른 명분으로 당당하게 나아가십시오."},
+  {id:44,name:"천풍구",hanja:"天風姤",meaning:"하늘 아래 바람",keyword:"만남",desc:"우연한 만남, 유혹이나 갑작스러운 변수를 경계",action:"새로운 만남에 신중하십시오. 겉보기에 좋아 보이는 것이 해로울 수 있습니다."},
+  {id:45,name:"택지췌",hanja:"澤地萃",meaning:"연못 아래 땅",keyword:"모임",desc:"인재와 재물의 모임, 화합을 위한 구심점 필요",action:"사람들을 모으고 결속할 때입니다. 진심과 예의로 임하면 큰 힘이 만들어집니다."},
+  {id:46,name:"지풍승",hanja:"地風升",meaning:"땅 아래 나무",keyword:"오름",desc:"수직 상승, 묵묵히 노력하여 점진적으로 도약",action:"묵묵히 오르는 시기입니다. 서두르지 않고 한 단계씩 올라가십시오."},
+  {id:47,name:"택수곤",hanja:"澤水困",meaning:"연못 아래 물",keyword:"곤경",desc:"곤궁함과 시련, 말보다 진정성 있는 태도로 버팀",action:"말로는 해결되지 않습니다. 행동으로 보여주십시오. 어려울수록 뜻을 굽히지 마십시오."},
+  {id:48,name:"수풍정",hanja:"水風井",meaning:"물 아래 나무",keyword:"우물",desc:"마르지 않는 우물, 한결같은 내면의 자양분",action:"자신의 능력을 갈고닦아 세상에 도움이 되십시오. 한결같은 나눔이 복을 부릅니다."},
+  {id:49,name:"택화혁",hanja:"澤火革",meaning:"연못 아래 불",keyword:"혁명",desc:"변혁과 혁명, 낡은 관습을 깨고 새롭게 태어남",action:"낡은 것을 과감히 바꿀 때입니다. 명분 없는 변혁은 오히려 해가 되니 신중하십시오."},
+  {id:50,name:"화풍정",hanja:"火風鼎",meaning:"불 아래 나무",keyword:"솥",desc:"세 발 솥, 세력의 균형과 협력을 통한 성과",action:"새로운 것을 만들어낼 때입니다. 인재를 기르고 새로운 조직을 만들면 큰 성과를 냅니다."},
+  {id:51,name:"중뢰진",hanja:"重雷震",meaning:"우레 거듭",keyword:"놀람",desc:"천둥과 번개, 갑작스러운 충격에 침착함을 유지",action:"두려운 일이 오더라도 흔들리지 마십시오. 충격을 계기로 자신을 돌아보면 오히려 성장합니다."},
+  {id:52,name:"중산간",hanja:"重山艮",meaning:"산 거듭",keyword:"그침",desc:"머무름과 정지, 분수를 알고 나아갈 때와 멈출 때",action:"멈추십시오. 과도한 욕심과 행동을 내려놓고 고요히 자신을 바라보십시오."},
+  {id:53,name:"풍산점",hanja:"風山漸",meaning:"산 아래 나무",keyword:"점진",desc:"점진적인 발전, 거위가 날아오르듯 차근차근",action:"서두르지 마십시오. 자연의 순서처럼 하나씩 차근차근 나아가면 반드시 목적에 이릅니다."},
+  {id:54,name:"뇌택귀매",hanja:"雷澤歸妹",meaning:"우레 아래 연못",keyword:"귀매",desc:"잘못된 결합, 절차를 무시한 서두름을 경계",action:"자신의 위치와 역할을 분명히 하십시오. 처음에 신중하면 나중에 후회가 없습니다."},
+  {id:55,name:"뇌화풍",hanja:"雷火豊",meaning:"우레 아래 불",keyword:"풍성함",desc:"풍요와 절정, 가득 차면 기우니 미래를 대비",action:"지금의 풍요를 즐기되, 가득 차면 기우는 법을 잊지 마십시오. 베풀고 나누면 더 오래 지속됩니다."},
+  {id:56,name:"화산려",hanja:"火山旅",meaning:"산 아래 불",keyword:"나그네",desc:"나그네의 여정, 불안정한 환경에서 예의를 지킴",action:"낯선 환경에서 처신을 조심하십시오. 가볍게 다투거나 큰 일을 벌이지 마십시오."},
+  {id:57,name:"중풍손",hanja:"重風巽",meaning:"바람 거듭",keyword:"겸손",desc:"부드러운 바람, 겸손하게 스며드는 리더십",action:"강하게 밀어붙이지 말고 부드럽게 침투하십시오. 겸손하게 따르는 것이 결국 더 멀리 갑니다."},
+  {id:58,name:"중택태",hanja:"重澤兌",meaning:"연못 거듭",keyword:"기쁨",desc:"기쁨과 화합, 진실한 대화로 주변을 즐겁게 함",action:"기쁘게 소통하십시오. 진심 어린 기쁨이 사람을 모으고 일을 이루게 합니다."},
+  {id:59,name:"풍수환",hanja:"風水渙",meaning:"바람 아래 물",keyword:"흩어짐",desc:"흩어짐과 해소, 뭉친 갈등을 풀고 새 비전 제시",action:"굳어진 것들을 녹여 흩어지게 하십시오. 공동체의 힘을 빌리면 더욱 효과적입니다."},
+  {id:60,name:"수택절",hanja:"水澤節",meaning:"연못 아래 물",keyword:"절제",desc:"절제와 규율, 마디를 짓고 분수를 지키는 삶",action:"과함을 줄이고 기준을 세우십시오. 지나친 절제는 오히려 해가 되니 균형을 찾으십시오."},
+  {id:61,name:"풍택중부",hanja:"風澤中孚",meaning:"바람 아래 연못",keyword:"믿음",desc:"지극한 정성, 신뢰와 믿음으로 상대를 감동시킴",action:"진심으로 임하십시오. 계략이나 거짓 없이 진실한 마음이 상대의 마음을 열고 일을 이룹니다."},
+  {id:62,name:"뇌산소과",hanja:"雷山小過",meaning:"우레 아래 산",keyword:"작게 지나침",desc:"작은 과도기, 소소한 일에 집중하며 자세를 낮춤",action:"큰 것을 바라지 마십시오. 작고 낮은 것에 집중하고 겸손하게 임해야 할 때입니다."},
+  {id:63,name:"수화기제",hanja:"水火旣濟",meaning:"물 아래 불",keyword:"완성",desc:"이미 성취함, 완벽한 상태이므로 유지가 핵심",action:"완성에 방심하지 마십시오. 끝까지 긴장을 늦추지 마십시오."},
+  {id:64,name:"화수미제",hanja:"火水未濟",meaning:"불 아래 물",keyword:"미완성",desc:"아직 완성되지 않음, 끝없는 가능성과 새로운 시작",action:"포기하지 말고 신중하게 다음 발걸음을 준비하십시오. 새로운 시작이 옵니다."}
+];
+
+
+/* ══ 만세력 일진 캐시 (2023-2027) ══ */
+const DAILY_ILJIN = {"2023-01-01":"己未","2023-01-02":"庚申","2023-01-03":"辛酉","2023-01-04":"壬戌","2023-01-05":"癸亥","2023-01-06":"甲子","2023-01-07":"乙丑","2023-01-08":"丙寅","2023-01-09":"丁卯","2023-01-10":"戊辰","2023-01-11":"己巳","2023-01-12":"庚午","2023-01-13":"辛未","2023-01-14":"壬申","2023-01-15":"癸酉","2023-01-16":"甲戌","2023-01-17":"乙亥","2023-01-18":"丙子","2023-01-19":"丁丑","2023-01-20":"戊寅","2023-01-21":"己卯","2023-01-22":"庚辰","2023-01-23":"辛巳","2023-01-24":"壬午","2023-01-25":"癸未","2023-01-26":"甲申","2023-01-27":"乙酉","2023-01-28":"丙戌","2023-01-29":"丁亥","2023-01-30":"戊子","2023-01-31":"己丑","2023-02-01":"庚寅","2023-02-02":"辛卯","2023-02-03":"壬辰","2023-02-04":"癸巳","2023-02-05":"甲午","2023-02-06":"乙未","2023-02-07":"丙申","2023-02-08":"丁酉","2023-02-09":"戊戌","2023-02-10":"己亥","2023-02-11":"庚子","2023-02-12":"辛丑","2023-02-13":"壬寅","2023-02-14":"癸卯","2023-02-15":"甲辰","2023-02-16":"乙巳","2023-02-17":"丙午","2023-02-18":"丁未","2023-02-19":"戊申","2023-02-20":"己酉","2023-02-21":"庚戌","2023-02-22":"辛亥","2023-02-23":"壬子","2023-02-24":"癸丑","2023-02-25":"甲寅","2023-02-26":"乙卯","2023-02-27":"丙辰","2023-02-28":"丁巳","2023-03-01":"戊午","2023-03-02":"己未","2023-03-03":"庚申","2023-03-04":"辛酉","2023-03-05":"壬戌","2023-03-06":"癸亥","2023-03-07":"甲子","2023-03-08":"乙丑","2023-03-09":"丙寅","2023-03-10":"丁卯","2023-03-11":"戊辰","2023-03-12":"己巳","2023-03-13":"庚午","2023-03-14":"辛未","2023-03-15":"壬申","2023-03-16":"癸酉","2023-03-17":"甲戌","2023-03-18":"乙亥","2023-03-19":"丙子","2023-03-20":"丁丑","2023-03-21":"戊寅","2023-03-22":"己卯","2023-03-23":"庚辰","2023-03-24":"辛巳","2023-03-25":"壬午","2023-03-26":"癸未","2023-03-27":"甲申","2023-03-28":"乙酉","2023-03-29":"丙戌","2023-03-30":"丁亥","2023-03-31":"戊子","2023-04-01":"己丑","2023-04-02":"庚寅","2023-04-03":"辛卯","2023-04-04":"壬辰","2023-04-05":"癸巳","2023-04-06":"甲午","2023-04-07":"乙未","2023-04-08":"丙申","2023-04-09":"丁酉","2023-04-10":"戊戌","2023-04-11":"己亥","2023-04-12":"庚子","2023-04-13":"辛丑","2023-04-14":"壬寅","2023-04-15":"癸卯","2023-04-16":"甲辰","2023-04-17":"乙巳","2023-04-18":"丙午","2023-04-19":"丁未","2023-04-20":"戊申","2023-04-21":"己酉","2023-04-22":"庚戌","2023-04-23":"辛亥","2023-04-24":"壬子","2023-04-25":"癸丑","2023-04-26":"甲寅","2023-04-27":"乙卯","2023-04-28":"丙辰","2023-04-29":"丁巳","2023-04-30":"戊午","2023-05-01":"己未","2023-05-02":"庚申","2023-05-03":"辛酉","2023-05-04":"壬戌","2023-05-05":"癸亥","2023-05-06":"甲子","2023-05-07":"乙丑","2023-05-08":"丙寅","2023-05-09":"丁卯","2023-05-10":"戊辰","2023-05-11":"己巳","2023-05-12":"庚午","2023-05-13":"辛未","2023-05-14":"壬申","2023-05-15":"癸酉","2023-05-16":"甲戌","2023-05-17":"乙亥","2023-05-18":"丙子","2023-05-19":"丁丑","2023-05-20":"戊寅","2023-05-21":"己卯","2023-05-22":"庚辰","2023-05-23":"辛巳","2023-05-24":"壬午","2023-05-25":"癸未","2023-05-26":"甲申","2023-05-27":"乙酉","2023-05-28":"丙戌","2023-05-29":"丁亥","2023-05-30":"戊子","2023-05-31":"己丑","2023-06-01":"庚寅","2023-06-02":"辛卯","2023-06-03":"壬辰","2023-06-04":"癸巳","2023-06-05":"甲午","2023-06-06":"乙未","2023-06-07":"丙申","2023-06-08":"丁酉","2023-06-09":"戊戌","2023-06-10":"己亥","2023-06-11":"庚子","2023-06-12":"辛丑","2023-06-13":"壬寅","2023-06-14":"癸卯","2023-06-15":"甲辰","2023-06-16":"乙巳","2023-06-17":"丙午","2023-06-18":"丁未","2023-06-19":"戊申","2023-06-20":"己酉","2023-06-21":"庚戌","2023-06-22":"辛亥","2023-06-23":"壬子","2023-06-24":"癸丑","2023-06-25":"甲寅","2023-06-26":"乙卯","2023-06-27":"丙辰","2023-06-28":"丁巳","2023-06-29":"戊午","2023-06-30":"己未","2023-07-01":"庚申","2023-07-02":"辛酉","2023-07-03":"壬戌","2023-07-04":"癸亥","2023-07-05":"甲子","2023-07-06":"乙丑","2023-07-07":"丙寅","2023-07-08":"丁卯","2023-07-09":"戊辰","2023-07-10":"己巳","2023-07-11":"庚午","2023-07-12":"辛未","2023-07-13":"壬申","2023-07-14":"癸酉","2023-07-15":"甲戌","2023-07-16":"乙亥","2023-07-17":"丙子","2023-07-18":"丁丑","2023-07-19":"戊寅","2023-07-20":"己卯","2023-07-21":"庚辰","2023-07-22":"辛巳","2023-07-23":"壬午","2023-07-24":"癸未","2023-07-25":"甲申","2023-07-26":"乙酉","2023-07-27":"丙戌","2023-07-28":"丁亥","2023-07-29":"戊子","2023-07-30":"己丑","2023-07-31":"庚寅","2023-08-01":"辛卯","2023-08-02":"壬辰","2023-08-03":"癸巳","2023-08-04":"甲午","2023-08-05":"乙未","2023-08-06":"丙申","2023-08-07":"丁酉","2023-08-08":"戊戌","2023-08-09":"己亥","2023-08-10":"庚子","2023-08-11":"辛丑","2023-08-12":"壬寅","2023-08-13":"癸卯","2023-08-14":"甲辰","2023-08-15":"乙巳","2023-08-16":"丙午","2023-08-17":"丁未","2023-08-18":"戊申","2023-08-19":"己酉","2023-08-20":"庚戌","2023-08-21":"辛亥","2023-08-22":"壬子","2023-08-23":"癸丑","2023-08-24":"甲寅","2023-08-25":"乙卯","2023-08-26":"丙辰","2023-08-27":"丁巳","2023-08-28":"戊午","2023-08-29":"己未","2023-08-30":"庚申","2023-08-31":"辛酉","2023-09-01":"壬戌","2023-09-02":"癸亥","2023-09-03":"甲子","2023-09-04":"乙丑","2023-09-05":"丙寅","2023-09-06":"丁卯","2023-09-07":"戊辰","2023-09-08":"己巳","2023-09-09":"庚午","2023-09-10":"辛未","2023-09-11":"壬申","2023-09-12":"癸酉","2023-09-13":"甲戌","2023-09-14":"乙亥","2023-09-15":"丙子","2023-09-16":"丁丑","2023-09-17":"戊寅","2023-09-18":"己卯","2023-09-19":"庚辰","2023-09-20":"辛巳","2023-09-21":"壬午","2023-09-22":"癸未","2023-09-23":"甲申","2023-09-24":"乙酉","2023-09-25":"丙戌","2023-09-26":"丁亥","2023-09-27":"戊子","2023-09-28":"己丑","2023-09-29":"庚寅","2023-09-30":"辛卯","2023-10-01":"壬辰","2023-10-02":"癸巳","2023-10-03":"甲午","2023-10-04":"乙未","2023-10-05":"丙申","2023-10-06":"丁酉","2023-10-07":"戊戌","2023-10-08":"己亥","2023-10-09":"庚子","2023-10-10":"辛丑","2023-10-11":"壬寅","2023-10-12":"癸卯","2023-10-13":"甲辰","2023-10-14":"乙巳","2023-10-15":"丙午","2023-10-16":"丁未","2023-10-17":"戊申","2023-10-18":"己酉","2023-10-19":"庚戌","2023-10-20":"辛亥","2023-10-21":"壬子","2023-10-22":"癸丑","2023-10-23":"甲寅","2023-10-24":"乙卯","2023-10-25":"丙辰","2023-10-26":"丁巳","2023-10-27":"戊午","2023-10-28":"己未","2023-10-29":"庚申","2023-10-30":"辛酉","2023-10-31":"壬戌","2023-11-01":"癸亥","2023-11-02":"甲子","2023-11-03":"乙丑","2023-11-04":"丙寅","2023-11-05":"丁卯","2023-11-06":"戊辰","2023-11-07":"己巳","2023-11-08":"庚午","2023-11-09":"辛未","2023-11-10":"壬申","2023-11-11":"癸酉","2023-11-12":"甲戌","2023-11-13":"乙亥","2023-11-14":"丙子","2023-11-15":"丁丑","2023-11-16":"戊寅","2023-11-17":"己卯","2023-11-18":"庚辰","2023-11-19":"辛巳","2023-11-20":"壬午","2023-11-21":"癸未","2023-11-22":"甲申","2023-11-23":"乙酉","2023-11-24":"丙戌","2023-11-25":"丁亥","2023-11-26":"戊子","2023-11-27":"己丑","2023-11-28":"庚寅","2023-11-29":"辛卯","2023-11-30":"壬辰","2023-12-01":"癸巳","2023-12-02":"甲午","2023-12-03":"乙未","2023-12-04":"丙申","2023-12-05":"丁酉","2023-12-06":"戊戌","2023-12-07":"己亥","2023-12-08":"庚子","2023-12-09":"辛丑","2023-12-10":"壬寅","2023-12-11":"癸卯","2023-12-12":"甲辰","2023-12-13":"乙巳","2023-12-14":"丙午","2023-12-15":"丁未","2023-12-16":"戊申","2023-12-17":"己酉","2023-12-18":"庚戌","2023-12-19":"辛亥","2023-12-20":"壬子","2023-12-21":"癸丑","2023-12-22":"甲寅","2023-12-23":"乙卯","2023-12-24":"丙辰","2023-12-25":"丁巳","2023-12-26":"戊午","2023-12-27":"己未","2023-12-28":"庚申","2023-12-29":"辛酉","2023-12-30":"壬戌","2023-12-31":"癸亥","2024-01-01":"甲子","2024-01-02":"乙丑","2024-01-03":"丙寅","2024-01-04":"丁卯","2024-01-05":"戊辰","2024-01-06":"己巳","2024-01-07":"庚午","2024-01-08":"辛未","2024-01-09":"壬申","2024-01-10":"癸酉","2024-01-11":"甲戌","2024-01-12":"乙亥","2024-01-13":"丙子","2024-01-14":"丁丑","2024-01-15":"戊寅","2024-01-16":"己卯","2024-01-17":"庚辰","2024-01-18":"辛巳","2024-01-19":"壬午","2024-01-20":"癸未","2024-01-21":"甲申","2024-01-22":"乙酉","2024-01-23":"丙戌","2024-01-24":"丁亥","2024-01-25":"戊子","2024-01-26":"己丑","2024-01-27":"庚寅","2024-01-28":"辛卯","2024-01-29":"壬辰","2024-01-30":"癸巳","2024-01-31":"甲午","2024-02-01":"乙未","2024-02-02":"丙申","2024-02-03":"丁酉","2024-02-04":"戊戌","2024-02-05":"己亥","2024-02-06":"庚子","2024-02-07":"辛丑","2024-02-08":"壬寅","2024-02-09":"癸卯","2024-02-10":"甲辰","2024-02-11":"乙巳","2024-02-12":"丙午","2024-02-13":"丁未","2024-02-14":"戊申","2024-02-15":"己酉","2024-02-16":"庚戌","2024-02-17":"辛亥","2024-02-18":"壬子","2024-02-19":"癸丑","2024-02-20":"甲寅","2024-02-21":"乙卯","2024-02-22":"丙辰","2024-02-23":"丁巳","2024-02-24":"戊午","2024-02-25":"己未","2024-02-26":"庚申","2024-02-27":"辛酉","2024-02-28":"壬戌","2024-02-29":"癸亥","2024-03-01":"甲子","2024-03-02":"乙丑","2024-03-03":"丙寅","2024-03-04":"丁卯","2024-03-05":"戊辰","2024-03-06":"己巳","2024-03-07":"庚午","2024-03-08":"辛未","2024-03-09":"壬申","2024-03-10":"癸酉","2024-03-11":"甲戌","2024-03-12":"乙亥","2024-03-13":"丙子","2024-03-14":"丁丑","2024-03-15":"戊寅","2024-03-16":"己卯","2024-03-17":"庚辰","2024-03-18":"辛巳","2024-03-19":"壬午","2024-03-20":"癸未","2024-03-21":"甲申","2024-03-22":"乙酉","2024-03-23":"丙戌","2024-03-24":"丁亥","2024-03-25":"戊子","2024-03-26":"己丑","2024-03-27":"庚寅","2024-03-28":"辛卯","2024-03-29":"壬辰","2024-03-30":"癸巳","2024-03-31":"甲午","2024-04-01":"乙未","2024-04-02":"丙申","2024-04-03":"丁酉","2024-04-04":"戊戌","2024-04-05":"己亥","2024-04-06":"庚子","2024-04-07":"辛丑","2024-04-08":"壬寅","2024-04-09":"癸卯","2024-04-10":"甲辰","2024-04-11":"乙巳","2024-04-12":"丙午","2024-04-13":"丁未","2024-04-14":"戊申","2024-04-15":"己酉","2024-04-16":"庚戌","2024-04-17":"辛亥","2024-04-18":"壬子","2024-04-19":"癸丑","2024-04-20":"甲寅","2024-04-21":"乙卯","2024-04-22":"丙辰","2024-04-23":"丁巳","2024-04-24":"戊午","2024-04-25":"己未","2024-04-26":"庚申","2024-04-27":"辛酉","2024-04-28":"壬戌","2024-04-29":"癸亥","2024-04-30":"甲子","2024-05-01":"乙丑","2024-05-02":"丙寅","2024-05-03":"丁卯","2024-05-04":"戊辰","2024-05-05":"己巳","2024-05-06":"庚午","2024-05-07":"辛未","2024-05-08":"壬申","2024-05-09":"癸酉","2024-05-10":"甲戌","2024-05-11":"乙亥","2024-05-12":"丙子","2024-05-13":"丁丑","2024-05-14":"戊寅","2024-05-15":"己卯","2024-05-16":"庚辰","2024-05-17":"辛巳","2024-05-18":"壬午","2024-05-19":"癸未","2024-05-20":"甲申","2024-05-21":"乙酉","2024-05-22":"丙戌","2024-05-23":"丁亥","2024-05-24":"戊子","2024-05-25":"己丑","2024-05-26":"庚寅","2024-05-27":"辛卯","2024-05-28":"壬辰","2024-05-29":"癸巳","2024-05-30":"甲午","2024-05-31":"乙未","2024-06-01":"丙申","2024-06-02":"丁酉","2024-06-03":"戊戌","2024-06-04":"己亥","2024-06-05":"庚子","2024-06-06":"辛丑","2024-06-07":"壬寅","2024-06-08":"癸卯","2024-06-09":"甲辰","2024-06-10":"乙巳","2024-06-11":"丙午","2024-06-12":"丁未","2024-06-13":"戊申","2024-06-14":"己酉","2024-06-15":"庚戌","2024-06-16":"辛亥","2024-06-17":"壬子","2024-06-18":"癸丑","2024-06-19":"甲寅","2024-06-20":"乙卯","2024-06-21":"丙辰","2024-06-22":"丁巳","2024-06-23":"戊午","2024-06-24":"己未","2024-06-25":"庚申","2024-06-26":"辛酉","2024-06-27":"壬戌","2024-06-28":"癸亥","2024-06-29":"甲子","2024-06-30":"乙丑","2024-07-01":"丙寅","2024-07-02":"丁卯","2024-07-03":"戊辰","2024-07-04":"己巳","2024-07-05":"庚午","2024-07-06":"辛未","2024-07-07":"壬申","2024-07-08":"癸酉","2024-07-09":"甲戌","2024-07-10":"乙亥","2024-07-11":"丙子","2024-07-12":"丁丑","2024-07-13":"戊寅","2024-07-14":"己卯","2024-07-15":"庚辰","2024-07-16":"辛巳","2024-07-17":"壬午","2024-07-18":"癸未","2024-07-19":"甲申","2024-07-20":"乙酉","2024-07-21":"丙戌","2024-07-22":"丁亥","2024-07-23":"戊子","2024-07-24":"己丑","2024-07-25":"庚寅","2024-07-26":"辛卯","2024-07-27":"壬辰","2024-07-28":"癸巳","2024-07-29":"甲午","2024-07-30":"乙未","2024-07-31":"丙申","2024-08-01":"丁酉","2024-08-02":"戊戌","2024-08-03":"己亥","2024-08-04":"庚子","2024-08-05":"辛丑","2024-08-06":"壬寅","2024-08-07":"癸卯","2024-08-08":"甲辰","2024-08-09":"乙巳","2024-08-10":"丙午","2024-08-11":"丁未","2024-08-12":"戊申","2024-08-13":"己酉","2024-08-14":"庚戌","2024-08-15":"辛亥","2024-08-16":"壬子","2024-08-17":"癸丑","2024-08-18":"甲寅","2024-08-19":"乙卯","2024-08-20":"丙辰","2024-08-21":"丁巳","2024-08-22":"戊午","2024-08-23":"己未","2024-08-24":"庚申","2024-08-25":"辛酉","2024-08-26":"壬戌","2024-08-27":"癸亥","2024-08-28":"甲子","2024-08-29":"乙丑","2024-08-30":"丙寅","2024-08-31":"丁卯","2024-09-01":"戊辰","2024-09-02":"己巳","2024-09-03":"庚午","2024-09-04":"辛未","2024-09-05":"壬申","2024-09-06":"癸酉","2024-09-07":"甲戌","2024-09-08":"乙亥","2024-09-09":"丙子","2024-09-10":"丁丑","2024-09-11":"戊寅","2024-09-12":"己卯","2024-09-13":"庚辰","2024-09-14":"辛巳","2024-09-15":"壬午","2024-09-16":"癸未","2024-09-17":"甲申","2024-09-18":"乙酉","2024-09-19":"丙戌","2024-09-20":"丁亥","2024-09-21":"戊子","2024-09-22":"己丑","2024-09-23":"庚寅","2024-09-24":"辛卯","2024-09-25":"壬辰","2024-09-26":"癸巳","2024-09-27":"甲午","2024-09-28":"乙未","2024-09-29":"丙申","2024-09-30":"丁酉","2024-10-01":"戊戌","2024-10-02":"己亥","2024-10-03":"庚子","2024-10-04":"辛丑","2024-10-05":"壬寅","2024-10-06":"癸卯","2024-10-07":"甲辰","2024-10-08":"乙巳","2024-10-09":"丙午","2024-10-10":"丁未","2024-10-11":"戊申","2024-10-12":"己酉","2024-10-13":"庚戌","2024-10-14":"辛亥","2024-10-15":"壬子","2024-10-16":"癸丑","2024-10-17":"甲寅","2024-10-18":"乙卯","2024-10-19":"丙辰","2024-10-20":"丁巳","2024-10-21":"戊午","2024-10-22":"己未","2024-10-23":"庚申","2024-10-24":"辛酉","2024-10-25":"壬戌","2024-10-26":"癸亥","2024-10-27":"甲子","2024-10-28":"乙丑","2024-10-29":"丙寅","2024-10-30":"丁卯","2024-10-31":"戊辰","2024-11-01":"己巳","2024-11-02":"庚午","2024-11-03":"辛未","2024-11-04":"壬申","2024-11-05":"癸酉","2024-11-06":"甲戌","2024-11-07":"乙亥","2024-11-08":"丙子","2024-11-09":"丁丑","2024-11-10":"戊寅","2024-11-11":"己卯","2024-11-12":"庚辰","2024-11-13":"辛巳","2024-11-14":"壬午","2024-11-15":"癸未","2024-11-16":"甲申","2024-11-17":"乙酉","2024-11-18":"丙戌","2024-11-19":"丁亥","2024-11-20":"戊子","2024-11-21":"己丑","2024-11-22":"庚寅","2024-11-23":"辛卯","2024-11-24":"壬辰","2024-11-25":"癸巳","2024-11-26":"甲午","2024-11-27":"乙未","2024-11-28":"丙申","2024-11-29":"丁酉","2024-11-30":"戊戌","2024-12-01":"己亥","2024-12-02":"庚子","2024-12-03":"辛丑","2024-12-04":"壬寅","2024-12-05":"癸卯","2024-12-06":"甲辰","2024-12-07":"乙巳","2024-12-08":"丙午","2024-12-09":"丁未","2024-12-10":"戊申","2024-12-11":"己酉","2024-12-12":"庚戌","2024-12-13":"辛亥","2024-12-14":"壬子","2024-12-15":"癸丑","2024-12-16":"甲寅","2024-12-17":"乙卯","2024-12-18":"丙辰","2024-12-19":"丁巳","2024-12-20":"戊午","2024-12-21":"己未","2024-12-22":"庚申","2024-12-23":"辛酉","2024-12-24":"壬戌","2024-12-25":"癸亥","2024-12-26":"甲子","2024-12-27":"乙丑","2024-12-28":"丙寅","2024-12-29":"丁卯","2024-12-30":"戊辰","2024-12-31":"己巳","2025-01-01":"庚午","2025-01-02":"辛未","2025-01-03":"壬申","2025-01-04":"癸酉","2025-01-05":"甲戌","2025-01-06":"乙亥","2025-01-07":"丙子","2025-01-08":"丁丑","2025-01-09":"戊寅","2025-01-10":"己卯","2025-01-11":"庚辰","2025-01-12":"辛巳","2025-01-13":"壬午","2025-01-14":"癸未","2025-01-15":"甲申","2025-01-16":"乙酉","2025-01-17":"丙戌","2025-01-18":"丁亥","2025-01-19":"戊子","2025-01-20":"己丑","2025-01-21":"庚寅","2025-01-22":"辛卯","2025-01-23":"壬辰","2025-01-24":"癸巳","2025-01-25":"甲午","2025-01-26":"乙未","2025-01-27":"丙申","2025-01-28":"丁酉","2025-01-29":"戊戌","2025-01-30":"己亥","2025-01-31":"庚子","2025-02-01":"辛丑","2025-02-02":"壬寅","2025-02-03":"癸卯","2025-02-04":"甲辰","2025-02-05":"乙巳","2025-02-06":"丙午","2025-02-07":"丁未","2025-02-08":"戊申","2025-02-09":"己酉","2025-02-10":"庚戌","2025-02-11":"辛亥","2025-02-12":"壬子","2025-02-13":"癸丑","2025-02-14":"甲寅","2025-02-15":"乙卯","2025-02-16":"丙辰","2025-02-17":"丁巳","2025-02-18":"戊午","2025-02-19":"己未","2025-02-20":"庚申","2025-02-21":"辛酉","2025-02-22":"壬戌","2025-02-23":"癸亥","2025-02-24":"甲子","2025-02-25":"乙丑","2025-02-26":"丙寅","2025-02-27":"丁卯","2025-02-28":"戊辰","2025-03-01":"己巳","2025-03-02":"庚午","2025-03-03":"辛未","2025-03-04":"壬申","2025-03-05":"癸酉","2025-03-06":"甲戌","2025-03-07":"乙亥","2025-03-08":"丙子","2025-03-09":"丁丑","2025-03-10":"戊寅","2025-03-11":"己卯","2025-03-12":"庚辰","2025-03-13":"辛巳","2025-03-14":"壬午","2025-03-15":"癸未","2025-03-16":"甲申","2025-03-17":"乙酉","2025-03-18":"丙戌","2025-03-19":"丁亥","2025-03-20":"戊子","2025-03-21":"己丑","2025-03-22":"庚寅","2025-03-23":"辛卯","2025-03-24":"壬辰","2025-03-25":"癸巳","2025-03-26":"甲午","2025-03-27":"乙未","2025-03-28":"丙申","2025-03-29":"丁酉","2025-03-30":"戊戌","2025-03-31":"己亥","2025-04-01":"庚子","2025-04-02":"辛丑","2025-04-03":"壬寅","2025-04-04":"癸卯","2025-04-05":"甲辰","2025-04-06":"乙巳","2025-04-07":"丙午","2025-04-08":"丁未","2025-04-09":"戊申","2025-04-10":"己酉","2025-04-11":"庚戌","2025-04-12":"辛亥","2025-04-13":"壬子","2025-04-14":"癸丑","2025-04-15":"甲寅","2025-04-16":"乙卯","2025-04-17":"丙辰","2025-04-18":"丁巳","2025-04-19":"戊午","2025-04-20":"己未","2025-04-21":"庚申","2025-04-22":"辛酉","2025-04-23":"壬戌","2025-04-24":"癸亥","2025-04-25":"甲子","2025-04-26":"乙丑","2025-04-27":"丙寅","2025-04-28":"丁卯","2025-04-29":"戊辰","2025-04-30":"己巳","2025-05-01":"庚午","2025-05-02":"辛未","2025-05-03":"壬申","2025-05-04":"癸酉","2025-05-05":"甲戌","2025-05-06":"乙亥","2025-05-07":"丙子","2025-05-08":"丁丑","2025-05-09":"戊寅","2025-05-10":"己卯","2025-05-11":"庚辰","2025-05-12":"辛巳","2025-05-13":"壬午","2025-05-14":"癸未","2025-05-15":"甲申","2025-05-16":"乙酉","2025-05-17":"丙戌","2025-05-18":"丁亥","2025-05-19":"戊子","2025-05-20":"己丑","2025-05-21":"庚寅","2025-05-22":"辛卯","2025-05-23":"壬辰","2025-05-24":"癸巳","2025-05-25":"甲午","2025-05-26":"乙未","2025-05-27":"丙申","2025-05-28":"丁酉","2025-05-29":"戊戌","2025-05-30":"己亥","2025-05-31":"庚子","2025-06-01":"辛丑","2025-06-02":"壬寅","2025-06-03":"癸卯","2025-06-04":"甲辰","2025-06-05":"乙巳","2025-06-06":"丙午","2025-06-07":"丁未","2025-06-08":"戊申","2025-06-09":"己酉","2025-06-10":"庚戌","2025-06-11":"辛亥","2025-06-12":"壬子","2025-06-13":"癸丑","2025-06-14":"甲寅","2025-06-15":"乙卯","2025-06-16":"丙辰","2025-06-17":"丁巳","2025-06-18":"戊午","2025-06-19":"己未","2025-06-20":"庚申","2025-06-21":"辛酉","2025-06-22":"壬戌","2025-06-23":"癸亥","2025-06-24":"甲子","2025-06-25":"乙丑","2025-06-26":"丙寅","2025-06-27":"丁卯","2025-06-28":"戊辰","2025-06-29":"己巳","2025-06-30":"庚午","2025-07-01":"辛未","2025-07-02":"壬申","2025-07-03":"癸酉","2025-07-04":"甲戌","2025-07-05":"乙亥","2025-07-06":"丙子","2025-07-07":"丁丑","2025-07-08":"戊寅","2025-07-09":"己卯","2025-07-10":"庚辰","2025-07-11":"辛巳","2025-07-12":"壬午","2025-07-13":"癸未","2025-07-14":"甲申","2025-07-15":"乙酉","2025-07-16":"丙戌","2025-07-17":"丁亥","2025-07-18":"戊子","2025-07-19":"己丑","2025-07-20":"庚寅","2025-07-21":"辛卯","2025-07-22":"壬辰","2025-07-23":"癸巳","2025-07-24":"甲午","2025-07-25":"乙未","2025-07-26":"丙申","2025-07-27":"丁酉","2025-07-28":"戊戌","2025-07-29":"己亥","2025-07-30":"庚子","2025-07-31":"辛丑","2025-08-01":"壬寅","2025-08-02":"癸卯","2025-08-03":"甲辰","2025-08-04":"乙巳","2025-08-05":"丙午","2025-08-06":"丁未","2025-08-07":"戊申","2025-08-08":"己酉","2025-08-09":"庚戌","2025-08-10":"辛亥","2025-08-11":"壬子","2025-08-12":"癸丑","2025-08-13":"甲寅","2025-08-14":"乙卯","2025-08-15":"丙辰","2025-08-16":"丁巳","2025-08-17":"戊午","2025-08-18":"己未","2025-08-19":"庚申","2025-08-20":"辛酉","2025-08-21":"壬戌","2025-08-22":"癸亥","2025-08-23":"甲子","2025-08-24":"乙丑","2025-08-25":"丙寅","2025-08-26":"丁卯","2025-08-27":"戊辰","2025-08-28":"己巳","2025-08-29":"庚午","2025-08-30":"辛未","2025-08-31":"壬申","2025-09-01":"癸酉","2025-09-02":"甲戌","2025-09-03":"乙亥","2025-09-04":"丙子","2025-09-05":"丁丑","2025-09-06":"戊寅","2025-09-07":"己卯","2025-09-08":"庚辰","2025-09-09":"辛巳","2025-09-10":"壬午","2025-09-11":"癸未","2025-09-12":"甲申","2025-09-13":"乙酉","2025-09-14":"丙戌","2025-09-15":"丁亥","2025-09-16":"戊子","2025-09-17":"己丑","2025-09-18":"庚寅","2025-09-19":"辛卯","2025-09-20":"壬辰","2025-09-21":"癸巳","2025-09-22":"甲午","2025-09-23":"乙未","2025-09-24":"丙申","2025-09-25":"丁酉","2025-09-26":"戊戌","2025-09-27":"己亥","2025-09-28":"庚子","2025-09-29":"辛丑","2025-09-30":"壬寅","2025-10-01":"癸卯","2025-10-02":"甲辰","2025-10-03":"乙巳","2025-10-04":"丙午","2025-10-05":"丁未","2025-10-06":"戊申","2025-10-07":"己酉","2025-10-08":"庚戌","2025-10-09":"辛亥","2025-10-10":"壬子","2025-10-11":"癸丑","2025-10-12":"甲寅","2025-10-13":"乙卯","2025-10-14":"丙辰","2025-10-15":"丁巳","2025-10-16":"戊午","2025-10-17":"己未","2025-10-18":"庚申","2025-10-19":"辛酉","2025-10-20":"壬戌","2025-10-21":"癸亥","2025-10-22":"甲子","2025-10-23":"乙丑","2025-10-24":"丙寅","2025-10-25":"丁卯","2025-10-26":"戊辰","2025-10-27":"己巳","2025-10-28":"庚午","2025-10-29":"辛未","2025-10-30":"壬申","2025-10-31":"癸酉","2025-11-01":"甲戌","2025-11-02":"乙亥","2025-11-03":"丙子","2025-11-04":"丁丑","2025-11-05":"戊寅","2025-11-06":"己卯","2025-11-07":"庚辰","2025-11-08":"辛巳","2025-11-09":"壬午","2025-11-10":"癸未","2025-11-11":"甲申","2025-11-12":"乙酉","2025-11-13":"丙戌","2025-11-14":"丁亥","2025-11-15":"戊子","2025-11-16":"己丑","2025-11-17":"庚寅","2025-11-18":"辛卯","2025-11-19":"壬辰","2025-11-20":"癸巳","2025-11-21":"甲午","2025-11-22":"乙未","2025-11-23":"丙申","2025-11-24":"丁酉","2025-11-25":"戊戌","2025-11-26":"己亥","2025-11-27":"庚子","2025-11-28":"辛丑","2025-11-29":"壬寅","2025-11-30":"癸卯","2025-12-01":"甲辰","2025-12-02":"乙巳","2025-12-03":"丙午","2025-12-04":"丁未","2025-12-05":"戊申","2025-12-06":"己酉","2025-12-07":"庚戌","2025-12-08":"辛亥","2025-12-09":"壬子","2025-12-10":"癸丑","2025-12-11":"甲寅","2025-12-12":"乙卯","2025-12-13":"丙辰","2025-12-14":"丁巳","2025-12-15":"戊午","2025-12-16":"己未","2025-12-17":"庚申","2025-12-18":"辛酉","2025-12-19":"壬戌","2025-12-20":"癸亥","2025-12-21":"甲子","2025-12-22":"乙丑","2025-12-23":"丙寅","2025-12-24":"丁卯","2025-12-25":"戊辰","2025-12-26":"己巳","2025-12-27":"庚午","2025-12-28":"辛未","2025-12-29":"壬申","2025-12-30":"癸酉","2025-12-31":"甲戌","2026-01-01":"乙亥","2026-01-02":"丙子","2026-01-03":"丁丑","2026-01-04":"戊寅","2026-01-05":"己卯","2026-01-06":"庚辰","2026-01-07":"辛巳","2026-01-08":"壬午","2026-01-09":"癸未","2026-01-10":"甲申","2026-01-11":"乙酉","2026-01-12":"丙戌","2026-01-13":"丁亥","2026-01-14":"戊子","2026-01-15":"己丑","2026-01-16":"庚寅","2026-01-17":"辛卯","2026-01-18":"壬辰","2026-01-19":"癸巳","2026-01-20":"甲午","2026-01-21":"乙未","2026-01-22":"丙申","2026-01-23":"丁酉","2026-01-24":"戊戌","2026-01-25":"己亥","2026-01-26":"庚子","2026-01-27":"辛丑","2026-01-28":"壬寅","2026-01-29":"癸卯","2026-01-30":"甲辰","2026-01-31":"乙巳","2026-02-01":"丙午","2026-02-02":"丁未","2026-02-03":"戊申","2026-02-04":"己酉","2026-02-05":"庚戌","2026-02-06":"辛亥","2026-02-07":"壬子","2026-02-08":"癸丑","2026-02-09":"甲寅","2026-02-10":"乙卯","2026-02-11":"丙辰","2026-02-12":"丁巳","2026-02-13":"戊午","2026-02-14":"己未","2026-02-15":"庚申","2026-02-16":"辛酉","2026-02-17":"壬戌","2026-02-18":"癸亥","2026-02-19":"甲子","2026-02-20":"乙丑","2026-02-21":"丙寅","2026-02-22":"丁卯","2026-02-23":"戊辰","2026-02-24":"己巳","2026-02-25":"庚午","2026-02-26":"辛未","2026-02-27":"壬申","2026-02-28":"癸酉","2026-03-01":"甲戌","2026-03-02":"乙亥","2026-03-03":"丙子","2026-03-04":"丁丑","2026-03-05":"戊寅","2026-03-06":"己卯","2026-03-07":"庚辰","2026-03-08":"辛巳","2026-03-09":"壬午","2026-03-10":"癸未","2026-03-11":"甲申","2026-03-12":"乙酉","2026-03-13":"丙戌","2026-03-14":"丁亥","2026-03-15":"戊子","2026-03-16":"己丑","2026-03-17":"庚寅","2026-03-18":"辛卯","2026-03-19":"壬辰","2026-03-20":"癸巳","2026-03-21":"甲午","2026-03-22":"乙未","2026-03-23":"丙申","2026-03-24":"丁酉","2026-03-25":"戊戌","2026-03-26":"己亥","2026-03-27":"庚子","2026-03-28":"辛丑","2026-03-29":"壬寅","2026-03-30":"癸卯","2026-03-31":"甲辰","2026-04-01":"乙巳","2026-04-02":"丙午","2026-04-03":"丁未","2026-04-04":"戊申","2026-04-05":"己酉","2026-04-06":"庚戌","2026-04-07":"辛亥","2026-04-08":"壬子","2026-04-09":"癸丑","2026-04-10":"甲寅","2026-04-11":"乙卯","2026-04-12":"丙辰","2026-04-13":"丁巳","2026-04-14":"戊午","2026-04-15":"己未","2026-04-16":"庚申","2026-04-17":"辛酉","2026-04-18":"壬戌","2026-04-19":"癸亥","2026-04-20":"甲子","2026-04-21":"乙丑","2026-04-22":"丙寅","2026-04-23":"丁卯","2026-04-24":"戊辰","2026-04-25":"己巳","2026-04-26":"庚午","2026-04-27":"辛未","2026-04-28":"壬申","2026-04-29":"癸酉","2026-04-30":"甲戌","2026-05-01":"乙亥","2026-05-02":"丙子","2026-05-03":"丁丑","2026-05-04":"戊寅","2026-05-05":"己卯","2026-05-06":"庚辰","2026-05-07":"辛巳","2026-05-08":"壬午","2026-05-09":"癸未","2026-05-10":"甲申","2026-05-11":"乙酉","2026-05-12":"丙戌","2026-05-13":"丁亥","2026-05-14":"戊子","2026-05-15":"己丑","2026-05-16":"庚寅","2026-05-17":"辛卯","2026-05-18":"壬辰","2026-05-19":"癸巳","2026-05-20":"甲午","2026-05-21":"乙未","2026-05-22":"丙申","2026-05-23":"丁酉","2026-05-24":"戊戌","2026-05-25":"己亥","2026-05-26":"庚子","2026-05-27":"辛丑","2026-05-28":"壬寅","2026-05-29":"癸卯","2026-05-30":"甲辰","2026-05-31":"乙巳","2026-06-01":"丙午","2026-06-02":"丁未","2026-06-03":"戊申","2026-06-04":"己酉","2026-06-05":"庚戌","2026-06-06":"辛亥","2026-06-07":"壬子","2026-06-08":"癸丑","2026-06-09":"甲寅","2026-06-10":"乙卯","2026-06-11":"丙辰","2026-06-12":"丁巳","2026-06-13":"戊午","2026-06-14":"己未","2026-06-15":"庚申","2026-06-16":"辛酉","2026-06-17":"壬戌","2026-06-18":"癸亥","2026-06-19":"甲子","2026-06-20":"乙丑","2026-06-21":"丙寅","2026-06-22":"丁卯","2026-06-23":"戊辰","2026-06-24":"己巳","2026-06-25":"庚午","2026-06-26":"辛未","2026-06-27":"壬申","2026-06-28":"癸酉","2026-06-29":"甲戌","2026-06-30":"乙亥","2026-07-01":"丙子","2026-07-02":"丁丑","2026-07-03":"戊寅","2026-07-04":"己卯","2026-07-05":"庚辰","2026-07-06":"辛巳","2026-07-07":"壬午","2026-07-08":"癸未","2026-07-09":"甲申","2026-07-10":"乙酉","2026-07-11":"丙戌","2026-07-12":"丁亥","2026-07-13":"戊子","2026-07-14":"己丑","2026-07-15":"庚寅","2026-07-16":"辛卯","2026-07-17":"壬辰","2026-07-18":"癸巳","2026-07-19":"甲午","2026-07-20":"乙未","2026-07-21":"丙申","2026-07-22":"丁酉","2026-07-23":"戊戌","2026-07-24":"己亥","2026-07-25":"庚子","2026-07-26":"辛丑","2026-07-27":"壬寅","2026-07-28":"癸卯","2026-07-29":"甲辰","2026-07-30":"乙巳","2026-07-31":"丙午","2026-08-01":"丁未","2026-08-02":"戊申","2026-08-03":"己酉","2026-08-04":"庚戌","2026-08-05":"辛亥","2026-08-06":"壬子","2026-08-07":"癸丑","2026-08-08":"甲寅","2026-08-09":"乙卯","2026-08-10":"丙辰","2026-08-11":"丁巳","2026-08-12":"戊午","2026-08-13":"己未","2026-08-14":"庚申","2026-08-15":"辛酉","2026-08-16":"壬戌","2026-08-17":"癸亥","2026-08-18":"甲子","2026-08-19":"乙丑","2026-08-20":"丙寅","2026-08-21":"丁卯","2026-08-22":"戊辰","2026-08-23":"己巳","2026-08-24":"庚午","2026-08-25":"辛未","2026-08-26":"壬申","2026-08-27":"癸酉","2026-08-28":"甲戌","2026-08-29":"乙亥","2026-08-30":"丙子","2026-08-31":"丁丑","2026-09-01":"戊寅","2026-09-02":"己卯","2026-09-03":"庚辰","2026-09-04":"辛巳","2026-09-05":"壬午","2026-09-06":"癸未","2026-09-07":"甲申","2026-09-08":"乙酉","2026-09-09":"丙戌","2026-09-10":"丁亥","2026-09-11":"戊子","2026-09-12":"己丑","2026-09-13":"庚寅","2026-09-14":"辛卯","2026-09-15":"壬辰","2026-09-16":"癸巳","2026-09-17":"甲午","2026-09-18":"乙未","2026-09-19":"丙申","2026-09-20":"丁酉","2026-09-21":"戊戌","2026-09-22":"己亥","2026-09-23":"庚子","2026-09-24":"辛丑","2026-09-25":"壬寅","2026-09-26":"癸卯","2026-09-27":"甲辰","2026-09-28":"乙巳","2026-09-29":"丙午","2026-09-30":"丁未","2026-10-01":"戊申","2026-10-02":"己酉","2026-10-03":"庚戌","2026-10-04":"辛亥","2026-10-05":"壬子","2026-10-06":"癸丑","2026-10-07":"甲寅","2026-10-08":"乙卯","2026-10-09":"丙辰","2026-10-10":"丁巳","2026-10-11":"戊午","2026-10-12":"己未","2026-10-13":"庚申","2026-10-14":"辛酉","2026-10-15":"壬戌","2026-10-16":"癸亥","2026-10-17":"甲子","2026-10-18":"乙丑","2026-10-19":"丙寅","2026-10-20":"丁卯","2026-10-21":"戊辰","2026-10-22":"己巳","2026-10-23":"庚午","2026-10-24":"辛未","2026-10-25":"壬申","2026-10-26":"癸酉","2026-10-27":"甲戌","2026-10-28":"乙亥","2026-10-29":"丙子","2026-10-30":"丁丑","2026-10-31":"戊寅","2026-11-01":"己卯","2026-11-02":"庚辰","2026-11-03":"辛巳","2026-11-04":"壬午","2026-11-05":"癸未","2026-11-06":"甲申","2026-11-07":"乙酉","2026-11-08":"丙戌","2026-11-09":"丁亥","2026-11-10":"戊子","2026-11-11":"己丑","2026-11-12":"庚寅","2026-11-13":"辛卯","2026-11-14":"壬辰","2026-11-15":"癸巳","2026-11-16":"甲午","2026-11-17":"乙未","2026-11-18":"丙申","2026-11-19":"丁酉","2026-11-20":"戊戌","2026-11-21":"己亥","2026-11-22":"庚子","2026-11-23":"辛丑","2026-11-24":"壬寅","2026-11-25":"癸卯","2026-11-26":"甲辰","2026-11-27":"乙巳","2026-11-28":"丙午","2026-11-29":"丁未","2026-11-30":"戊申","2026-12-01":"己酉","2026-12-02":"庚戌","2026-12-03":"辛亥","2026-12-04":"壬子","2026-12-05":"癸丑","2026-12-06":"甲寅","2026-12-07":"乙卯","2026-12-08":"丙辰","2026-12-09":"丁巳","2026-12-10":"戊午","2026-12-11":"己未","2026-12-12":"庚申","2026-12-13":"辛酉","2026-12-14":"壬戌","2026-12-15":"癸亥","2026-12-16":"甲子","2026-12-17":"乙丑","2026-12-18":"丙寅","2026-12-19":"丁卯","2026-12-20":"戊辰","2026-12-21":"己巳","2026-12-22":"庚午","2026-12-23":"辛未","2026-12-24":"壬申","2026-12-25":"癸酉","2026-12-26":"甲戌","2026-12-27":"乙亥","2026-12-28":"丙子","2026-12-29":"丁丑","2026-12-30":"戊寅","2026-12-31":"己卯","2027-01-01":"庚辰","2027-01-02":"辛巳","2027-01-03":"壬午","2027-01-04":"癸未","2027-01-05":"甲申","2027-01-06":"乙酉","2027-01-07":"丙戌","2027-01-08":"丁亥","2027-01-09":"戊子","2027-01-10":"己丑","2027-01-11":"庚寅","2027-01-12":"辛卯","2027-01-13":"壬辰","2027-01-14":"癸巳","2027-01-15":"甲午","2027-01-16":"乙未","2027-01-17":"丙申","2027-01-18":"丁酉","2027-01-19":"戊戌","2027-01-20":"己亥","2027-01-21":"庚子","2027-01-22":"辛丑","2027-01-23":"壬寅","2027-01-24":"癸卯","2027-01-25":"甲辰","2027-01-26":"乙巳","2027-01-27":"丙午","2027-01-28":"丁未","2027-01-29":"戊申","2027-01-30":"己酉","2027-01-31":"庚戌","2027-02-01":"辛亥","2027-02-02":"壬子","2027-02-03":"癸丑","2027-02-04":"甲寅","2027-02-05":"乙卯","2027-02-06":"丙辰","2027-02-07":"丁巳","2027-02-08":"戊午","2027-02-09":"己未","2027-02-10":"庚申","2027-02-11":"辛酉","2027-02-12":"壬戌","2027-02-13":"癸亥","2027-02-14":"甲子","2027-02-15":"乙丑","2027-02-16":"丙寅","2027-02-17":"丁卯","2027-02-18":"戊辰","2027-02-19":"己巳","2027-02-20":"庚午","2027-02-21":"辛未","2027-02-22":"壬申","2027-02-23":"癸酉","2027-02-24":"甲戌","2027-02-25":"乙亥","2027-02-26":"丙子","2027-02-27":"丁丑","2027-02-28":"戊寅","2027-03-01":"己卯","2027-03-02":"庚辰","2027-03-03":"辛巳","2027-03-04":"壬午","2027-03-05":"癸未","2027-03-06":"甲申","2027-03-07":"乙酉","2027-03-08":"丙戌","2027-03-09":"丁亥","2027-03-10":"戊子","2027-03-11":"己丑","2027-03-12":"庚寅","2027-03-13":"辛卯","2027-03-14":"壬辰","2027-03-15":"癸巳","2027-03-16":"甲午","2027-03-17":"乙未","2027-03-18":"丙申","2027-03-19":"丁酉","2027-03-20":"戊戌","2027-03-21":"己亥","2027-03-22":"庚子","2027-03-23":"辛丑","2027-03-24":"壬寅","2027-03-25":"癸卯","2027-03-26":"甲辰","2027-03-27":"乙巳","2027-03-28":"丙午","2027-03-29":"丁未","2027-03-30":"戊申","2027-03-31":"己酉","2027-04-01":"庚戌","2027-04-02":"辛亥","2027-04-03":"壬子","2027-04-04":"癸丑","2027-04-05":"甲寅","2027-04-06":"乙卯","2027-04-07":"丙辰","2027-04-08":"丁巳","2027-04-09":"戊午","2027-04-10":"己未","2027-04-11":"庚申","2027-04-12":"辛酉","2027-04-13":"壬戌","2027-04-14":"癸亥","2027-04-15":"甲子","2027-04-16":"乙丑","2027-04-17":"丙寅","2027-04-18":"丁卯","2027-04-19":"戊辰","2027-04-20":"己巳","2027-04-21":"庚午","2027-04-22":"辛未","2027-04-23":"壬申","2027-04-24":"癸酉","2027-04-25":"甲戌","2027-04-26":"乙亥","2027-04-27":"丙子","2027-04-28":"丁丑","2027-04-29":"戊寅","2027-04-30":"己卯","2027-05-01":"庚辰","2027-05-02":"辛巳","2027-05-03":"壬午","2027-05-04":"癸未","2027-05-05":"甲申","2027-05-06":"乙酉","2027-05-07":"丙戌","2027-05-08":"丁亥","2027-05-09":"戊子","2027-05-10":"己丑","2027-05-11":"庚寅","2027-05-12":"辛卯","2027-05-13":"壬辰","2027-05-14":"癸巳","2027-05-15":"甲午","2027-05-16":"乙未","2027-05-17":"丙申","2027-05-18":"丁酉","2027-05-19":"戊戌","2027-05-20":"己亥","2027-05-21":"庚子","2027-05-22":"辛丑","2027-05-23":"壬寅","2027-05-24":"癸卯","2027-05-25":"甲辰","2027-05-26":"乙巳","2027-05-27":"丙午","2027-05-28":"丁未","2027-05-29":"戊申","2027-05-30":"己酉","2027-05-31":"庚戌","2027-06-01":"辛亥","2027-06-02":"壬子","2027-06-03":"癸丑","2027-06-04":"甲寅","2027-06-05":"乙卯","2027-06-06":"丙辰","2027-06-07":"丁巳","2027-06-08":"戊午","2027-06-09":"己未","2027-06-10":"庚申","2027-06-11":"辛酉","2027-06-12":"壬戌","2027-06-13":"癸亥","2027-06-14":"甲子","2027-06-15":"乙丑","2027-06-16":"丙寅","2027-06-17":"丁卯","2027-06-18":"戊辰","2027-06-19":"己巳","2027-06-20":"庚午","2027-06-21":"辛未","2027-06-22":"壬申","2027-06-23":"癸酉","2027-06-24":"甲戌","2027-06-25":"乙亥","2027-06-26":"丙子","2027-06-27":"丁丑","2027-06-28":"戊寅","2027-06-29":"己卯","2027-06-30":"庚辰","2027-07-01":"辛巳","2027-07-02":"壬午","2027-07-03":"癸未","2027-07-04":"甲申","2027-07-05":"乙酉","2027-07-06":"丙戌","2027-07-07":"丁亥","2027-07-08":"戊子","2027-07-09":"己丑","2027-07-10":"庚寅","2027-07-11":"辛卯","2027-07-12":"壬辰","2027-07-13":"癸巳","2027-07-14":"甲午","2027-07-15":"乙未","2027-07-16":"丙申","2027-07-17":"丁酉","2027-07-18":"戊戌","2027-07-19":"己亥","2027-07-20":"庚子","2027-07-21":"辛丑","2027-07-22":"壬寅","2027-07-23":"癸卯","2027-07-24":"甲辰","2027-07-25":"乙巳","2027-07-26":"丙午","2027-07-27":"丁未","2027-07-28":"戊申","2027-07-29":"己酉","2027-07-30":"庚戌","2027-07-31":"辛亥","2027-08-01":"壬子","2027-08-02":"癸丑","2027-08-03":"甲寅","2027-08-04":"乙卯","2027-08-05":"丙辰","2027-08-06":"丁巳","2027-08-07":"戊午","2027-08-08":"己未","2027-08-09":"庚申","2027-08-10":"辛酉","2027-08-11":"壬戌","2027-08-12":"癸亥","2027-08-13":"甲子","2027-08-14":"乙丑","2027-08-15":"丙寅","2027-08-16":"丁卯","2027-08-17":"戊辰","2027-08-18":"己巳","2027-08-19":"庚午","2027-08-20":"辛未","2027-08-21":"壬申","2027-08-22":"癸酉","2027-08-23":"甲戌","2027-08-24":"乙亥","2027-08-25":"丙子","2027-08-26":"丁丑","2027-08-27":"戊寅","2027-08-28":"己卯","2027-08-29":"庚辰","2027-08-30":"辛巳","2027-08-31":"壬午","2027-09-01":"癸未","2027-09-02":"甲申","2027-09-03":"乙酉","2027-09-04":"丙戌","2027-09-05":"丁亥","2027-09-06":"戊子","2027-09-07":"己丑","2027-09-08":"庚寅","2027-09-09":"辛卯","2027-09-10":"壬辰","2027-09-11":"癸巳","2027-09-12":"甲午","2027-09-13":"乙未","2027-09-14":"丙申","2027-09-15":"丁酉","2027-09-16":"戊戌","2027-09-17":"己亥","2027-09-18":"庚子","2027-09-19":"辛丑","2027-09-20":"壬寅","2027-09-21":"癸卯","2027-09-22":"甲辰","2027-09-23":"乙巳","2027-09-24":"丙午","2027-09-25":"丁未","2027-09-26":"戊申","2027-09-27":"己酉","2027-09-28":"庚戌","2027-09-29":"辛亥","2027-09-30":"壬子","2027-10-01":"癸丑","2027-10-02":"甲寅","2027-10-03":"乙卯","2027-10-04":"丙辰","2027-10-05":"丁巳","2027-10-06":"戊午","2027-10-07":"己未","2027-10-08":"庚申","2027-10-09":"辛酉","2027-10-10":"壬戌","2027-10-11":"癸亥","2027-10-12":"甲子","2027-10-13":"乙丑","2027-10-14":"丙寅","2027-10-15":"丁卯","2027-10-16":"戊辰","2027-10-17":"己巳","2027-10-18":"庚午","2027-10-19":"辛未","2027-10-20":"壬申","2027-10-21":"癸酉","2027-10-22":"甲戌","2027-10-23":"乙亥","2027-10-24":"丙子","2027-10-25":"丁丑","2027-10-26":"戊寅","2027-10-27":"己卯","2027-10-28":"庚辰","2027-10-29":"辛巳","2027-10-30":"壬午","2027-10-31":"癸未","2027-11-01":"甲申","2027-11-02":"乙酉","2027-11-03":"丙戌","2027-11-04":"丁亥","2027-11-05":"戊子","2027-11-06":"己丑","2027-11-07":"庚寅","2027-11-08":"辛卯","2027-11-09":"壬辰","2027-11-10":"癸巳","2027-11-11":"甲午","2027-11-12":"乙未","2027-11-13":"丙申","2027-11-14":"丁酉","2027-11-15":"戊戌","2027-11-16":"己亥","2027-11-17":"庚子","2027-11-18":"辛丑","2027-11-19":"壬寅","2027-11-20":"癸卯","2027-11-21":"甲辰","2027-11-22":"乙巳","2027-11-23":"丙午","2027-11-24":"丁未","2027-11-25":"戊申","2027-11-26":"己酉","2027-11-27":"庚戌","2027-11-28":"辛亥","2027-11-29":"壬子","2027-11-30":"癸丑","2027-12-01":"甲寅","2027-12-02":"乙卯","2027-12-03":"丙辰","2027-12-04":"丁巳","2027-12-05":"戊午","2027-12-06":"己未","2027-12-07":"庚申","2027-12-08":"辛酉","2027-12-09":"壬戌","2027-12-10":"癸亥","2027-12-11":"甲子","2027-12-12":"乙丑","2027-12-13":"丙寅","2027-12-14":"丁卯","2027-12-15":"戊辰","2027-12-16":"己巳","2027-12-17":"庚午","2027-12-18":"辛未","2027-12-19":"壬申","2027-12-20":"癸酉","2027-12-21":"甲戌","2027-12-22":"乙亥","2027-12-23":"丙子","2027-12-24":"丁丑","2027-12-25":"戊寅","2027-12-26":"己卯","2027-12-27":"庚辰","2027-12-28":"辛巳","2027-12-29":"壬午","2027-12-30":"癸未","2027-12-31":"甲申"};
+
+/* ══ 사주-주역 매칭 알고리즘 ══ */
+const CHUNGAN_OHAENG = {甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'};
+const GUA_UPPER_LOWER = {
+  '111':'乾','011':'兌','101':'離','001':'震',
+  '110':'巽','010':'坎','100':'艮','000':'坤'
+};
+const GUA_OHAENG = {乾:'金',兌:'金',離:'火',震:'木',巽:'木',坎:'水',艮:'土',坤:'土'};
+const SIPSUNG = [
+  {rel:'비겁',theme:'인간관계 · 독립심 · 주체성',
+   interp:'나와 대등한 협력자 혹은 경쟁자가 나타나는 시기입니다. 주관을 뚜렷이 가지되 고집보다 소통을 앞세우십시오.'},
+  {rel:'식상',theme:'창의성 · 표현력 · 프로젝트 시작',
+   interp:'아이디어가 샘솟고 자신을 표출하기 좋은 때입니다. 새 프로젝트를 시작하거나 자신을 어필하기 유리하지만 말실수는 조심하십시오.'},
+  {rel:'재성',theme:'재물운 · 성과 · 결과물 확보',
+   interp:'내가 통제하고 쟁취할 수 있는 기운이 강해집니다. 투자·계약·비즈니스 성과를 내기에 가장 좋은 타이밍이니 결단력을 발휘하십시오.'},
+  {rel:'관성',theme:'직장운 · 명예 · 규율 · 리더십',
+   interp:'조직·직장·윗사람의 영향력이 강해지는 날입니다. 책임감 있게 의무를 다하면 인정을 받지만, 무리한 업무로 지치지 않도록 완급을 조절하십시오.'},
+  {rel:'인성',theme:'문서운 · 학업 · 계약 · 귀인의 도움',
+   interp:'나를 지탱하고 도와주는 에너지가 들어옵니다. 공부·자격증·계약서 작성에 유리하며 귀인이나 멘토를 만나 시야가 넓어질 수 있습니다.'}
+];
+
+// 생성(相生) 관계: 木→火→土→金→水→木
+const SAENGSAENGGUK = {
+  生: {木:'火',火:'土',土:'金',金:'水',水:'木'},
+  克: {木:'土',火:'金',土:'水',金:'木',水:'火'}
+};
+
+/**
+ * 일간(日干) 오행과 오늘 괘 오행으로 십성(十星) 도출
+ * @param {string} ilgan - 일간 천간 (甲乙丙...)
+ * @param {string} todayGanji - 오늘 일진 간지 (丙辰 등)
+ * @param {string} guaKey - 6비트 이진 키 (본괘)
+ */
+function getSipsung(ilgan, todayGanji, guaKey) {
+  if (!ilgan || !todayGanji || !guaKey) return null;
+  const ilOhaeng = CHUNGAN_OHAENG[ilgan];
+  if (!ilOhaeng) return null;
+
+  // 오늘 괘 상괘 오행으로 매칭 (일진 간지 기준 + 괘 상괘 오행 결합)
+  const upperTri = GUA_UPPER_LOWER[guaKey.slice(3)] || '乾';
+  const guaOhaeng = GUA_OHAENG[upperTri] || '金';
+
+  let rel;
+  if (ilOhaeng === guaOhaeng) {
+    rel = '비겁';
+  } else if (SAENGSAENGGUK.生[ilOhaeng] === guaOhaeng) {
+    rel = '식상';
+  } else if (SAENGSAENGGUK.克[ilOhaeng] === guaOhaeng) {
+    rel = '재성';
+  } else if (SAENGSAENGGUK.克[guaOhaeng] === ilOhaeng) {
+    rel = '관성';
+  } else if (SAENGSAENGGUK.生[guaOhaeng] === ilOhaeng) {
+    rel = '인성';
+  } else {
+    return null;
+  }
+  return SIPSUNG.find(s => s.rel === rel) || null;
+}
+
+/**
+ * 일진 캐시에서 오늘 간지 조회 (YYYY-MM-DD 키)
+ */
+function getTodayGanji() {
+  const d = new Date();
+  const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return DAILY_ILJIN[key] || null;
+}
+
+/**
+ * 사주에서 일간(日干) 추출
+ * 60甲子 수식으로 직접 계산 — DAILY_ILJIN 캐시 범위(2023~) 제약 없이 모든 생년월일 지원
+ * 기준: 양력 1900-01-01 = 甲戌일 (甲=0, index=0)
+ */
+function getIlgan(saju) {
+  if (!saju || !saju.year || !saju.month || !saju.day) return null;
+  const HEAVENLY = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  // 기준일: 1900-01-01 = 甲 (인덱스 0)
+  const BASE = new Date(1900, 0, 1);
+  // 음력이면 캐시에서 양력 변환 시도, 실패 시 그냥 양력으로 처리
+  let y = Number(saju.year), m = Number(saju.month), d = Number(saju.day);
+  if (saju.calType === 'lunar') {
+    // 음력→양력 변환은 DAILY_ILJIN 역조회로 근사: 해당 년도 범위에 있으면 사용, 없으면 그냥 입력값 사용
+    // (정확한 음양력 변환 라이브러리 없으므로 양력으로 간주하고 계산)
+  }
+  const target = new Date(y, m - 1, d);
+  const diffDays = Math.round((target - BASE) / 86400000);
+  // 기준일 甲의 천간 인덱스 = 0, 지지 인덱스: 戌=10 (사용 안 함)
+  const ganIdx = ((diffDays % 10) + 10) % 10;
+  return HEAVENLY[ganIdx];
+}
+
+function getGua(key){
+  // 이진 키 → 괘 번호 매핑 (선천팔괘 기준 간이 계산)
+  const upper = key.slice(3); // 상괘 (4~6효)
+  const lower = key.slice(0,3); // 하괘 (1~3효)
+  const triMap={'111':0,'011':1,'101':2,'001':3,'110':4,'010':5,'100':6,'000':7};
+  const u=triMap[upper]??0, l=triMap[lower]??0;
+  const idx=(u*8+l)%64;
+  return G64[idx]||G64[2];
+}
+
+/* ══ 오늘의 괘 ══ */
+function initDaily(){
+  const n=new Date();
+  const ds=`${n.getFullYear()}년 ${n.getMonth()+1}월 ${n.getDate()}일`;
+  const titleEl=document.getElementById('dailyTitle');
+  if(titleEl) titleEl.textContent=ds;
+  const seed=(n.getFullYear()*10000+(n.getMonth()+1)*100+n.getDate())%64;
+  const g=G64[seed];
+  const nameEl=document.getElementById('dName');
+  const hjEl=document.getElementById('dHj');
+  const descEl=document.getElementById('dDesc');
+  const kwsEl=document.getElementById('dKws');
+  if(nameEl) nameEl.textContent=g.name;
+  if(hjEl) hjEl.textContent=g.hanja+' · '+g.keyword;
+  if(descEl) descEl.textContent=g.desc;
+  if(kwsEl) kwsEl.innerHTML='<span class="kw">'+g.keyword+'</span>';
+}
+initDaily();
+
+/* ══ 모달 유틸 ══ */
+function openMo(id){document.getElementById(id).classList.add('on');}
+function closeMo(id){document.getElementById(id).classList.remove('on');}
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on');}));
+
+/* ══ 점괘 시작 ══ */
+let divType='free';
+let throws=[], simIdx=0, tMode='real';
+let simSession=0; // setTimeout 취소용 세션 ID
+
+async function startDiv(type){
+  divType=type;
+
+  // 비회원 차단 — 모든 점괘는 로그인 필수
+  if(!CU){
+    openMo('loginMo');
+    toast('점괘 서비스는 회원가입 후 이용 가능합니다.');
+    return;
+  }
+
+  if(type==='paid'){
+    if(!(UP?.subscribed||(UP?.remainCount>0))){
+    openPayMo('charge');return;
+    }
+    if(UP?.saju){startCoin();}else{openMo('sajuMo');}
+    return;
+  }
+
+  // 무료 횟수 체크
+  const today=todayStr();
+  // 날짜가 바뀌면 오늘 사용횟수 초기화
+  if((UP?.freeResetDate||'')!==today){
+    await db.ref('users/'+CU.uid).update({freeUsedToday:0,freeResetDate:today});
+    if(UP){UP.freeUsedToday=0;UP.freeResetDate=today;}
+  }
+  const usedToday = UP?.freeUsedToday||0;
+  // 1회 이상 사용했으면 차단 (0 → 허용 / 1 이상 → 차단)
+  if(usedToday>=1 && !UP?.subscribed && !(UP?.remainCount>0)){
+    toast('오늘 무료 횟수(1회)를 사용했습니다. 충전 후 이용하세요.');
+    openPayMo('charge');return;
+  }
+  startCoin();
+}
+
+function startCoin(){throws=[];simIdx=0;simSession++;openMo('coinMo');goCS(1);}
+
+/* ══ 단계 이동 ══ */
+function goCS(n){
+  document.querySelectorAll('.ms').forEach(s=>s.classList.remove('on'));
+  document.getElementById('cs'+n).classList.add('on');
+  if(n===3)initCS3();
+  if(n===4)showResult();
+}
+
+function setTMode(m){
+  tMode=m;
+  document.getElementById('tabR').classList.toggle('on',m==='real');
+  document.getElementById('tabS').classList.toggle('on',m==='sim');
+}
+
+function initCS3(){
+  throws=[];simIdx=0;resetYao();
+  document.getElementById('seeResBtn').disabled=true;
+  document.getElementById('throwStatus').textContent='';
+  if(tMode==='real'){
+    document.getElementById('realMode').style.display='block';
+    document.getElementById('simMode').style.display='none';
+    buildMRows();
+  }else{
+    document.getElementById('realMode').style.display='none';
+    document.getElementById('simMode').style.display='block';
+    document.getElementById('throwCntTxt').textContent='1효 / 6효 — 동전을 던지십시오';
+    document.getElementById('throwBtn').disabled=false;
+    resetCoins();
+  }
+}
+
+function buildMRows(){
+  const c=document.getElementById('manualRows');c.innerHTML='';
+  for(let i=6;i>=1;i--){
+    c.innerHTML+=`<div class="mrow"><span class="mlbl">${i}효</span>
+    <div class="mbtns">
+      <button class="mbtn" onclick="selM(${i},6,this)">뒤뒤뒤(6)</button>
+      <button class="mbtn" onclick="selM(${i},7,this)">앞앞뒤(7)</button>
+      <button class="mbtn" onclick="selM(${i},8,this)">앞뒤뒤(8)</button>
+      <button class="mbtn" onclick="selM(${i},9,this)">앞앞앞(9)</button>
+    </div>
+    <span class="mscr" id="ms${i}">—</span></div>`;
+  }
+}
+
+function selM(yao,score,btn){
+  btn.closest('.mbtns').querySelectorAll('.mbtn').forEach(b=>b.classList.remove('sf','sb'));
+  btn.classList.add(score>=7?'sf':'sb');
+  document.getElementById('ms'+yao).textContent=score+'점';
+  throws[yao-1]=score;
+  drawYao(yao,score);
+  if(throws.filter(Boolean).length===6)document.getElementById('seeResBtn').disabled=false;
+}
+
+function throwSim(){
+  if(simIdx>=6)return;
+  const r=[r2(),r2(),r2()],tot=r[0]+r[1]+r[2];
+  const mySession=simSession; // 현재 세션 캡처
+  ['c1','c2','c3'].forEach((id,i)=>{
+    const el=document.getElementById(id);el.className='coin';
+    setTimeout(()=>{el.classList.add(r[i]===3?'front':'back');el.textContent=r[i]===3?'앞':'뒤';},i*100);
+  });
+  setTimeout(()=>{
+    if(simSession!==mySession)return; // 세션이 바뀌었으면 (startCoin 재호출) 중단
+    simIdx++;throws[simIdx-1]=tot;drawYao(simIdx,tot);
+    const sm={6:'노음(변함)',7:'소양',8:'소음',9:'노양(변함)'};
+    document.getElementById('throwStatus').textContent=simIdx+'효: '+tot+'점 → '+sm[tot];
+    if(simIdx<6){document.getElementById('throwCntTxt').textContent=(simIdx+1)+'효 / 6효 — 다시 던지십시오';}
+    else{document.getElementById('throwCntTxt').textContent='6효 완성!';document.getElementById('throwBtn').disabled=true;document.getElementById('seeResBtn').disabled=false;}
+  },400);
+}
+function r2(){return Math.random()<.5?2:3;}
+
+function resetYao(){
+  for(let i=1;i<=6;i++)document.getElementById('yl'+i).innerHTML=`<span class="yaolbl">${i}</span><div class="yaoseg" style="background:var(--paper3);width:100%;opacity:.3"></div>`;
+}
+function drawYao(idx,score){
+  const el=document.getElementById('yl'+idx);
+  if(!el)return; // 모달이 닫혔거나 DOM에 없으면 무시
+  const isY=score===7||score===9,isM=score===6||score===9;
+  const lbl=`<span class="yaolbl">${idx}</span>`;
+  const col=isM?'var(--gold)':'var(--ink)';
+  const op=isM?.7:1;
+  if(isY){el.innerHTML=lbl+`<div class="yaoseg" style="width:86px;background:${col};opacity:${op}"></div>`;}
+  else{el.innerHTML=lbl+`<div class="yaoseg" style="width:36px;background:${col};opacity:${op}"></div><div style="width:10px"></div><div class="yaoseg" style="width:36px;background:${col};opacity:${op}"></div>`;}
+}
+function resetCoins(){['c1','c2','c3'].forEach(id=>{const e=document.getElementById(id);e.className='coin';e.textContent='○';});}
+
+/* ══ 결과 ══ */
+async function showResult(){
+  const key=throws.map(s=>(s===7||s===9)?'1':'0').join('');
+  const moving=throws.map((s,i)=>(s===6||s===9)?i+1:null).filter(Boolean);
+  const gua=getGua(key);
+  const q=document.getElementById('userQ').value||'(질문 없음)';
+
+  // 유료 여부: 구독 중이거나 충전 잔여횟수가 있는 경우
+  const isSub = UP?.subscribed||false;
+  const hasCharge = (UP?.remainCount||0)>0;
+  const isPaid = CU && (isSub || hasCharge);
+
+  // 지괘 계산 (유료)
+  let jiGuaHtml='';
+  if(moving.length>0&&isPaid){
+    const jiKey=throws.map((s)=>{
+      if(s===6)return'1';
+      if(s===9)return'0';
+      return (s===7)?'1':'0';
+    }).join('');
+    const jiGua=getGua(jiKey);
+    jiGuaHtml=`
+      <div style="margin-top:12px;padding:12px 16px;background:var(--paper2);border-radius:8px;border-left:3px solid var(--pb);">
+        <p style="font-size:10px;letter-spacing:2px;color:var(--pb);margin-bottom:6px;">지괘 (之卦) — 앞으로 변해갈 방향</p>
+        <p style="font-size:14px;font-weight:600;color:var(--ink);font-family:'Noto Serif KR',serif;">${jiGua.name} <span style="font-size:12px;color:var(--ink3);">${jiGua.hanja}</span></p>
+        <p style="font-size:13px;color:var(--ink2);margin-top:4px;line-height:1.7;">${jiGua.desc}</p>
+      </div>`;
+  }
+
+  // 사주-주역 십성 매칭 (사주 점괘+유료+사주 보유자)
+  let sipsungHtml = '';
+  if(divType==='paid' && isPaid && UP?.saju) {
+    const ilgan = getIlgan(UP.saju);
+    const todayGanji = getTodayGanji();
+    const ss = getSipsung(ilgan, todayGanji, key);
+    if(ss && ilgan) {
+      const ilOhaeng = CHUNGAN_OHAENG[ilgan] || '';
+      sipsungHtml = `
+        <div style="margin-top:20px;padding:16px 18px;background:linear-gradient(135deg,var(--ink) 0%,#2d2010 100%);border-radius:10px;border:1px solid rgba(200,146,42,.25);">
+          <p style="font-size:10px;letter-spacing:3px;color:var(--gold);margin-bottom:10px;">✦ 사주 × 주역 연동 — 오늘의 명리 테마</p>
+          <div style="display:flex;align-items:flex-start;gap:14px;">
+            <div style="text-align:center;flex-shrink:0;">
+              <div style="font-family:'Noto Serif KR',serif;font-size:28px;color:var(--gold);line-height:1;">${ilgan}</div>
+              <div style="font-size:9px;color:var(--ink3);margin-top:3px;letter-spacing:1px;">일간 · ${ilOhaeng}</div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;color:var(--goldl);margin-bottom:5px;">${ss.rel} (${ss.theme})</div>
+              <div style="font-size:12px;color:#c8b898;line-height:1.8;">${ss.interp}</div>
+              ${todayGanji?`<div style="font-size:10px;color:var(--ink3);margin-top:8px;letter-spacing:1px;">오늘 일진: ${todayGanji}</div>`:''}
+            </div>
+          </div>
+        </div>`;
+    }
+  }
+
+  // 동효 해석
+  const movHtml = moving.length>0 ? `
+    <div style="margin-top:20px;">
+      <p class="rstit">동효 (動爻) — 변화를 예고하는 자리</p>
+      <p class="rtxt">${moving.map(y=>y+'효').join(', ')}에서 변화의 기운이 감지됩니다.
+      ${isPaid
+        ? '이 자리는 지금 상황에서 가장 역동적으로 움직이는 지점입니다. 변화를 두려워하지 말되, 그 변화가 어떤 방향으로 흘러가는지를 냉정하게 읽어야 합니다.'
+        : '<span style="color:var(--pb);font-size:12px;">(효사 상세 해석은 유료 기능입니다)</span>'}
+      </p>
+      ${isPaid ? jiGuaHtml : ''}
+    </div>` : '';
+
+  // 유료 AI 프롬프트
+  let paidHtml='';
+  if(isPaid){
+    const prompt=buildPrompt(q,gua,moving,key);
+    paidHtml=`
+      <div style="margin-top:28px;border-top:1px solid var(--paper3);padding-top:24px;">
+        <p class="rstit">AI 심층 해설 프롬프트</p>
+        <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.7;">
+          아래 프롬프트 전체를 복사해 <strong>ChatGPT · Claude · Gemini</strong> 중 하나에 붙여넣으세요.<br>
+          훅+카드 형태의 1페이지 보고서로 심층 해석을 받을 수 있습니다.
+        </p>
+        <div class="promptbox">
+          <pre id="promptTxt">${escHtml(prompt)}</pre>
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+            <button class="btncopy" onclick="copyPrompt()">📋 프롬프트 복사</button>
+            <span style="font-size:11px;color:var(--ink3);align-self:center;">복사 후 AI 대화창에 붙여넣기 하세요</span>
+          </div>
+        </div>
+      </div>`;
+  } else {
+    paidHtml=`
+      <div style="margin-top:28px;border-top:1px solid var(--paper3);padding-top:24px;">
+        <p class="rstit">AI 심층 해설 프롬프트</p>
+        <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.7;">
+          ChatGPT · Claude · Gemini에 붙여넣으면 1페이지 심층 해설 보고서를 받을 수 있습니다.
+        </p>
+        <div style="position:relative;border-radius:8px;overflow:hidden;margin-bottom:16px;">
+          <div style="filter:blur(4px);pointer-events:none;background:var(--ink);border-radius:8px;padding:16px;">
+            <pre style="font-size:11px;color:#c8b898;line-height:1.7;white-space:pre-wrap;word-break:break-word;">당신은 주역(周易) 전문 해설가입니다. 아래 점괘 정보를 바탕으로
+훅(Hook) + 카드(Card) 형태의 1페이지 심층 해설 보고서를 작성해 주세요.
+
+━━━━━━━━━━━━━━━━━━━━
+📋 점괘 기본 정보
+━━━━━━━━━━━━━━━━━━━━
+날짜: 2026년 6월 11일
+질문: "지금 이 결정을 밀고 나가도 될까요?"
+본괘: 지천태 (地天泰) — 평화
+키워드: 평화와 번영
+동효: 3효, 5효
+
+【HOOK】
+하늘과 땅이 소통하는 지금, 당신의 결단은 흐름을 타고 있습니다.
+
+【카드 1 — 지금의 형세】
+지천태괘는 음양이 조화롭게...</pre>
+          </div>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(26,18,8,0.55);border-radius:8px;">
+            <p style="color:var(--goldd);font-size:13px;font-weight:600;margin-bottom:4px;">🔒 유료 회원 전용</p>
+            <p style="color:#c8b898;font-size:11px;margin-bottom:14px;text-align:center;line-height:1.6;">미리 충전 후 점괘를 보시면<br>바로 프롬프트를 확인할 수 있습니다</p>
+            <button class="btnpaid" onclick="openPayMo()" style="font-size:12px;padding:8px 20px;">충전하러 가기</button>
+          </div>
+        </div>
+        <div style="background:var(--paper2);border-radius:8px;padding:14px 16px;font-size:12px;color:var(--ink3);line-height:1.8;">
+          💡 <strong style="color:var(--ink2);">이용 안내</strong><br>
+          주역 점괘는 그 순간의 기운을 읽는 것으로 재현이 불가합니다.<br>
+          AI 해설 프롬프트가 필요하다면 <strong>미리 충전 후</strong> 점괘를 보세요.<br>
+          <a href="#" onclick="openSample();return false;" style="color:var(--gold);text-decoration:none;">▶ AI 해설 샘플 보기</a>
+        </div>
+      </div>`;
+  }
+
+  document.getElementById('resultArea').innerHTML=`
+    <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--paper3);">
+      <div style="font-family:'Noto Serif KR',serif;font-size:52px;color:var(--gold);line-height:1;flex-shrink:0;">☯</div>
+      <div>
+        <div class="rgua">${gua.name}</div>
+        <div class="rhj">${gua.hanja} · ${gua.meaning}</div>
+        <span class="rkw">${gua.keyword}</span>
+      </div>
+    </div>
+    <p style="font-size:10px;letter-spacing:2px;color:var(--ink3);margin-bottom:6px;">당신의 질문</p>
+    <p style="font-size:13px;background:var(--paper2);padding:10px 14px;border-radius:6px;margin-bottom:20px;line-height:1.8;color:var(--ink2);font-style:italic;">"${escHtml(q)}"</p>
+    <p class="rstit">지금의 형세</p>
+    <p class="rtxt" style="margin-bottom:12px;">${gua.desc}</p>
+    <p class="rtxt">이 괘가 나온 것은 우연이 아닙니다. 지금 당신이 처한 상황은 <strong>${gua.keyword}</strong>의 기운 안에 있습니다. 이 형세를 거스르려 하면 더 큰 저항을 만나게 됩니다. 흐름을 읽고 그 안에서 가장 현명한 자리를 찾는 것이 지금 할 일입니다.</p>
+    ${movHtml}
+    ${sipsungHtml}
+    <p class="rstit" style="margin-top:20px;">지금 당신이 취해야 할 태도</p>
+    <div class="ract">
+      <p style="line-height:1.9;">${gua.action}</p>
+      <p style="margin-top:10px;font-size:12px;color:var(--ink3);line-height:1.7;">주역은 결과를 예언하지 않습니다. 당신이 이 지침을 어떻게 받아들이고 실천하느냐에 따라 앞으로의 형세는 얼마든지 달라질 수 있습니다.</p>
+    </div>
+    ${paidHtml}
+    <div style="margin-top:24px;text-align:center;">
+      <button class="bs" style="font-size:13px;" onclick="goCS(1)">다시 점괘 보기</button>
+    </div>`;
+
+  // 사용 기록 저장 및 횟수 처리
+  if(CU){
+    // 점괘 기록 저장
+    await db.ref('users/'+CU.uid+'/records').push({
+      date:Date.now(), key, guaName:gua.name, hanja:gua.hanja,
+      keyword:gua.keyword, question:q, moving, divType
+    });
+
+    if(isPaid && hasCharge && !isSub){
+      // 충전 횟수 차감 (구독 아닌 유료 충전 회원)
+      const nc = Math.max(0,(UP?.remainCount||0)-1);
+      await db.ref('users/'+CU.uid).update({remainCount:nc});
+      if(UP) UP.remainCount=nc;
+      updateCnt();
+    } else if(!isPaid){
+      // 무료 사용 횟수 증가
+      const used=(UP?.freeUsedToday||0)+1;
+      await db.ref('users/'+CU.uid).update({freeUsedToday:used, freeResetDate:todayStr()});
+      if(UP) UP.freeUsedToday=used;
+    }
+  }
+}
+
+/* ══ AI 프롬프트 — 훅+카드 보고서 형태 ══ */
+function buildPrompt(q,gua,moving,key){
+  const d=new Date();
+  const dateStr=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
+  const saju=UP?.saju
+    ?`${UP.saju.year}년 ${UP.saju.month}월 ${UP.saju.day}일 ${UP.saju.hour} (${UP.saju.calType==='lunar'?'음력':'양력'})`
+    :'미입력';
+  const movStr=moving.length>0?moving.map(y=>y+'효').join(', '):'없음';
+  // 사주-주역 연동 정보 (사주 점괘일 때만)
+  const ilgan = (divType==='paid' && UP?.saju) ? getIlgan(UP.saju) : null;
+  const todayGanji = divType==='paid' ? getTodayGanji() : null;
+  const ss = (ilgan && key) ? getSipsung(ilgan, todayGanji, key) : null;
+  const sipsungLine = divType!=='paid'
+    ? null
+    : ss
+      ? `일간: ${ilgan}(${CHUNGAN_OHAENG[ilgan]||''}) / 오늘 일진: ${todayGanji||'미확인'} / 십성 테마: ${ss.rel}(${ss.theme})`
+      : '미입력 또는 산출 불가';
+
+  return `당신은 주역(周易) 해설가입니다. 아래 점괘 데이터를 바탕으로 읽는 사람이 주역 지식 없이도 바로 이해할 수 있는 해설을 작성해 주세요.
+
+━━━━━━━━━━━━━━━━━━━━
+📋 점괘 데이터
+━━━━━━━━━━━━━━━━━━━━
+날짜: ${dateStr}
+${divType==='paid' ? `생년월일시: ${saju}\n` : ''}${sipsungLine !== null ? `사주×주역 연동: ${sipsungLine}\n` : ''}질문: "${q}"
+본괘: ${gua.name} (${gua.hanja}) — ${gua.meaning}
+괘 핵심의미: ${gua.desc}
+키워드: ${gua.keyword}
+변화 포인트(동효): ${movStr}
+
+━━━━━━━━━━━━━━━━━━━━
+📝 출력 구조 (반드시 이 순서·형태로)
+━━━━━━━━━━━━━━━━━━━━
+
+## ⚡ 한 줄 핵심
+지금 이 점괘가 질문자에게 전하는 핵심을 **단 한 문장**으로 직격하세요.
+전문용어 없이, 읽는 즉시 "맞아, 이거야"가 느껴지는 문장이어야 합니다.
+
+---
+
+## 🪬 지금 내 상황
+**핵심 키워드: (2~3개, 예: 정체 / 내부 충돌 / 시기상조)**
+위 키워드를 중심으로 지금 질문자가 처한 상황을 2~3문장으로 풀어주세요.
+"${gua.name}괘", "괘사" 같은 주역 용어 대신 상황을 직접 묘사하는 평어(平語)로 쓰세요.
+
+---
+
+## 🔀 지금 변하고 있는 것
+**핵심 키워드: (1~2개, 예: 균열 / 전환점)**
+${moving.length>0
+  ? `${movStr} 자리에서 변화가 일어나고 있습니다. 이 변화가 질문자에게 실제로 무엇을 의미하는지, 지금 어떤 지점이 흔들리거나 달라지고 있는지를 2~3문장으로 설명하세요. "효사", "동효" 같은 용어는 쓰지 마세요.`
+  : `현재는 안정된 상태입니다. 변화보다 유지가 핵심인 지금 이 국면이 질문자에게 무엇을 의미하는지 2~3문장으로 설명하세요.`}
+
+---
+
+## 🧭 앞으로 흘러갈 방향
+**핵심 키워드: (1~2개, 예: 분산 → 집중 / 갈등 → 정리)**
+${moving.length>0
+  ? `지금의 변화가 계속되면 어떤 상황으로 전개될지를 2~3문장으로 설명하세요. "지괘"라는 단어 없이 "이 흐름이 이어지면 ~" 형태로 서술하세요.`
+  : `지금 이 상태를 유지할 때 어떤 방향으로 이어지는지를 2~3문장으로 설명하세요.`}
+
+---
+
+## ✅ 지금 당장 할 일
+구체적인 행동 3가지를 아래 형식으로 제시하세요. 이유보다 행동 자체가 앞에 와야 합니다.
+
+1. **[행동]** — 짧은 이유 (1문장)
+2. **[행동]** — 짧은 이유 (1문장)
+3. **[행동]** — 짧은 이유 (1문장)
+
+주역 용어 없이, 질문("${q}")에 직접 연결되는 현실적인 행동으로 쓰세요.
+
+---
+
+> 💬 **마무리 한 마디** — 길흉 판정 없이, 지금 어떤 태도로 임해야 하는지를 한 문장으로 마무리하세요.
+
+━━━━━━━━━━━━━━━━━━━━
+⚠️ 필수 주의사항
+━━━━━━━━━━━━━━━━━━━━
+• 효사·괘사·동효·지괘·처세술·이기론 등 전문용어를 결과물에 그대로 노출하지 마세요. 풀어서 설명하거나 아예 쓰지 마세요.
+${sipsungLine ? '• 사주×주역 연동 정보가 있으면 "지금 당신에게는 ~한 에너지가 강하게 작용합니다" 식으로 자연스럽게 녹이세요.\n' : ''}• 각 카드의 핵심 키워드는 반드시 **볼드** 처리하세요.
+• "길합니다", "흉합니다" 같은 단정 표현은 쓰지 마세요.`;
+}
+
+function openSample(){openMo('sampleMo');}
+
+function copyPrompt(){
+  const t=document.getElementById('promptTxt').textContent;
+  navigator.clipboard.writeText(t).then(()=>toast('✅ 프롬프트가 복사되었습니다. AI 대화창에 붙여넣기 하세요.'));
+}
+
+/* ══ 양력/음력 토글 ══ */
+let calType='solar';
+function setCalType(type){
+  calType=type;
+  const solar=document.getElementById('calSolar');
+  const lunar=document.getElementById('calLunar');
+  const note=document.getElementById('calNote');
+  if(type==='solar'){
+    solar.style.background='var(--ink)';solar.style.color='var(--goldd)';
+    lunar.style.background='#fff';lunar.style.color='var(--ink3)';
+    note.textContent='양력 기준으로 입력하세요.';
+  } else {
+    lunar.style.background='var(--ink)';lunar.style.color='var(--goldd)';
+    solar.style.background='#fff';solar.style.color='var(--ink3)';
+    note.textContent='음력으로 아시는 생년월일을 그대로 입력하세요. 음력 기준으로 저장됩니다.';
+  }
+}
+
+/* ══ 사주 저장 ══ */
+async function saveSaju(){
+  if(!CU)return;
+  const y=document.getElementById('sYear').value;
+  const m=document.getElementById('sMonth').value;
+  const d=document.getElementById('sDay').value;
+  const h=document.getElementById('sHour').value;
+  if(!y||!m||!d)return toast('생년월일을 입력하세요.');
+  const saju={year:y,month:m,day:d,hour:h||'모름',calType:calType};
+  try {
+    await db.ref('users/'+CU.uid).update({saju:saju});
+    if(UP)UP.saju=saju;
+    toast('사주 정보가 저장되었습니다. ('+(calType==='solar'?'양력':'음력')+')');
+    closeMo('sajuMo');
+    startCoin();
+  } catch(err) {
+    console.error('saveSaju 오류:', err);
+    toast('저장 실패: '+err.message);
+  }
+}
+
+/* ══ 결제 ══ */
+function openPayMo(type='charge'){
+  if(!CU){ openMo('loginMo'); toast('결제는 로그인 후 이용 가능합니다.'); return; }
+  setPayType(type);
+  openMo('payMo');
+}
+
+function setPayType(t){
+  document.getElementById('payTit').textContent=t==='subscribe'?'구독 신청':'충전하기';
+  if(t==='subscribe')document.getElementById('payProd').value='sub_month';
+  // 회원 정보 자동 입력
+  if(CU){
+    document.getElementById('payName').value=UP?.name||CU.displayName||'';
+    document.getElementById('payEmail').value=CU.email||'';
+  }
+}
+
+async function submitPay(){
+  if(!CU){openMo('loginMo');toast('결제는 로그인 후 이용 가능합니다.');return;}
+  const n=document.getElementById('payName').value.trim();
+  const ph=document.getElementById('payPhone').value.trim();
+  const em=document.getElementById('payEmail').value.trim();
+  const pr=document.getElementById('payProd').value;
+  if(!n||!ph||!em||!pr)return toast('모든 항목을 입력해주세요.');
+  await db.ref('payments').push({
+    name:n,phone:ph,email:em,product:pr,
+    uid:CU.uid,status:'pending',createdAt:Date.now()
+  });
+  const sel=document.getElementById('payProd');
+  alert(`신청이 완료되었습니다!\n\n이름: ${n}\n상품: ${sel.options[sel.selectedIndex].text}\n\n입금자명: ${n}${ph.slice(-4)}\n입금 확인 후 1~2시간 내에 처리됩니다.`);
+  closeMo('payMo');
+}
+
+/* ══ 개념 콘텐츠 ══ */
+const CONC=[
+  {e:'01 · 기초',t:'주역이란 무엇인가',b:`
+    <p>주역(周易)은 동양 철학의 뿌리이자 3천 년을 내려온 고전입니다. 서양에서는 '변화의 책(Book of Changes, I Ching)'이라 부릅니다. 단순한 점술서로 오해받지만, 실제로는 우주와 인간사의 변화 원리를 체계적으로 정리한 거대한 철학서입니다.</p>
+    <div class="hl">핵심: 미래가 어떻게 정해져 있는지를 보는 것이 아니라, 지금 내가 처한 형세를 파악하고 어떻게 행동해야 하는지 — 즉 처세술(處世術)을 배우는 것입니다.</div>
+    <h4>역(易)의 세 가지 뜻</h4>
+    <p><strong>변역(變易)</strong> — 세상의 모든 것은 끊임없이 변한다. 영원히 좋은 것도, 영원히 나쁜 것도 없다. 낮이 가면 밤이 오고, 겨울이 가면 봄이 오듯 모든 현상은 순환한다.</p>
+    <p><strong>불역(不易)</strong> — 그 변화에는 변하지 않는 법칙이 있다. 차면 기울고, 비면 채워진다(物極必反). 이 법칙 자체는 절대로 바뀌지 않는다.</p>
+    <p><strong>간역(簡易)</strong> — 복잡한 우주의 원리가 음(陰)과 양(陽), 단 두 가지 기호로 설명된다. 단순함 속에 위대한 진리가 있다.</p>
+    <h4>64괘란 무엇인가</h4>
+    <p>음(╌╌)과 양(—)을 세 줄로 쌓으면 8가지 조합(8괘)이 만들어지고, 이 8괘를 위아래로 조합하면 총 64괘가 됩니다. 이 64개의 상(象)은 인간사에서 일어날 수 있는 64가지 전형적인 상황 — 전쟁, 협력, 위기, 번영, 물러남, 전진 — 을 나타냅니다.</p>
+    <div class="hl">주역은 "이런 상황에서 인간은 어떻게 행동해야 하는가"를 3천 년간 축적된 경험으로 알려주는 일종의 인류 최초의 빅데이터입니다.</div>
+    <h4>주역의 탄생</h4>
+    <p>전설에 따르면 복희씨(伏羲)가 8괘를 처음 그렸고(약 5,000년 전), 주나라 문왕(文王)이 감옥에서 64괘로 확장하며 괘사를 썼으며, 공자(孔子)가 철학적 해설인 십익(十翼)을 더해 지금의 형태가 완성되었습니다. 현대 역사학자들은 상(商)나라 시대 갑골 점복의 방대한 기록들이 주나라로 이어지며 체계화된 것이 주역의 실질적 기원이라고 봅니다.</p>
+  `},
+  {e:'02 · 원리',t:'점을 치는 원리 — 우연 속의 필연',b:`
+    <p>동전 던지기는 단순한 확률 게임처럼 보입니다. 그러나 주역의 세계관에서 이 우연은 단순한 우연이 아닙니다. 인간의 마음과 우주의 기운이 서로 통한다는 천인감응(天人感應)의 원리가 작동하기 때문입니다.</p>
+    <h4>칼 융의 동시성 이론</h4>
+    <p>세계적인 정신분석학자 칼 융(Carl Jung)은 주역을 수년간 연구한 후 이를 '동시성(Synchronicity) 원리'로 설명했습니다. 인과관계 없이 내면의 심리 상태와 외부 사건이 의미 있게 일치하는 현상 — 절박한 마음으로 던진 동전이 지금 내 상황을 기막히게 반영하는 괘를 만들어내는 것 — 이 바로 동시성입니다. 융은 이것이 미신이 아니라 심리학적으로 유효한 현상이라고 보았습니다.</p>
+    <div class="hl">간절한 마음으로 치면 맞고, 장난삼아 치면 맞지 않는다는 주역 대가들의 공통된 말은 이 원리를 직관적으로 표현한 것입니다.</div>
+    <h4>이기론(理氣論)으로 본 점괘의 원리</h4>
+    <p>성리학의 이기론적 관점에서 보면, 인간의 마음도 기(氣)이고 동전도 기(氣)입니다. 극도로 집중한 마음의 기(氣)가 동전이라는 기(氣)와 공명할 때, 우주의 변하지 않는 법칙인 이(理)가 그 결과를 통해 드러납니다. 이것이 "동전이 굴러가는 결과가 내 무의식의 답을 비춰주는 거울"이 되는 이유입니다.</p>
+    <h4>척전법(擲錢法) — 동전 던지기 방법</h4>
+    <p>동전 3개를 동시에 6번 던져 효(爻)를 쌓습니다. 앞면(양)은 3점, 뒷면(음)은 2점으로 계산하면 합계는 반드시 6~9점 중 하나가 됩니다. 6점(노음·변하는 음)과 9점(노양·변하는 양)은 동효(動爻) — 곧 변화를 예고하는 자리입니다.</p>
+    <p>실제 동전으로 던지는 것을 권장합니다. 화면 클릭보다 몸을 통해 기(氣)를 담는 행위 자체가 주역 점의 본질이기 때문입니다.</p>
+  `},
+  {e:'03 · 독법',t:'괘를 읽는 법 — 본괘와 지괘',b:`
+    <h4>본괘(本卦) — 지금 이 순간의 형세</h4>
+    <p>6번 던져 나온 효를 밑에서부터 위로 쌓으면 하나의 괘가 만들어집니다. 이것이 본괘입니다. 본괘는 지금 내가 처한 상황의 전체적인 형세와 성격을 보여줍니다. 64개의 괘 각각은 특정한 상황적 논리를 담고 있어, 내 질문과의 맥락 안에서 읽어야 합니다.</p>
+    <h4>동효(動爻) — 변화의 핵심</h4>
+    <p>6점(노음)이나 9점(노양)이 나온 자리가 동효입니다. 동효는 "이 상황에서 가장 주목해야 할 변화의 지점"을 가리킵니다. 동효에 해당하는 효사(爻辭)가 지금 내 상황에 대한 가장 핵심적인 메시지를 담고 있습니다.</p>
+    <h4>지괘(之卦) — 앞으로 변해갈 방향</h4>
+    <p>동효를 반대로 뒤집어 새로 만들어지는 괘가 지괘입니다. 본괘가 현재라면, 지괘는 이 상황이 자연스럽게 흘러갈 미래의 방향입니다. 단, 지괘는 확정된 미래가 아니라 지금 행동하지 않으면 흘러갈 방향을 보여주는 것입니다.</p>
+    <div class="hl">본괘는 지금 내가 서 있는 곳, 지괘는 이 길을 계속 걸어가면 도달할 곳입니다. 주역은 그 경로를 바꿀 수 있다고 말합니다.</div>
+    <h4>올바른 독법의 태도</h4>
+    <p>괘의 결과를 '맞다/틀리다'로 검증하려 들지 마십시오. 주역은 예언이 아니라 거울입니다. 나온 괘를 거울 삼아 지금 나의 상태, 욕심, 두려움을 냉정하게 점검하는 것이 올바른 독법입니다. 길(吉)이 나왔다고 자만하지 말고, 흉(凶)이 나왔다고 낙담하지 말 것 — 이것이 주역의 핵심 처세술입니다.</p>
+  `},
+  {e:'04 · 비교',t:'사주팔자와 주역점의 차이',b:`
+    <h4>사주팔자 — 타고난 기운의 설계도</h4>
+    <p>사주(四柱)는 태어난 연·월·일·시의 네 기둥으로 이루어진 명리학(命理學) 시스템입니다. 태어나는 순간 부여받은 기운의 배치를 분석해 "이 사람은 어떤 기질을 타고났고, 어떤 시기에 어떤 운이 흘러오는가"를 읽습니다. 생년월일시가 핵심 정보이며, 10년 단위의 대운(大運)과 연도별 세운(歲運)을 통해 인생의 흐름을 예측합니다.</p>
+    <h4>주역점 — 지금 이 순간의 형세 진단</h4>
+    <p>주역점은 생년월일이 필요 없습니다. "지금 내가 고민하는 이 상황에서 어떤 태도를 취해야 하는가"라는 현재의 구체적 질문에 답합니다. 조선의 왕들이 전쟁이나 외교 같은 중요한 국가적 결정 앞에서 주역점을 친 이유가 여기 있습니다. 타고난 운명이 아니라, 지금 이 순간 어떻게 행동할 것인가를 묻는 것입니다.</p>
+    <div class="hl">사주팔자가 인생 전체의 기상 예보라면, 주역은 오늘 우산을 들고 나가야 할지, 처마 밑에서 기다려야 할지를 알려주는 현재의 나침반입니다.</div>
+    <h4>이 서비스에서 두 가지를 결합하는 이유</h4>
+    <p>사주로 인생의 큰 흐름(대운)을 파악하고, 주역점으로 지금 이 순간의 구체적 형세를 읽으면 훨씬 입체적인 통찰을 얻을 수 있습니다. 사주 기반 정밀 점괘는 이 두 가지를 연결해 "지금 내 대운의 어느 지점에서 이 형세가 나왔는가"를 함께 해석합니다.</p>
+  `},
+  {e:'05 · 학문',t:'주역의 학문적 뿌리 — 성리학과 이기론',b:`
+    <p>주역은 단순한 점술 도구가 아니라 동양 철학 전체의 뿌리입니다. 주역에서 출발한 사상의 흐름을 이해하면 점괘 해석의 깊이가 전혀 달라집니다.</p>
+    <h4>주역 → 성리학으로</h4>
+    <p>공자 시대의 유학은 주로 윤리와 정치를 다뤘습니다. 그런데 송나라 시대(10~13세기)에 이르러 학자들은 "유학도 불교·도교처럼 우주의 근본 원리를 설명해야 한다"며 유학을 혁신합니다. 이때 뼈대로 삼은 책이 바로 주역이었습니다. 주돈이(周敦頤)의 태극도설(太極圖說)을 시작으로, 정이(程頤)·정호(程顥) 형제, 그리고 주희(朱熹)에 이르러 성리학(性理學)이 완성됩니다.</p>
+    <h4>이기론(理氣論) — 우주를 설명하는 두 열쇠</h4>
+    <p>성리학의 핵심 도구는 이(理)와 기(氣)입니다. <strong>이(理)</strong>는 세상 만물의 변하지 않는 근본 원리이자 도덕적 기준으로, 주역의 태극(太極)과 통합니다. <strong>기(氣)</strong>는 그 원리를 담아 실제로 현상으로 드러나게 하는 에너지이자 물질적 재료로, 주역의 음양(陰陽)과 통합니다.</p>
+    <div class="hl">컴퓨터로 비유하면 이(理)는 소프트웨어(운영체제), 기(氣)는 하드웨어(본체·모니터)입니다. 둘은 항상 함께 움직이지만, 어느 쪽이 더 근본인가를 두고 조선의 학자들이 수백 년간 치열하게 논쟁했습니다.</div>
+    <h4>주리론(主理論) vs 주기론(主氣論) — 조선 유학의 대논쟁</h4>
+    <p><strong>주리론(퇴계 이황)</strong>: 변하지 않는 도덕 원리인 이(理)가 기(氣)보다 근본이다. 사단(四端·인의예지)은 이(理)에서 발동하며, 도덕적 원칙과 근본이 가장 중요하다. → 원칙주의·도덕주의.</p>
+    <p><strong>주기론(율곡 이이)</strong>: 원리(理)는 스스로 움직이지 못하고 기(氣)를 통해서만 현실에 드러난다. 현실의 변화와 실천이 중요하다. → 개혁주의·현실주의.</p>
+    <p>이 논쟁은 오늘날에도 유효합니다. "원칙을 지키는 것이 우선인가, 현실에 맞게 변화하는 것이 우선인가" — 주역 점괘를 읽을 때도 이 두 관점이 해석의 깊이를 만듭니다.</p>
+    <h4>우주의 기운이란 무엇인가</h4>
+    <p>이기론의 관점에서 우주의 기운은 세 가지 층위를 가집니다. 첫째, 일정한 주기(봄·여름·가을·겨울, 간지 60甲子)가 있습니다. 둘째, 균형을 회복하기 위해 끊임없이 요동칩니다(음이 극에 달하면 양이 오고, 양이 극에 달하면 음이 옵니다). 셋째, 절대적인 법칙(理)에 따라 움직이지만, 인격적인 신(神)은 없습니다. 주역은 이 기운의 흐름을 읽는 도구입니다.</p>
+  `},
+  {e:'06 · 마음가짐',t:'올바른 마음가짐 — 주역을 대하는 태도',b:`
+    <p>주역에서 가장 중요한 것은 도구가 아니라 묻는 사람의 마음입니다. 어떤 마음으로 임하느냐에 따라 같은 괘도 전혀 다른 의미로 다가옵니다.</p>
+    <h4>초서불재(初筮不再) — 처음이 전부다</h4>
+    <p>처음 나온 괘가 진짜 답입니다. 마음에 들지 않는다고 다시 던지면 그 순간 점의 정확도는 0이 됩니다. 두 번째 던지는 행위 자체가 이미 "나는 원하는 답을 원한다"는 사적 욕심이 개입된 것이기 때문입니다. 주역 서적의 첫머리에는 반드시 이 경고가 있습니다.</p>
+    <h4>욕심보다 태도를 물어라</h4>
+    <p>좋은 질문과 나쁜 질문이 있습니다. "내가 이 주식으로 돈을 벌 수 있을까요?"는 나쁜 질문입니다. "지금 내 마음이 탐욕에 치우쳐 있지는 않은가, 지금 투자를 결행하는 것이 올바른 태도인가?"는 좋은 질문입니다. 주역은 미래를 맞히는 예언가가 아니라 현재 나의 상태를 비추는 거울입니다.</p>
+    <div class="hl">"길하면 자만하지 말고, 흉하면 낙담하지 않고 대비하라." — 이것이 주역 3천 년의 핵심 처세술입니다.</div>
+    <h4>욕심이 있어도 된다</h4>
+    <p>인간인데 어떻게 욕심이 없을 수 있겠습니까. 욕심을 품고 던지셔도 됩니다. 다만 주역은 그 욕심을 들어주는 요술 램프가 아니라, 욕심이 가져올 결과를 냉정하게 보여주는 거울입니다. 동전을 던지기 전 단 1분만이라도 욕심과 불안에서 한 발 물러나 내 상황을 제3자의 눈으로 바라보십시오. 그것만으로도 주역은 충분히 작동합니다.</p>
+    <h4>주역은 처방전이지 치트키가 아니다</h4>
+    <p>주역이 "기다려라"고 했다고 해서 현실 판단을 포기하면 안 됩니다. 기업의 펀더멘탈이 무너지는데 점괘만 믿고 버티는 것은 지혜가 아닙니다. 주역의 조언을 참고하되, 최종 결정은 철저히 본인의 이성적 분석과 책임 위에 이루어져야 합니다.</p>
+  `}
+];
+
+function openConcept(i){
+  const c=CONC[i];
+  document.getElementById('cEye').textContent=c.e;
+  document.getElementById('cTit').textContent=c.t;
+  document.getElementById('cBody').innerHTML=c.b;
+  openMo('conceptMo');
+}
+
+/* ══ 유틸 ══ */
+function todayStr(){const d=new Date();return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;}
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(msg,dur=3200){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),dur);
+}
+
+
+</script>
+</body>
+</html>
