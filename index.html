@@ -214,22 +214,19 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
   <p class="hero-sub">미래 예언이 아닌, 지금 이 순간의 형세를 읽고 어떻게 나아갈지를 스스로 묻는 도구입니다</p>
 </section>
 
-<!-- 오늘의 괘 (상단 중앙 전체폭) -->
-<section class="secw" style="padding-top:32px;padding-bottom:24px;">
-  <p class="slbl" style="text-align:center;">오늘의 괘</p>
-  <p style="font-size:11px;text-align:center;color:var(--ink3);margin-bottom:20px;letter-spacing:1px;" id="dailyTitle"></p>
-  <div class="dcrd">
-    <div class="dgua">☯</div>
-    <div style="flex:1;">
-      <div class="dname" id="dName"></div>
-      <div class="dhj" id="dHj"></div>
-      <p class="ddesc" id="dDesc"></p>
-      <div id="dKws"></div>
-      <p style="font-size:10px;color:var(--ink3);margin-top:12px;opacity:.7;">날짜를 기반으로 매일 자동 산출됩니다</p>
-    </div>
+<!-- 오늘의 괘 (띠 배너) -->
+<div style="background:var(--ink);border-bottom:1px solid rgba(255,255,255,.08);">
+  <div style="max-width:980px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <span style="font-size:10px;letter-spacing:2px;color:var(--ink3);flex-shrink:0;">오늘의 괘</span>
+    <span style="font-size:11px;color:var(--ink3);flex-shrink:0;" id="dailyTitle"></span>
+    <span style="color:rgba(255,255,255,.15);">|</span>
+    <span style="font-family:'Noto Serif KR',serif;font-size:15px;font-weight:600;color:var(--gold);" id="dName"></span>
+    <span style="font-size:12px;color:var(--ink3);" id="dHj"></span>
+    <span style="color:rgba(255,255,255,.15);">|</span>
+    <span style="font-size:12px;color:#c8b898;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="dDesc"></span>
+    <span id="dKws"></span>
   </div>
-</section>
-<hr class="divr">
+</div>
 
 <!-- 점괘 시스템 -->
 <section class="secw" id="entry" style="padding-top:32px;padding-bottom:32px;">
