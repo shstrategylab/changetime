@@ -740,7 +740,7 @@ document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.
 let divType='free';
 let throws=[], simIdx=0, tMode='real';
 
-function startDiv(type){
+async function startDiv(type){
   divType=type;
 
   // 비회원 차단 — 모든 점괘는 로그인 필수
@@ -752,8 +752,7 @@ function startDiv(type){
 
   if(type==='paid'){
     if(!(UP?.subscribed||(UP?.remainCount>0))){
-      openMo('payMo');setPayType('charge');
-      toast('이용권이 없습니다. 충전 후 이용하세요.');return;
+    openMo('payMo');setPayType('charge');return;
     }
     if(UP?.saju){startCoin();}else{openMo('sajuMo');}
     return;
