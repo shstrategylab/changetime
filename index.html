@@ -166,6 +166,10 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
 .sajugrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--goldd);padding:12px 24px;border-radius:4px;font-size:13px;z-index:999;display:none;max-width:320px;text-align:center;}
 .toast.on{display:block;}
+/* MYPAGE */
+.mprow{display:flex;align-items:center;padding:11px 16px;background:#fff;}
+.mplbl{font-size:12px;color:var(--ink3);letter-spacing:.5px;width:72px;flex-shrink:0;}
+.mpval{font-size:13px;color:var(--ink);font-weight:500;flex:1;}
 /* 상단 2컬럼 레이아웃 */
 .top-grid{display:grid;grid-template-columns:1fr 300px;gap:28px;align-items:start;}
 .daily-side{background:var(--ink);border-radius:var(--r);padding:24px;}
@@ -199,7 +203,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
     <a href="#concept">개념 이해</a>
     <a href="#pricing">요금제</a>
     <div id="navUser" class="nu" style="display:none;">
-      <span id="navName"></span>
+      <span id="navName" onclick="openMypage()" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--paper3);transition:color .2s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color=''"></span>
       <span class="ncnt" id="navCnt">0회</span>
       <a href="#" onclick="doLogout()" style="font-size:12px;color:var(--ink3);">로그아웃</a>
     </div>
@@ -501,6 +505,53 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
   </div>
 </div>
 
+<!-- ═══ 마이페이지 모달 ═══ -->
+<div class="mo" id="mypageMo">
+  <div class="md" style="max-width:460px;">
+    <button class="mdx" onclick="closeMo('mypageMo')">✕</button>
+    <p class="moeye">내 계정</p>
+    <h2 class="motit" style="margin-bottom:24px;">마이페이지</h2>
+    <div style="border:1px solid var(--paper3);border-radius:8px;overflow:hidden;margin-bottom:20px;">
+      <div class="mprow">
+        <span class="mplbl">이름</span>
+        <span class="mpval" id="mpName">—</span>
+      </div>
+      <div class="mprow" style="border-top:1px solid var(--paper2);">
+        <span class="mplbl">이메일</span>
+        <span class="mpval" id="mpEmail">—</span>
+      </div>
+      <div class="mprow" style="border-top:1px solid var(--paper2);">
+        <span class="mplbl">가입일</span>
+        <span class="mpval" id="mpJoined">—</span>
+      </div>
+      <div class="mprow" style="border-top:1px solid var(--paper2);">
+        <span class="mplbl">상태</span>
+        <span class="mpval" id="mpStatus">—</span>
+      </div>
+      <div class="mprow" style="border-top:1px solid var(--paper2);">
+        <span class="mplbl">잔여 횟수</span>
+        <span class="mpval" id="mpCnt">—</span>
+      </div>
+      <div class="mprow" style="border-top:1px solid var(--paper2);">
+        <span class="mplbl">사주</span>
+        <span class="mpval" id="mpSaju" style="font-size:12px;">—</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;">
+      <button class="bs" style="flex:1;font-size:13px;padding:10px;" onclick="closeMo('mypageMo');openMo('sajuMo');">사주 정보 변경</button>
+      <button class="bs" style="flex:1;font-size:13px;padding:10px;" onclick="closeMo('mypageMo');openPayMo('charge');">충전 / 구독</button>
+    </div>
+    <div style="border-top:1px solid var(--paper3);padding-top:16px;">
+      <p style="font-size:12px;color:var(--ink3);margin-bottom:10px;line-height:1.7;">탈퇴 시 계정 및 모든 이용 기록이 영구 삭제되며 복구할 수 없습니다.</p>
+      <button id="withdrawBtn" onclick="confirmWithdraw()" style="background:none;border:1px solid var(--red);color:var(--red);font-size:12px;padding:7px 18px;border-radius:4px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;"
+        onmouseover="this.style.background='var(--red)';this.style.color='#fff'"
+        onmouseout="this.style.background='none';this.style.color='var(--red)'">
+        회원 탈퇴
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ 결제 모달 ═══ -->
 <div class="mo" id="payMo">
   <div class="md" style="max-width:500px;">
@@ -654,6 +705,65 @@ async function doGoogleLogin(){
 }
 
 async function doLogout(){ await auth.signOut(); toast('로그아웃되었습니다.'); }
+
+/* ══ 마이페이지 ══ */
+function openMypage(){
+  if(!CU) return;
+  // 이름
+  document.getElementById('mpName').textContent = UP?.name || CU.displayName || CU.email.split('@')[0];
+  // 이메일
+  document.getElementById('mpEmail').textContent = CU.email || '—';
+  // 가입일
+  const joined = UP?.createdAt ? new Date(UP.createdAt) : (CU.metadata?.creationTime ? new Date(CU.metadata.creationTime) : null);
+  document.getElementById('mpJoined').textContent = joined ? `${joined.getFullYear()}년 ${joined.getMonth()+1}월 ${joined.getDate()}일` : '—';
+  // 상태
+  const sub = UP?.subscribed || false;
+  const cnt = UP?.remainCount || 0;
+  let statusHtml;
+  if(sub) statusHtml = '<span style="color:var(--pb);font-weight:600;">구독 중</span>';
+  else if(cnt>0) statusHtml = '<span style="color:var(--fg);font-weight:600;">충전 회원</span>';
+  else statusHtml = '<span style="color:var(--ink3);">무료 회원</span>';
+  document.getElementById('mpStatus').innerHTML = statusHtml;
+  // 잔여 횟수
+  if(sub){ document.getElementById('mpCnt').textContent = '무제한 (구독)'; }
+  else if(cnt>0){ document.getElementById('mpCnt').textContent = cnt + '회'; }
+  else {
+    const freeLeft = Math.max(0, 1 - (UP?.freeUsedToday||0));
+    document.getElementById('mpCnt').textContent = '오늘 무료 ' + freeLeft + '회 남음';
+  }
+  // 사주
+  const s = UP?.saju;
+  if(s){
+    const cal = s.calType==='lunar'?'음력':'양력';
+    document.getElementById('mpSaju').textContent = `${s.year}년 ${s.month}월 ${s.day}일 ${s.hour} (${cal})`;
+  } else {
+    document.getElementById('mpSaju').innerHTML = '<span style="color:var(--ink3);">미입력</span>';
+  }
+  openMo('mypageMo');
+}
+
+async function confirmWithdraw(){
+  if(!CU) return;
+  const ok = confirm('정말 탈퇴하시겠습니까?\n\n계정 및 모든 이용 기록이 영구 삭제되며 복구할 수 없습니다.');
+  if(!ok) return;
+  const btn = document.getElementById('withdrawBtn');
+  btn.textContent = '처리 중...'; btn.disabled = true;
+  try {
+    await db.ref('users/'+CU.uid).remove();
+    await CU.delete();
+    closeMo('mypageMo');
+    toast('탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.');
+  } catch(err) {
+    if(err.code === 'auth/requires-recent-login'){
+      toast('보안을 위해 재로그인 후 탈퇴를 진행해주세요.');
+      await auth.signOut();
+      closeMo('mypageMo');
+    } else {
+      toast('탈퇴 처리 중 오류가 발생했습니다: '+err.message);
+    }
+    btn.textContent = '회원 탈퇴'; btn.disabled = false;
+  }
+}
 
 /* ══ 64괘 전체 데이터 ══ */
 const G64=[
