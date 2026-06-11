@@ -521,31 +521,14 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
 <div class="mo" id="loginMo">
   <div class="md" style="max-width:420px;">
     <button class="mdx" onclick="closeMo('loginMo')">✕</button>
-    <div id="loginView">
-      <p class="moeye">회원</p>
-      <h2 class="motit">로그인</h2>
-      <p class="modesc">점괘 기록 · 사주 저장 · 유료 서비스를 이용하려면 로그인하세요.</p>
-      <label class="inplbl">이메일</label><input class="inp" id="lEmail" type="email" placeholder="example@email.com">
-      <label class="inplbl">비밀번호</label><input class="inp" id="lPw" type="password" placeholder="••••••••">
-      <div class="fe">
-        <button class="bs" onclick="showSU()">회원가입</button>
-        <button class="bp" onclick="doLogin()">로그인</button>
-      </div>
-      <p style="text-align:center;font-size:12px;color:var(--ink3);margin-top:16px;">
-        <a href="#" onclick="doReset()" style="color:var(--gold);">비밀번호 재설정</a>
-      </p>
-    </div>
-    <div id="signupView" style="display:none;">
-      <p class="moeye">회원가입</p>
-      <h2 class="motit">새 계정 만들기</h2>
-      <label class="inplbl">이름</label><input class="inp" id="sName" placeholder="홍길동">
-      <label class="inplbl">이메일</label><input class="inp" id="sEmail" type="email" placeholder="example@email.com">
-      <label class="inplbl">비밀번호 (6자 이상)</label><input class="inp" id="sPw" type="password" placeholder="••••••••">
-      <div class="fe">
-        <button class="bs" onclick="showLI()">로그인으로</button>
-        <button class="bp" onclick="doSignup()">가입하기</button>
-      </div>
-    </div>
+    <p class="moeye">회원</p>
+    <h2 class="motit">로그인</h2>
+    <p class="modesc">점괘 기록 · 사주 저장 · 유료 서비스를 이용하려면 로그인하세요.</p>
+    <button onclick="doGoogleLogin()" style="width:100%;padding:13px;border:1px solid var(--paper3);border-radius:8px;background:#fff;cursor:pointer;font-size:14px;font-family:'Noto Sans KR',sans-serif;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;margin-top:8px;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--paper3)'">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;height:20px;">
+      Google 계정으로 로그인
+    </button>
+    <p style="text-align:center;font-size:11px;color:var(--ink3);margin-top:16px;line-height:1.7;">비밀번호가 필요 없습니다.<br>Google 계정으로 간편하게 이용하세요.</p>
   </div>
 </div>
 
@@ -570,21 +553,16 @@ let CU = null; // currentUser
 let UP = null; // userProfile
 
 auth.onAuthStateChanged(async u => {
-  if(u && !u.emailVerified){
-    await auth.signOut();
-    toast("이메일 인증 후 이용 가능합니다. 메일함을 확인하세요.");
-    return;
-  }
   CU = u;
   if(u){
-    document.getElementById("navLoginBtn").style.display="none";
-    document.getElementById("navUser").style.display="flex";
-    document.getElementById("navName").textContent = u.displayName || u.email.split("@")[0];
+    document.getElementById('navLoginBtn').style.display='none';
+    document.getElementById('navUser').style.display='flex';
+    document.getElementById('navName').textContent = u.displayName || u.email.split('@')[0];
     await loadUP(u.uid);
-    closeMo("loginMo");
+    closeMo('loginMo');
   } else {
-    document.getElementById("navLoginBtn").style.display="inline-block";
-    document.getElementById("navUser").style.display="none";
+    document.getElementById('navLoginBtn').style.display='inline-block';
+    document.getElementById('navUser').style.display='none';
     UP=null;
   }
 });
@@ -601,41 +579,29 @@ function updateCnt(){
 }
 
 /* ══ 인증 ══ */
-function showSU(){document.getElementById('loginView').style.display='none';document.getElementById('signupView').style.display='block';}
-function showLI(){document.getElementById('signupView').style.display='none';document.getElementById('loginView').style.display='block';}
-
-async function doLogin(){
-  const e=document.getElementById('lEmail').value.trim();
-  const p=document.getElementById('lPw').value;
-  if(!e||!p) return toast('이메일과 비밀번호를 입력하세요.');
-  try{ await auth.signInWithEmailAndPassword(e,p); toast('로그인되었습니다.'); }
-  catch(err){ toast('로그인 실패: '+(err.code==='auth/wrong-password'?'비밀번호 오류':err.message)); }
-}
-
-async function doSignup(){
-  const n=document.getElementById('sName').value.trim();
-  const e=document.getElementById('sEmail').value.trim();
-  const p=document.getElementById('sPw').value;
-  if(!n||!e||!p) return toast('모든 항목을 입력하세요.');
+async function doGoogleLogin(){
+  const provider = new firebase.auth.GoogleAuthProvider();
   try{
-    const c=await auth.createUserWithEmailAndPassword(e,p);
-    await c.user.updateProfile({displayName:n});
-    await db.ref('users/'+c.user.uid).set({
-      name:n, email:e, role:'user',
-      remainCount:0, subscribed:false,
-      freeUsedToday:0, freeResetDate:todayStr(),
-      createdAt:Date.now()
-    });
-    await c.user.sendEmailVerification();
-    toast('가입 완료! '+e+'로 인증 메일을 발송했습니다. 메일함을 확인하세요.');
-  } catch(err){ toast('가입 실패: '+err.message); }
-}
-
-async function doReset(){
-  const e=document.getElementById('lEmail').value.trim();
-  if(!e) return toast('이메일을 먼저 입력하세요.');
-  await auth.sendPasswordResetEmail(e);
-  toast('재설정 이메일을 발송했습니다.');
+    const result = await auth.signInWithPopup(provider);
+    const u = result.user;
+    const snap = await db.ref('users/'+u.uid).once('value');
+    if(!snap.val()){
+      await db.ref('users/'+u.uid).set({
+        name: u.displayName||'',
+        email: u.email||'',
+        role: 'user',
+        remainCount: 0,
+        subscribed: false,
+        freeUsedToday: 0,
+        freeResetDate: todayStr(),
+        createdAt: Date.now()
+      });
+    }
+    toast('환영합니다, '+(u.displayName||u.email)+'님!');
+  } catch(err){
+    if(err.code !== 'auth/popup-closed-by-user')
+      toast('로그인 실패: '+err.message);
+  }
 }
 
 async function doLogout(){ await auth.signOut(); toast('로그아웃되었습니다.'); }
@@ -1199,17 +1165,7 @@ function toast(msg,dur=3200){
   setTimeout(()=>t.classList.remove('on'),dur);
 }
 
-/* ══ 엔터키 로그인 ══ */
-document.addEventListener('DOMContentLoaded',()=>{
-  ['lEmail','lPw'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
-  });
-  ['sName','sEmail','sPw'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.addEventListener('keydown',e=>{ if(e.key==='Enter') doSignup(); });
-  });
-});
+
 </script>
 </body>
 </html>
