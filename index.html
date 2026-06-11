@@ -1336,8 +1336,7 @@ function buildPrompt(q,gua,moving,key){
 📋 점괘 데이터
 ━━━━━━━━━━━━━━━━━━━━
 날짜: ${dateStr}
-생년월일시: ${saju}
-${sipsungLine !== null ? `사주×주역 연동: ${sipsungLine}\n` : ''}질문: "${q}"
+${divType==='paid' ? `생년월일시: ${saju}\n` : ''}${sipsungLine !== null ? `사주×주역 연동: ${sipsungLine}\n` : ''}질문: "${q}"
 본괘: ${gua.name} (${gua.hanja}) — ${gua.meaning}
 괘 핵심의미: ${gua.desc}
 키워드: ${gua.keyword}
