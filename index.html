@@ -998,6 +998,7 @@ document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.
 /* ══ 점괘 시작 ══ */
 let divType='free';
 let throws=[], simIdx=0, tMode='real';
+let simSession=0; // setTimeout 취소용 세션 ID
 
 async function startDiv(type){
   divType=type;
@@ -1033,7 +1034,7 @@ async function startDiv(type){
   startCoin();
 }
 
-function startCoin(){throws=[];simIdx=0;openMo('coinMo');goCS(1);}
+function startCoin(){throws=[];simIdx=0;simSession++;openMo('coinMo');goCS(1);}
 
 /* ══ 단계 이동 ══ */
 function goCS(n){
@@ -1092,11 +1093,13 @@ function selM(yao,score,btn){
 function throwSim(){
   if(simIdx>=6)return;
   const r=[r2(),r2(),r2()],tot=r[0]+r[1]+r[2];
+  const mySession=simSession; // 현재 세션 캡처
   ['c1','c2','c3'].forEach((id,i)=>{
     const el=document.getElementById(id);el.className='coin';
     setTimeout(()=>{el.classList.add(r[i]===3?'front':'back');el.textContent=r[i]===3?'앞':'뒤';},i*100);
   });
   setTimeout(()=>{
+    if(simSession!==mySession)return; // 세션이 바뀌었으면 (startCoin 재호출) 중단
     simIdx++;throws[simIdx-1]=tot;drawYao(simIdx,tot);
     const sm={6:'노음(변함)',7:'소양',8:'소음',9:'노양(변함)'};
     document.getElementById('throwStatus').textContent=simIdx+'효: '+tot+'점 → '+sm[tot];
@@ -1111,6 +1114,7 @@ function resetYao(){
 }
 function drawYao(idx,score){
   const el=document.getElementById('yl'+idx);
+  if(!el)return; // 모달이 닫혔거나 DOM에 없으면 무시
   const isY=score===7||score===9,isM=score===6||score===9;
   const lbl=`<span class="yaolbl">${idx}</span>`;
   const col=isM?'var(--gold)':'var(--ink)';
@@ -1416,11 +1420,16 @@ async function saveSaju(){
   const h=document.getElementById('sHour').value;
   if(!y||!m||!d)return toast('생년월일을 입력하세요.');
   const saju={year:y,month:m,day:d,hour:h||'모름',calType:calType};
-  await db.ref('users/'+CU.uid+'/saju').set(saju);
-  if(UP)UP.saju=saju;
-  toast('사주 정보가 저장되었습니다. ('+( calType==='solar'?'양력':'음력')+')');
-  closeMo('sajuMo');
-  startCoin();
+  try {
+    await db.ref('users/'+CU.uid).update({saju:saju});
+    if(UP)UP.saju=saju;
+    toast('사주 정보가 저장되었습니다. ('+(calType==='solar'?'양력':'음력')+')');
+    closeMo('sajuMo');
+    startCoin();
+  } catch(err) {
+    console.error('saveSaju 오류:', err);
+    toast('저장 실패: '+err.message);
+  }
 }
 
 /* ══ 결제 ══ */
