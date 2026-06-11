@@ -955,7 +955,7 @@ function getTodayGanji() {
  */
 function getIlgan(saju) {
   if (!saju || !saju.year || !saju.month || !saju.day) return null;
-  const key = `${saju.year}-${String(saju.month).padStart(2,'0')}-${String(Number(saju.day)).padStart(2,'0')}`;
+  const key = `${saju.year}-${String(Number(saju.month)).padStart(2,'0')}-${String(Number(saju.day)).padStart(2,'0')}`;
   const ganji = DAILY_ILJIN[key];
   if (!ganji) return null;
   return ganji[0]; // 천간만 (첫 글자)
