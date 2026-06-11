@@ -231,37 +231,53 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
 <!-- 점괘 시스템 -->
 <section class="secw" id="entry" style="padding-top:32px;padding-bottom:32px;">
   <p class="slbl">점괘 시스템</p>
-  <h2 class="stit" style="margin-bottom:16px;">무엇을 여쭙겠습니까</h2>
+  <h2 class="stit" style="margin-bottom:4px;">무엇을 여쭙겠습니까</h2>
+  <p style="font-size:13px;color:var(--ink3);margin-bottom:20px;line-height:1.7;">두 가지 방식 중 지금 나에게 맞는 것을 선택하세요.</p>
   <div class="egrid">
+
+    <!-- 즉석 점괘 -->
     <div class="ec free" onclick="startDiv('free')">
-      <span class="ebdg bf">무료 · 하루 1회</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <span class="ebdg bf">즉석 · 개인 명리 무관</span>
+        <span style="font-size:11px;color:var(--fg);background:var(--fb);padding:3px 9px;border-radius:10px;font-weight:500;">무료 1회 / 충전·구독 무제한</span>
+      </div>
       <div class="eico">🪙</div>
       <h3 class="etit">즉석 점괘</h3>
-      <p class="edesc">사주 없이 누구나. 지금 마음속 고민을 가지고 동전을 던져 현재 형세를 읽습니다.</p>
+      <p style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:8px;font-family:'Noto Serif KR',serif;">지금 이 순간, 사주 없이 가볍게</p>
+      <p class="edesc">동전만 던지면 됩니다. 생년월일 없이 누구나, 지금 마음속 고민의 형세를 바로 읽습니다. 개인 명리와 연결되지 않습니다.</p>
+      <div style="border-top:1px solid var(--paper3);margin:16px 0;"></div>
       <ul class="efeat">
-        <li>괘명 + 핵심 한 줄 <span class="ft ftf">무료</span></li>
-        <li>괘사 해설 (현재 상황) <span class="ft ftf">무료</span></li>
-        <li>행동 지침 <span class="ft ftf">무료</span></li>
-        <li>동효 · 효사 해석 <span class="ft ftp">유료</span></li>
-        <li>지괘 분석 <span class="ft ftp">유료</span></li>
-        <li>AI 해설 프롬프트 <span class="ft ftp">유료</span></li>
+        <li>괘명 · 괘사 · 행동 지침 <span class="ft ftf">무료 포함</span></li>
+        <li>동효 · 효사 · 지괘 분석 <span class="ft ftp">충전·구독</span></li>
+        <li>AI 해설 프롬프트 <span class="ft ftp">충전·구독</span></li>
       </ul>
+      <p style="margin-top:16px;font-size:11px;color:var(--ink3);line-height:1.7;">💡 충전·구독 회원도 명리 연결 없이 빠르게 보고 싶을 때 사용하세요.</p>
     </div>
+
+    <!-- 사주 기반 정밀 점괘 -->
     <div class="ec paid" onclick="startDiv('paid')">
-      <span class="ebdg bp2">유료 · 회원 전용</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <span class="ebdg bp2">정밀 · 개인 명리 연결</span>
+        <span style="font-size:11px;color:var(--pb);background:var(--pp);padding:3px 9px;border-radius:10px;font-weight:500;">🔒 충전·구독 전용</span>
+      </div>
       <div class="eico">☯</div>
       <h3 class="etit">사주 기반 정밀 점괘</h3>
-      <p class="edesc">생년월일시를 바탕으로 인생 본괘와 현재 시운을 연결한 심층 해석을 제공합니다.</p>
+      <p style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:8px;font-family:'Noto Serif KR',serif;">내 명리와 연결된 깊은 해석</p>
+      <p class="edesc">생년월일시를 바탕으로 지금 내 대운·시운 맥락 위에서 점괘를 읽습니다. 같은 괘라도 내 사주와 연결하면 전혀 다른 메시지가 됩니다.</p>
+      <div style="border-top:1px solid var(--paper3);margin:16px 0;"></div>
       <ul class="efeat">
-        <li>즉석 점괘 전체 포함 <span class="ft ftp">유료</span></li>
-        <li>인생 본괘 도출 <span class="ft ftp">유료</span></li>
-        <li>육룡 단계 분석 <span class="ft ftp">유료</span></li>
-        <li>연 · 월 운세 <span class="ft ftp">유료</span></li>
-        <li>사주 맥락 연결 <span class="ft ftp">유료</span></li>
-        <li>AI 심층 프롬프트 <span class="ft ftp">유료</span></li>
+        <li>즉석 점괘 전체 포함 <span class="ft ftp">충전·구독</span></li>
+        <li>인생 본괘 · 대운 맥락 연결 <span class="ft ftp">충전·구독</span></li>
+        <li>AI 심층 프롬프트 (사주 포함) <span class="ft ftp">충전·구독</span></li>
       </ul>
+      <p style="margin-top:16px;font-size:11px;color:var(--ink3);line-height:1.7;">💡 처음 이용 시 생년월일시를 한 번만 입력하면 이후엔 바로 시작됩니다.</p>
     </div>
+
   </div>
+  <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--ink3);">
+    두 점괘의 차이가 궁금하신가요?
+    <a href="#" onclick="openConcept(3);return false;" style="color:var(--gold);text-decoration:none;margin-left:4px;">사주와 주역의 차이 읽어보기 →</a>
+  </p>
 </section>
 <hr class="divr">
 
@@ -772,7 +788,7 @@ async function startDiv(type){
   }
   const usedToday = UP?.freeUsedToday||0;
   // 1회 이상 사용했으면 차단 (0 → 허용 / 1 이상 → 차단)
-  if(usedToday>=1&&!UP?.subscribed){
+  if(usedToday>=1 && !UP?.subscribed && !(UP?.remainCount>0)){
     toast('오늘 무료 횟수(1회)를 사용했습니다. 충전 후 이용하세요.');
     openPayMo('charge');return;
   }
