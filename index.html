@@ -310,7 +310,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
         <li>5,000원 = 10회</li>
         <li>10,000원 = 25회</li>
       </ul>
-      <button class="btnplan" onclick="openMo('payMo');setPayType('charge')">충전하기</button>
+      <button class="btnplan" onclick="openPayMo('charge')">충전하기</button>
     </div>
     <div class="pc">
       <p class="pplan">구독형</p>
@@ -323,7 +323,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
         <li>인생 본괘 + 육룡 분석</li>
         <li>점괘 기록 전체 보관</li>
       </ul>
-      <button class="btnplan" onclick="openMo('payMo');setPayType('subscribe')">구독 신청</button>
+      <button class="btnplan" onclick="openPayMo('subscribe')">구독 신청</button>
     </div>
   </div>
 </section>
@@ -554,7 +554,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
     </div>
     <p style="font-size:11px;color:var(--ink3);margin-top:14px;text-align:center;line-height:1.7;">위는 실제 AI 해설 샘플입니다. 충전 후 점괘를 보시면 당신의 질문과 괘에 맞는 해설을 받으실 수 있습니다.</p>
     <div style="text-align:center;margin-top:16px;">
-      <button class="bp" onclick="closeMo('sampleMo');openMo('payMo');">충전하러 가기</button>
+      <button class="bp" onclick="closeMo('sampleMo');openPayMo();">충전하러 가기</button>
     </div>
   </div>
 </div>
@@ -757,7 +757,7 @@ async function startDiv(type){
 
   if(type==='paid'){
     if(!(UP?.subscribed||(UP?.remainCount>0))){
-    openMo('payMo');setPayType('charge');return;
+    openPayMo('charge');return;
     }
     if(UP?.saju){startCoin();}else{openMo('sajuMo');}
     return;
@@ -774,7 +774,7 @@ async function startDiv(type){
   // 1회 이상 사용했으면 차단 (0 → 허용 / 1 이상 → 차단)
   if(usedToday>=1&&!UP?.subscribed){
     toast('오늘 무료 횟수(1회)를 사용했습니다. 충전 후 이용하세요.');
-    openMo('payMo');setPayType('charge');return;
+    openPayMo('charge');return;
   }
   startCoin();
 }
@@ -956,7 +956,7 @@ async function showResult(){
           <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(26,18,8,0.55);border-radius:8px;">
             <p style="color:var(--goldd);font-size:13px;font-weight:600;margin-bottom:4px;">🔒 유료 회원 전용</p>
             <p style="color:#c8b898;font-size:11px;margin-bottom:14px;text-align:center;line-height:1.6;">미리 충전 후 점괘를 보시면<br>바로 프롬프트를 확인할 수 있습니다</p>
-            <button class="btnpaid" onclick="openMo('payMo')" style="font-size:12px;padding:8px 20px;">충전하러 가기</button>
+            <button class="btnpaid" onclick="openPayMo()" style="font-size:12px;padding:8px 20px;">충전하러 가기</button>
           </div>
         </div>
         <div style="background:var(--paper2);border-radius:8px;padding:14px 16px;font-size:12px;color:var(--ink3);line-height:1.8;">
@@ -1121,14 +1121,13 @@ async function saveSaju(){
 }
 
 /* ══ 결제 ══ */
+function openPayMo(type='charge'){
+  if(!CU){ openMo('loginMo'); toast('결제는 로그인 후 이용 가능합니다.'); return; }
+  setPayType(type);
+  openMo('payMo');
+}
+
 function setPayType(t){
-  // 비회원 차단
-  if(!CU){
-    closeMo('payMo');
-    openMo('loginMo');
-    toast('결제는 회원가입 후 이용 가능합니다.');
-    return;
-  }
   document.getElementById('payTit').textContent=t==='subscribe'?'구독 신청':'충전하기';
   if(t==='subscribe')document.getElementById('payProd').value='sub_month';
   // 회원 정보 자동 입력
