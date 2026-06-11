@@ -570,16 +570,21 @@ let CU = null; // currentUser
 let UP = null; // userProfile
 
 auth.onAuthStateChanged(async u => {
+  if(u && !u.emailVerified){
+    await auth.signOut();
+    toast("이메일 인증 후 이용 가능합니다. 메일함을 확인하세요.");
+    return;
+  }
   CU = u;
   if(u){
-    document.getElementById('navLoginBtn').style.display='none';
-    document.getElementById('navUser').style.display='flex';
-    document.getElementById('navName').textContent = u.displayName || u.email.split('@')[0];
+    document.getElementById("navLoginBtn").style.display="none";
+    document.getElementById("navUser").style.display="flex";
+    document.getElementById("navName").textContent = u.displayName || u.email.split("@")[0];
     await loadUP(u.uid);
-    closeMo('loginMo');
+    closeMo("loginMo");
   } else {
-    document.getElementById('navLoginBtn').style.display='inline-block';
-    document.getElementById('navUser').style.display='none';
+    document.getElementById("navLoginBtn").style.display="inline-block";
+    document.getElementById("navUser").style.display="none";
     UP=null;
   }
 });
@@ -621,7 +626,8 @@ async function doSignup(){
       freeUsedToday:0, freeResetDate:todayStr(),
       createdAt:Date.now()
     });
-    toast('가입 완료! 환영합니다, '+n+'님.');
+    await c.user.sendEmailVerification();
+    toast('가입 완료! '+e+'로 인증 메일을 발송했습니다. 메일함을 확인하세요.');
   } catch(err){ toast('가입 실패: '+err.message); }
 }
 
