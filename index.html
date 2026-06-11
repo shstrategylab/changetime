@@ -532,6 +532,36 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
   </div>
 </div>
 
+
+<!-- ═══ AI 해설 샘플 모달 ═══ -->
+<div class="mo" id="sampleMo">
+  <div class="md" style="max-width:620px;">
+    <button class="mdx" onclick="closeMo('sampleMo')">✕</button>
+    <p class="moeye">AI 해설 샘플</p>
+    <h2 class="motit" style="margin-bottom:4px;">지천태 (地天泰) — 평화</h2>
+    <p style="font-size:11px;color:var(--ink3);margin-bottom:20px;">질문: "지금 이 결정을 밀고 나가도 될까요?" / 동효: 3효, 5효</p>
+    <div style="background:var(--paper2);border-radius:8px;padding:16px 18px;font-size:13px;color:var(--ink2);line-height:1.9;">
+      <p style="font-weight:600;color:var(--ink);font-family:'Noto Serif KR',serif;font-size:15px;margin-bottom:12px;border-left:3px solid var(--gold);padding-left:10px;">HOOK — 하늘과 땅이 소통하는 지금, 당신의 결단은 흐름을 타고 있습니다.</p>
+      <p style="font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">카드 1 — 지금의 형세</p>
+      <p style="margin-bottom:16px;">지천태(地天泰)는 땅이 위에, 하늘이 아래에 있어 두 기운이 서로를 향해 나아가는 형세입니다. 음과 양이 막힘 없이 소통하며 만물이 제자리를 찾아가는 번영의 시기입니다. 지금 당신이 고민하는 결정은 이 흐름과 맞닿아 있습니다. 억지로 밀어붙이는 것이 아니라, 이미 무르익은 때를 자연스럽게 받아들이는 것입니다.</p>
+      <p style="font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">카드 2 — 동효의 메시지</p>
+      <p style="margin-bottom:16px;">3효는 "평탄하면 기울지 않는 것이 없고, 떠나면 돌아오지 않는 것이 없다(无平不陂 无往不復)"고 합니다. 지금의 좋은 흐름에 자만하지 말고 반드시 올 변화에 대비하라는 경고입니다. 5효는 제을(帝乙)이 딸을 시집보내듯 겸손하게 처신하면 크게 길하다고 합니다. 높은 자리에서 낮추는 태도가 지금 가장 중요합니다.</p>
+      <p style="font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">카드 3 — 지괘와 변화의 방향</p>
+      <p style="margin-bottom:16px;">동효가 변하면 천지비(天地否)로 흘러갑니다. 태(泰)의 끝은 비(否)입니다. 이것은 흉조가 아니라 자연의 순환입니다. 지금 결단을 내리되, 정점에서 반드시 수확하고 물러날 준비를 함께 갖추어야 합니다. 나아감과 물러남을 함께 계획하십시오.</p>
+      <p style="font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">카드 4 — 지금 당장 취해야 할 행동</p>
+      <p style="margin-bottom:4px;">① <strong>결단을 실행하되 겸손을 유지하라</strong> — 태괘는 강함과 부드러움이 공존할 때 오래 지속됩니다.</p>
+      <p style="margin-bottom:4px;">② <strong>이익의 절반은 미리 확보하라</strong> — 3효의 경고처럼 전성기에 반드시 수확 시점을 정해두십시오.</p>
+      <p style="margin-bottom:16px;">③ <strong>주변과 나누어라</strong> — 지천태는 혼자의 번영이 아닌 공동의 번영일 때 더 오래 지속됩니다.</p>
+      <p style="font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">결론</p>
+      <p>지금은 나아갈 때입니다. 그러나 주역은 "길함이 극에 달하면 흉함이 온다"는 진리를 잊지 말라고 합니다. 결단을 내리되, 정점을 지나는 순간을 놓치지 마십시오. 지혜로운 사람은 흐름을 타면서도 항상 다음 파도를 준비합니다.</p>
+    </div>
+    <p style="font-size:11px;color:var(--ink3);margin-top:14px;text-align:center;line-height:1.7;">위는 실제 AI 해설 샘플입니다. 충전 후 점괘를 보시면 당신의 질문과 괘에 맞는 해설을 받으실 수 있습니다.</p>
+    <div style="text-align:center;margin-top:16px;">
+      <button class="bp" onclick="closeMo('sampleMo');openMo('payMo');">충전하러 가기</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -901,9 +931,43 @@ async function showResult(){
       </div>`;
   } else {
     paidHtml=`
-      <div class="paidbox" style="margin-top:24px;">
-        <p>동효·효사 해석, 지괘 분석,<br>AI 심층 해설 프롬프트는 유료 기능입니다.</p>
-        <button class="btnpaid" onclick="openMo('payMo')">유료 기능 이용하기</button>
+      <div style="margin-top:28px;border-top:1px solid var(--paper3);padding-top:24px;">
+        <p class="rstit">AI 심층 해설 프롬프트</p>
+        <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.7;">
+          ChatGPT · Claude · Gemini에 붙여넣으면 1페이지 심층 해설 보고서를 받을 수 있습니다.
+        </p>
+        <div style="position:relative;border-radius:8px;overflow:hidden;margin-bottom:16px;">
+          <div style="filter:blur(4px);pointer-events:none;background:var(--ink);border-radius:8px;padding:16px;">
+            <pre style="font-size:11px;color:#c8b898;line-height:1.7;white-space:pre-wrap;word-break:break-word;">당신은 주역(周易) 전문 해설가입니다. 아래 점괘 정보를 바탕으로
+훅(Hook) + 카드(Card) 형태의 1페이지 심층 해설 보고서를 작성해 주세요.
+
+━━━━━━━━━━━━━━━━━━━━
+📋 점괘 기본 정보
+━━━━━━━━━━━━━━━━━━━━
+날짜: 2026년 6월 11일
+질문: "지금 이 결정을 밀고 나가도 될까요?"
+본괘: 지천태 (地天泰) — 평화
+키워드: 평화와 번영
+동효: 3효, 5효
+
+【HOOK】
+하늘과 땅이 소통하는 지금, 당신의 결단은 흐름을 타고 있습니다.
+
+【카드 1 — 지금의 형세】
+지천태괘는 음양이 조화롭게...</pre>
+          </div>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(26,18,8,0.55);border-radius:8px;">
+            <p style="color:var(--goldd);font-size:13px;font-weight:600;margin-bottom:4px;">🔒 유료 회원 전용</p>
+            <p style="color:#c8b898;font-size:11px;margin-bottom:14px;text-align:center;line-height:1.6;">미리 충전 후 점괘를 보시면<br>바로 프롬프트를 확인할 수 있습니다</p>
+            <button class="btnpaid" onclick="openMo('payMo')" style="font-size:12px;padding:8px 20px;">충전하러 가기</button>
+          </div>
+        </div>
+        <div style="background:var(--paper2);border-radius:8px;padding:14px 16px;font-size:12px;color:var(--ink3);line-height:1.8;">
+          💡 <strong style="color:var(--ink2);">이용 안내</strong><br>
+          주역 점괘는 그 순간의 기운을 읽는 것으로 재현이 불가합니다.<br>
+          AI 해설 프롬프트가 필요하다면 <strong>미리 충전 후</strong> 점괘를 보세요.<br>
+          <a href="#" onclick="openSample();return false;" style="color:var(--gold);text-decoration:none;">▶ AI 해설 샘플 보기</a>
+        </div>
       </div>`;
   }
 
@@ -1006,6 +1070,8 @@ ${moving.length>0?'동효가 변한 후 만들어지는 지괘를 도출하고, 
 • 질문자의 구체적인 상황("${q}")을 항상 해석의 중심에 놓으세요
 • 전체 분량은 A4 1페이지 분량(약 600~800자)으로 작성하세요`;
 }
+
+function openSample(){openMo('sampleMo');}
 
 function copyPrompt(){
   const t=document.getElementById('promptTxt').textContent;
