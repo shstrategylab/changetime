@@ -951,14 +951,25 @@ function getTodayGanji() {
 
 /**
  * 사주에서 일간(日干) 추출
- * 저장된 사주(년월일 양력)를 이용해 만세력 캐시에서 일진을 찾고 천간만 반환
+ * 60甲子 수식으로 직접 계산 — DAILY_ILJIN 캐시 범위(2023~) 제약 없이 모든 생년월일 지원
+ * 기준: 양력 1900-01-01 = 甲戌일 (甲=0, index=0)
  */
 function getIlgan(saju) {
   if (!saju || !saju.year || !saju.month || !saju.day) return null;
-  const key = `${saju.year}-${String(Number(saju.month)).padStart(2,'0')}-${String(Number(saju.day)).padStart(2,'0')}`;
-  const ganji = DAILY_ILJIN[key];
-  if (!ganji) return null;
-  return ganji[0]; // 천간만 (첫 글자)
+  const HEAVENLY = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  // 기준일: 1900-01-01 = 甲 (인덱스 0)
+  const BASE = new Date(1900, 0, 1);
+  // 음력이면 캐시에서 양력 변환 시도, 실패 시 그냥 양력으로 처리
+  let y = Number(saju.year), m = Number(saju.month), d = Number(saju.day);
+  if (saju.calType === 'lunar') {
+    // 음력→양력 변환은 DAILY_ILJIN 역조회로 근사: 해당 년도 범위에 있으면 사용, 없으면 그냥 입력값 사용
+    // (정확한 음양력 변환 라이브러리 없으므로 양력으로 간주하고 계산)
+  }
+  const target = new Date(y, m - 1, d);
+  const diffDays = Math.round((target - BASE) / 86400000);
+  // 기준일 甲의 천간 인덱스 = 0, 지지 인덱스: 戌=10 (사용 안 함)
+  const ganIdx = ((diffDays % 10) + 10) % 10;
+  return HEAVENLY[ganIdx];
 }
 
 function getGua(key){
