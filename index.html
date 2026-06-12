@@ -194,7 +194,8 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
   .daily-side{order:-1;}
 }
 @media(max-width:680px){
-  .egrid,.cgrid,.pgrid,#pricing .secw > div{grid-template-columns:1fr;}
+  .egrid,.cgrid,.pgrid{grid-template-columns:1fr;}
+  #pricingGrid{grid-template-columns:1fr!important;}
   nav{padding:0 16px;}
   .nav-r{position:relative;}
   .md{padding:28px 20px;}
@@ -394,7 +395,7 @@ body.iab-active{padding-top:84px;}
 <section class="secw" id="pricing">
   <p class="slbl" style="text-align:center;">요금제</p>
   <h2 class="stit" style="text-align:center;">나에게 맞는 방식으로</h2>
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:24px;">
+  <div id="pricingGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:24px;">
     <div class="pc">
       <p class="pplan">무료</p>
       <p class="pprice">0원</p>
