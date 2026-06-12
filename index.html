@@ -473,7 +473,7 @@ body.iab-active{padding-top:84px;}
         <li>10,000원 = 25회</li>
         <li>30,000원 = 80회</li>
       </ul>
-      <button class="btnplan" onclick="openPayMo('charge')">충전하기</button>
+      <button id="btnCharge" class="btnplan" onclick="openPayMo('charge')">충전하기</button>
     </div>
     <div class="pc">
       <p class="pplan">월 구독</p>
@@ -485,7 +485,7 @@ body.iab-active{padding-top:84px;}
         <li>세운 · 월건 · 일진 왕쇠 판별</li>
         <li>점괘 기록 보관 7일</li>
       </ul>
-      <button class="btnplan" onclick="openPayMo('subscribe')">구독 신청</button>
+      <button id="btnSub" class="btnplan" onclick="openPayMo('subscribe')">구독 신청</button>
     </div>
     <div class="pc" style="border-color:var(--gold);position:relative;overflow:hidden;">
       <div style="position:absolute;top:12px;right:-22px;background:var(--gold);color:var(--ink);font-size:10px;font-weight:600;padding:3px 28px;transform:rotate(35deg);letter-spacing:1px;">연간 특전</div>
@@ -498,7 +498,7 @@ body.iab-active{padding-top:84px;}
         <li style="color:var(--gold);font-weight:500;">인생 본괘 분석 <span style="font-size:10px;background:var(--goldd);color:var(--ink);padding:1px 6px;border-radius:3px;margin-left:4px;">연간 전용</span></li>
         <li style="color:var(--gold);font-weight:500;">육룡(六龍) 단계 진단 <span style="font-size:10px;background:var(--goldd);color:var(--ink);padding:1px 6px;border-radius:3px;margin-left:4px;">연간 전용</span></li>
       </ul>
-      <button class="btnplan" style="background:var(--gold);color:var(--ink);" onclick="openPayMo('subscribe_year')">연간 구독 신청</button>
+      <button id="btnYear" class="btnplan" style="background:var(--gold);color:var(--ink);" onclick="openPayMo('subscribe_year')">연간 구독 신청</button>
     </div>
   </div>
   <p style="text-align:center;margin-top:14px;font-size:11px;color:var(--ink3);">인생 본괘 + 육룡 분석은 연간 구독 가입 즉시 마이페이지에서 자동으로 제공됩니다.</p>
@@ -933,6 +933,7 @@ function unlockDeepContent(){
 
 function updateCnt(){
   const sub = UP?.subscribed||false;
+  const isYear = sub && (UP?.subType === 'year');
   const cnt = UP?.remainCount||0;
   const usedToday = UP?.freeUsedToday||0;
   unlockDeepContent();
@@ -942,6 +943,70 @@ function updateCnt(){
   else if(cnt > 0) label = cnt+'회';
   else label = '무료 '+freeLeft+'회';
   document.getElementById('navCnt').textContent = label;
+  updatePricingButtons(sub, isYear, cnt);
+}
+
+function updatePricingButtons(isSub, isYear, cnt){
+  const btnCharge = document.getElementById('btnCharge');
+  if(btnCharge){
+    if(isSub){
+      btnCharge.textContent = '구독 중 (충전 불필요)';
+      btnCharge.disabled = true;
+      btnCharge.style.opacity = '0.5';
+      btnCharge.style.cursor = 'not-allowed';
+      btnCharge.onclick = null;
+    } else {
+      btnCharge.textContent = cnt > 0 ? '추가 충전' : '충전하기';
+      btnCharge.disabled = false;
+      btnCharge.style.opacity = '';
+      btnCharge.style.cursor = '';
+      btnCharge.onclick = () => openPayMo('charge');
+    }
+  }
+  const btnSub = document.getElementById('btnSub');
+  if(btnSub){
+    if(isYear){
+      btnSub.textContent = '연간 구독 이용 중';
+      btnSub.disabled = true;
+      btnSub.style.opacity = '0.5';
+      btnSub.style.cursor = 'not-allowed';
+      btnSub.onclick = null;
+    } else if(isSub){
+      btnSub.textContent = '구독 중';
+      btnSub.disabled = true;
+      btnSub.style.opacity = '0.5';
+      btnSub.style.cursor = 'not-allowed';
+      btnSub.onclick = null;
+    } else {
+      btnSub.textContent = '구독 신청';
+      btnSub.disabled = false;
+      btnSub.style.opacity = '';
+      btnSub.style.cursor = '';
+      btnSub.onclick = () => openPayMo('subscribe');
+    }
+  }
+  const btnYear = document.getElementById('btnYear');
+  if(btnYear){
+    if(isYear){
+      btnYear.textContent = '연간 구독 이용 중';
+      btnYear.disabled = true;
+      btnYear.style.opacity = '0.5';
+      btnYear.style.cursor = 'not-allowed';
+      btnYear.onclick = null;
+    } else if(isSub){
+      btnYear.textContent = '연간으로 업그레이드';
+      btnYear.disabled = false;
+      btnYear.style.opacity = '';
+      btnYear.style.cursor = '';
+      btnYear.onclick = () => openPayMo('subscribe_year');
+    } else {
+      btnYear.textContent = '연간 구독 신청';
+      btnYear.disabled = false;
+      btnYear.style.opacity = '';
+      btnYear.style.cursor = '';
+      btnYear.onclick = () => openPayMo('subscribe_year');
+    }
+  }
 }
 
 /* ══ 인증 ══ */
@@ -2290,6 +2355,41 @@ async function saveSaju(){
 /* ══ 결제 ══ */
 function openPayMo(type='charge'){
   if(!CU){ openMo('loginMo'); toast('결제는 로그인 후 이용 가능합니다.'); return; }
+
+  const isSub  = UP?.subscribed || false;
+  const isYear = isSub && (UP?.subType === 'year');
+  const hasCnt = (UP?.remainCount || 0) > 0;
+
+  // ── 충전하기 ──
+  if(type === 'charge'){
+    if(isSub){
+      toast('구독 회원은 무제한으로 이용 가능합니다. 충전이 필요하지 않습니다.');
+      return;
+    }
+    // 충전 회원이어도 추가 충전은 허용
+  }
+
+  // ── 월 구독 신청 ──
+  if(type === 'subscribe'){
+    if(isYear){
+      toast('이미 연간 구독 중입니다. 더 높은 플랜을 이용하고 계십니다.');
+      return;
+    }
+    if(isSub){
+      toast('이미 월 구독 중입니다. 마이페이지에서 이용 현황을 확인하세요.');
+      return;
+    }
+  }
+
+  // ── 연간 구독 신청 ──
+  if(type === 'subscribe_year'){
+    if(isYear){
+      toast('이미 연간 구독 중입니다.');
+      return;
+    }
+    // 월 구독 → 연간 업그레이드는 허용 (기존 안내 문구가 모달에 있음)
+  }
+
   setPayType(type);
   openMo('payMo');
 }
