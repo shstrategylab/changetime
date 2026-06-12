@@ -829,18 +829,18 @@ async function ensureIching() {
     .then(r => { if (!r.ok) throw new Error('iching_384 fetch 실패: ' + r.status); return r.json(); })
     .then(data => {
       ICHING384 = data;
-      // G64 배열 재구성 (id 1~64 순서)
+      // G64 배열 재구성 — _G64_FALLBACK은 아래 선언되므로 fetch 완료 시점엔 이미 존재
       G64 = Array.from({length: 64}, (_, i) => {
         const entry = data[String(i + 1)];
-        if (!entry) return null;
+        const fb = _G64_FALLBACK[i] || {};
         return {
           id:      i + 1,
-          name:    _G64_FALLBACK[i]?.name    || entry.korean_name || '',
-          hanja:   _G64_FALLBACK[i]?.hanja   || entry.trad_chinese || '',
-          meaning: _G64_FALLBACK[i]?.meaning  || '',
-          keyword: _G64_FALLBACK[i]?.keyword  || '',
-          desc:    _G64_FALLBACK[i]?.desc     || '',
-          action:  _G64_FALLBACK[i]?.action   || '',
+          name:    fb.name    || entry?.korean_name  || '',
+          hanja:   fb.hanja   || entry?.trad_chinese || '',
+          meaning: fb.meaning || '',
+          keyword: fb.keyword || '',
+          desc:    fb.desc    || '',
+          action:  fb.action  || '',
         };
       });
       _ichingReady = true;
@@ -853,7 +853,8 @@ async function ensureIching() {
     });
   return _ichingPromise;
 }
-ensureIching();
+// fetch 시작 — 완료 후 initDaily 호출
+ensureIching().then(() => initDaily());
 
 /* ══ 64괘 기본 데이터 (폴백 · 괘명/키워드/행동지침) ══ */
 const _G64_FALLBACK=[
@@ -939,27 +940,13 @@ async function ensureManse() {
       return r.json();
     })
     .then(data => {
-      // DB 구조에 따라 날짜→간지 매핑 추출
-      // 예상 형태 1: { "2024-01-01": "甲子", ... }
-      // 예상 형태 2: { days: [ { date:"2024-01-01", ganji:"甲子" }, ... ] }
-      if (data && typeof data === 'object' && !Array.isArray(data)) {
-        const firstVal = Object.values(data)[0];
-        if (typeof firstVal === 'string') {
-          // 형태 1: 바로 날짜→간지
-          DAILY_ILJIN = data;
-        } else if (firstVal && typeof firstVal === 'object') {
-          // 형태 2: 중첩 객체일 경우 — ganji 또는 일진 필드 추출
-          Object.entries(data).forEach(([k, v]) => {
-            const val = v.ganji || v.iljin || v.간지 || v.일진 || '';
-            if (val) DAILY_ILJIN[k] = val;
-          });
-        }
-      } else if (Array.isArray(data)) {
-        // 형태 3: 배열
-        data.forEach(item => {
-          const key = item.date || item.양력 || item.solar || '';
-          const val = item.ganji || item.iljin || item.간지 || item.일진 || '';
-          if (key && val) DAILY_ILJIN[key] = val;
+      // 구조: { description, base_setting, years, daily_cache: {"YYYY-MM-DD":"甲子",...} }
+      const cache = data.daily_cache || data;
+      if (cache && typeof cache === 'object' && !Array.isArray(cache)) {
+        Object.entries(cache).forEach(([k, v]) => {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(k) && typeof v === 'string') {
+            DAILY_ILJIN[k] = v;
+          }
         });
       }
       _manseReady = true;
@@ -1130,7 +1117,7 @@ function initDaily(){
   if(descEl) descEl.textContent=g.desc;
   if(kwsEl) kwsEl.innerHTML='<span class="kw">'+g.keyword+'</span>';
 }
-initDaily();
+// initDaily()는 ensureIching().then() 에서 호출됨
 
 /* ══ 모달 유틸 ══ */
 function openMo(id){document.getElementById(id).classList.add('on');}
