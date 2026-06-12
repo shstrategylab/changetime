@@ -213,12 +213,14 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
     flex-direction:column;gap:0;
   }
   .nav-r.menu-open .nav-links{display:flex;}
-  .nav-r .nav-links a{display:block!important;padding:10px 18px;font-size:13px;}
+  .nav-r .nav-links a{padding:10px 18px;font-size:13px;}
+  .nav-r .nav-links a:not(#navLogoutBtn){display:block;}
   .nav-r .nav-links a:hover{background:var(--paper2);}
   .nav-r .nu{
-    flex-direction:column;align-items:flex-start;gap:8px;
-    padding:10px 18px;border-top:1px solid var(--paper2);width:100%;
+    flex-direction:row;align-items:center;gap:6px;font-size:11px;
   }
+  .nav-r .nu .ncnt{font-size:10px;padding:2px 6px;}
+  .nav-r .nu #navName{max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
   /* 오늘의 괘 배너 - 모바일 1줄 처리 */
   .daily-banner-inner{
@@ -278,15 +280,15 @@ body.iab-active{padding-top:84px;}
 <nav>
   <a class="logo" href="#">역<span>易</span></a>
   <div class="nav-r" id="navR">
+    <div id="navUser" class="nu" style="display:none;">
+      <span id="navName" onclick="openMypage()" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--paper3);transition:color .2s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color=''"></span>
+      <span class="ncnt" id="navCnt">0회</span>
+    </div>
     <div class="nav-links">
       <a href="#entry">점괘 보기</a>
       <a href="#concept">개념 이해</a>
       <a href="#pricing">요금제</a>
-      <div id="navUser" class="nu" style="display:none;">
-        <span id="navName" onclick="openMypage()" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--paper3);transition:color .2s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color=''"></span>
-        <span class="ncnt" id="navCnt">0회</span>
-        <a href="#" onclick="doLogout()" style="font-size:12px;color:var(--ink3);">로그아웃</a>
-      </div>
+      <a href="#" id="navLogoutBtn" onclick="doLogout()" style="display:none;">로그아웃</a>
     </div>
     <a href="#" class="nbtn" id="navLoginBtn" onclick="openMo('loginMo')">로그인</a>
     <button class="hamb" id="hambBtn" onclick="document.getElementById('navR').classList.toggle('menu-open')" aria-label="메뉴">
@@ -741,12 +743,14 @@ auth.onAuthStateChanged(async u => {
   if(u){
     document.getElementById('navLoginBtn').style.display='none';
     document.getElementById('navUser').style.display='flex';
+    document.getElementById('navLogoutBtn').style.display='block';
     document.getElementById('navName').textContent = u.displayName || u.email.split('@')[0];
     await loadUP(u.uid);
     closeMo('loginMo');
   } else {
     document.getElementById('navLoginBtn').style.display='inline-block';
     document.getElementById('navUser').style.display='none';
+    document.getElementById('navLogoutBtn').style.display='none';
     UP=null;
   }
 });
