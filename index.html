@@ -412,7 +412,7 @@ body.iab-active{padding-top:84px;}
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px;">
 
     <!-- 세운·월건 (월 구독 이상) -->
-    <div style="border-radius:var(--r);border:1px solid var(--paper3);background:#fff;padding:24px;position:relative;overflow:hidden;cursor:pointer;" onclick="openPayMo('subscribe')">
+    <div style="border-radius:var(--r);border:1px solid var(--paper3);background:#fff;padding:24px;position:relative;overflow:hidden;cursor:pointer;" onclick="openPreviewCard('sub')">
       <div style="font-size:10px;letter-spacing:2px;color:var(--fg);background:var(--fb);padding:2px 10px;border-radius:10px;display:inline-block;margin-bottom:14px;">월 구독 이상</div>
       <div style="font-size:28px;margin-bottom:10px;">🌿</div>
       <h3 style="font-family:'Noto Serif KR',serif;font-size:16px;font-weight:600;color:var(--ink);margin-bottom:8px;">이달의 세운 · 월건 해설</h3>
@@ -422,7 +422,7 @@ body.iab-active{padding-top:84px;}
     </div>
 
     <!-- 연·월 운세 (연간 구독) -->
-    <div style="border-radius:var(--r);border:1px solid var(--gold);background:#fff;padding:24px;position:relative;overflow:hidden;cursor:pointer;" onclick="openPayMo('subscribe')">
+    <div style="border-radius:var(--r);border:1px solid var(--gold);background:#fff;padding:24px;position:relative;overflow:hidden;cursor:pointer;" onclick="openPreviewCard('year')">
       <div style="font-size:10px;letter-spacing:2px;color:var(--pb);background:var(--pp);padding:2px 10px;border-radius:10px;display:inline-block;margin-bottom:14px;">연간 구독 전용</div>
       <div style="font-size:28px;margin-bottom:10px;">📅</div>
       <h3 style="font-family:'Noto Serif KR',serif;font-size:16px;font-weight:600;color:var(--ink);margin-bottom:8px;">연 · 월 운세</h3>
@@ -432,7 +432,7 @@ body.iab-active{padding-top:84px;}
     </div>
 
     <!-- 인생 본괘 + 육룡 (연간 구독) -->
-    <div style="border-radius:var(--r);border:1px solid var(--gold);background:#fff;padding:24px;position:relative;overflow:hidden;cursor:pointer;" onclick="openPayMo('subscribe')">
+    <div style="border-radius:var(--r);border:1px solid var(--gold);background:#fff;padding:24px;position:relative;overflow:hidden;cursor:pointer;" onclick="openPreviewCard('year')">
       <div style="font-size:10px;letter-spacing:2px;color:var(--pb);background:var(--pp);padding:2px 10px;border-radius:10px;display:inline-block;margin-bottom:14px;">연간 구독 전용</div>
       <div style="font-size:28px;margin-bottom:10px;">☯</div>
       <h3 style="font-family:'Noto Serif KR',serif;font-size:16px;font-weight:600;color:var(--ink);margin-bottom:8px;">인생 본괘 · 육룡 단계 진단</h3>
@@ -849,6 +849,23 @@ async function loadUP(uid){
   UP = s.val()||{};
   updateCnt();
 }
+function openPreviewCard(req){
+  // req: 'sub' (월 구독 이상) | 'year' (연간 구독)
+  if(!CU){ openMo('loginMo'); toast('로그인 후 이용 가능합니다.'); return; }
+  const sub = UP?.subscribed||false;
+  const isYear = sub && (UP?.subType === 'year');
+  const ok = req==='year' ? isYear : sub;
+  if(ok){
+    openMypage();
+    openMo('mypageMo');
+  } else if(req==='year' && sub){
+    toast('연간 구독 전용 콘텐츠입니다. 연간 구독으로 업그레이드해 주세요.');
+    openPayMo('subscribe_year');
+  } else {
+    openPayMo(req==='year' ? 'subscribe_year' : 'subscribe');
+  }
+}
+
 function unlockDeepContent(){
   const isPaid = (UP?.subscribed) || ((UP?.remainCount||0)>0);
   const grid = document.getElementById('deepGrid');
