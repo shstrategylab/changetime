@@ -700,7 +700,7 @@ body.iab-active{padding-top:84px;}
 
     <!-- ── 월 구독 이상: 세운·월건 카드 ── -->
     <div id="mpSeunBox" style="display:none;margin-bottom:12px;">
-      <div onclick="openDetailMo('seun')" style="cursor:pointer;background:var(--paper2);border:1px solid var(--paper3);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+      <div onclick="_detailFromMypage=true;openDetailMo('seun')" style="cursor:pointer;background:var(--paper2);border:1px solid var(--paper3);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
         <div>
           <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:4px;">이달의 기운</p>
           <strong style="font-size:14px;font-family:'Noto Serif KR',serif;color:var(--ink);" id="mpSeunSummary">세운 · 월건 해설</strong>
@@ -712,7 +712,7 @@ body.iab-active{padding-top:84px;}
 
     <!-- ── 연간 구독 전용: 연·월 운세 카드 ── -->
     <div id="mpYearUnseBox" style="display:none;margin-bottom:12px;">
-      <div onclick="openDetailMo('yearse')" style="cursor:pointer;background:var(--paper2);border:1px solid var(--paper3);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+      <div onclick="_detailFromMypage=true;openDetailMo('yearse')" style="cursor:pointer;background:var(--paper2);border:1px solid var(--paper3);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
         <div>
           <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:4px;">연간 전용 · 연 · 월 운세</p>
           <strong style="font-size:14px;font-family:'Noto Serif KR',serif;color:var(--ink);" id="mpYearSummary">올해의 흐름 · 월별 기운</strong>
@@ -724,7 +724,7 @@ body.iab-active{padding-top:84px;}
 
     <!-- ── 연간 구독 전용: 인생 본괘 + 육룡 카드 ── -->
     <div id="mpYukryongBox" style="display:none;margin-bottom:20px;">
-      <div onclick="openDetailMo('yukryong')" style="cursor:pointer;background:var(--ink);border:1px solid rgba(200,184,152,.2);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 16px rgba(0,0,0,.2)'" onmouseout="this.style.boxShadow=''">
+      <div onclick="_detailFromMypage=true;openDetailMo('yukryong')" style="cursor:pointer;background:var(--ink);border:1px solid rgba(200,184,152,.2);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 16px rgba(0,0,0,.2)'" onmouseout="this.style.boxShadow=''">
         <div>
           <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:4px;">연간 전용 · 인생 본괘 · 육룡</p>
           <strong style="font-size:14px;font-family:'Noto Serif KR',serif;color:#e8d8b8;" id="mpYukSummary">본괘 · 육룡 단계 진단</strong>
@@ -752,7 +752,7 @@ body.iab-active{padding-top:84px;}
 <!-- ═══ 세운·월건 상세 모달 ═══ -->
 <div class="mo mo-top" id="seunDetailMo">
   <div class="md" style="max-width:580px;">
-    <button class="mdx" onclick="closeMo('seunDetailMo');openMo('mypageMo');">✕</button>
+    <button class="mdx" onclick="closeDetailMo('seunDetailMo');">✕</button>
     <p class="moeye">월 구독 전용</p>
     <h2 class="motit">이달의 세운 · 월건 해설</h2>
     <div id="seunDetailBody" style="margin-top:20px;"></div>
@@ -762,7 +762,7 @@ body.iab-active{padding-top:84px;}
 <!-- ═══ 연·월 운세 상세 모달 ═══ -->
 <div class="mo mo-top" id="yearUnseDetailMo">
   <div class="md" style="max-width:580px;">
-    <button class="mdx" onclick="closeMo('yearUnseDetailMo');openMo('mypageMo');">✕</button>
+    <button class="mdx" onclick="closeDetailMo('yearUnseDetailMo');">✕</button>
     <p class="moeye">연간 구독 전용</p>
     <h2 class="motit">연 · 월 운세</h2>
     <div id="yearUnseDetailBody" style="margin-top:20px;"></div>
@@ -772,7 +772,7 @@ body.iab-active{padding-top:84px;}
 <!-- ═══ 인생 본괘·육룡 상세 모달 ═══ -->
 <div class="mo mo-top" id="yukryongDetailMo">
   <div class="md" style="max-width:580px;background:var(--ink);">
-    <button class="mdx" onclick="closeMo('yukryongDetailMo');openMo('mypageMo');" style="color:#c8b898;">✕</button>
+    <button class="mdx" onclick="closeDetailMo('yukryongDetailMo');" style="color:#c8b898;">✕</button>
     <p class="moeye" style="color:var(--gold);">연간 구독 전용</p>
     <h2 class="motit" style="color:#e8d8b8;">인생 본괘 · 육룡(六龍) 단계 진단</h2>
     <div id="yukryongDetailBody" style="margin-top:20px;"></div>
@@ -906,7 +906,7 @@ function openPreviewCard(req, type){
   const isYear = sub && (UP?.subType === 'year');
   const ok = req==='year' ? isYear : sub;
   if(ok){
-    openMypage(); // window._seunDetail / _yearDetail / _yukDetail 채움
+    prepareMypage(); // window._seunDetail / _yearDetail / _yukDetail 채움 (마이페이지 모달은 열지 않음)
     if(type==='yearse' && !window._yearDetail){
       toast('사주 정보를 먼저 입력해 주세요.');
       openMo('sajuMo');
@@ -1108,6 +1108,18 @@ auth.getRedirectResult().then(async result => {
 async function doLogout(){ await auth.signOut(); toast('로그아웃되었습니다.'); }
 
 /* ══ 마이페이지 ══ */
+
+// 상세 모달 진입 경로 추적 (true = 마이페이지에서 열었음, false = 랜딩 카드에서 직접 열었음)
+let _detailFromMypage = false;
+
+function closeDetailMo(moId){
+  closeMo(moId);
+  if(_detailFromMypage){
+    openMo('mypageMo');
+  }
+  _detailFromMypage = false;
+}
+
 function openDetailMo(type){
   if(type==='seun' && window._seunDetail){
     const {seun,wolgeon,seunOh,wolOh,OHNAMES,OHLONG,WOLGEONLONG} = window._seunDetail;
@@ -1201,7 +1213,7 @@ function openDetailMo(type){
   }
 }
 
-function openMypage(){
+function prepareMypage(){
   if(!CU) return;
   document.getElementById('mpName').textContent = UP?.name || CU.displayName || CU.email.split('@')[0];
   document.getElementById('mpEmail').textContent = CU.email || '—';
@@ -1351,6 +1363,10 @@ function openMypage(){
     yukryongBox.style.display = 'none';
   }
 
+}
+
+function openMypage(){
+  prepareMypage();
   openMo('mypageMo');
 }
 
