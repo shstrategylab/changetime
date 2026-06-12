@@ -692,6 +692,9 @@ async function saveMember(){
 
 /* ══ 점괘 기록 ══ */
 async function loadRecords(){
+  const statsEl=document.getElementById('recordStats');
+  const el=document.getElementById('recordTableWrap');
+  try{
   const snap=await db.ref('users').once('value');
   recordsData=[];
   let todayCnt=0, totalCnt=0;
@@ -714,8 +717,14 @@ async function loadRecords(){
     });
   }
   // 비회원 기록 (별도 노드에 저장된 경우)
-  const gSnap=await db.ref('guest_records').once('value');
-  if(gSnap.val()){
+  let gSnap;
+  try{
+    gSnap=await db.ref('guest_records').once('value');
+  }catch(ge){
+    console.warn('guest_records 읽기 오류(무시):',ge.message);
+    gSnap=null;
+  }
+  if(gSnap && gSnap.val()){
     Object.entries(gSnap.val()).forEach(([rid,r])=>{
       recordsData.push({id:rid,uid:null,userName:'비회원',userEmail:'-',isMember:false,...r});
       totalCnt++;
@@ -727,7 +736,6 @@ async function loadRecords(){
   document.getElementById('statToday').textContent=todayCnt;
 
   // 통계 업데이트
-  const statsEl=document.getElementById('recordStats');
   if(statsEl){
     statsEl.innerHTML=`
       <span style="margin-right:16px;">전체 사용: <strong>${totalCnt}회</strong></span>
@@ -736,7 +744,6 @@ async function loadRecords(){
       <span style="margin-left:16px;">비회원 사용: <strong>${recordsData.filter(r=>!r.isMember).length}회</strong></span>`;
   }
 
-  const el=document.getElementById('recordTableWrap');
   if(!recordsData.length){el.innerHTML='<div class="empty"><div class="ico">🔮</div><p>점괘 기록이 없습니다.</p></div>';return;}
   el.innerHTML=`<table>
     <thead><tr>
@@ -753,6 +760,11 @@ async function loadRecords(){
       <td>${!r.isMember?`<button class="btn btn-cancel btn-sm" onclick="deleteGuestRecord('${r.id}')">삭제</button>`:'<span style="font-size:11px;color:var(--ink3);">-</span>'}</td>
     </tr>`).join('')}</tbody>
   </table>`;
+  }catch(err){
+    console.error('loadRecords 오류:',err);
+    if(statsEl) statsEl.innerHTML=`<span style="color:var(--red);">통계 로딩 실패: ${esc(err.message)}</span>`;
+    if(el) el.innerHTML=`<div class="empty"><div class="ico">⚠️</div><p>데이터 로딩 실패: ${esc(err.message)}</p><p style="font-size:11px;color:var(--ink3);margin-top:6px;">Firebase 권한(rules) 또는 네트워크 문제일 수 있습니다.</p></div>`;
+  }
 }
 
 async function deleteGuestRecord(id){
