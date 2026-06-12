@@ -26,6 +26,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
 .logo{font-family:'Noto Serif KR',serif;font-size:22px;font-weight:700;color:var(--ink);letter-spacing:4px;text-decoration:none;}
 .logo span{color:var(--gold);}
 .nav-r{display:flex;gap:22px;align-items:center;}
+.nav-links{display:flex;gap:22px;align-items:center;}
 .nav-r a{font-size:13px;color:var(--ink2);text-decoration:none;transition:color .2s;}
 .nav-r a:hover{color:var(--gold);}
 .nbtn{background:var(--gold)!important;color:#fff!important;padding:7px 18px;border-radius:20px;font-size:13px!important;font-weight:500;}
@@ -195,12 +196,56 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
 @media(max-width:680px){
   .egrid,.cgrid,.pgrid{grid-template-columns:1fr;}
   nav{padding:0 16px;}
-  .nav-r a:not(.nbtn):not(.nu){display:none;}
+  .nav-r{position:relative;}
+  .nav-r .nu{display:none!important;}
+  .nav-r.menu-open .nu{display:flex!important;}
   .md{padding:28px 20px;}
   .sajugrid{grid-template-columns:1fr;}
   .mbtns{gap:4px;}
   .mbtn{padding:4px 8px;font-size:10px;}
+
+  /* 햄버거 메뉴 */
+  .hamb{display:flex!important;}
+  .nav-r{flex-wrap:wrap;justify-content:flex-end;gap:12px;}
+  .nav-r .nav-links{
+    display:none;
+    position:absolute;top:100%;right:0;
+    background:var(--paper);border:1px solid var(--paper3);border-radius:8px;
+    box-shadow:var(--sh);padding:10px 0;min-width:160px;z-index:300;
+    flex-direction:column;gap:0;
+  }
+  .nav-r.menu-open .nav-links{display:flex;}
+  .nav-r .nav-links a{display:block!important;padding:10px 18px;font-size:13px;}
+  .nav-r .nav-links a:hover{background:var(--paper2);}
+  .nav-r .nu{
+    flex-direction:column;align-items:flex-start;gap:8px;
+    padding:10px 18px;border-top:1px solid var(--paper2);width:100%;
+  }
+  .nav-r.menu-open .nu{order:99;}
+
+  /* 오늘의 괘 배너 - 모바일 1줄 처리 */
+  .daily-banner-inner{
+    flex-wrap:nowrap!important;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .daily-banner-inner::-webkit-scrollbar{display:none;}
+  .daily-banner-inner > span{flex-shrink:0!important;}
+  .daily-banner-inner #dDesc{
+    flex:0 0 auto!important;
+    max-width:160px;
+  }
 }
+.hamb{
+  display:none;background:none;border:none;cursor:pointer;
+  width:32px;height:32px;align-items:center;justify-content:center;
+  flex-direction:column;gap:4px;padding:0;
+}
+.hamb span{display:block;width:20px;height:2px;background:var(--ink2);border-radius:1px;transition:all .2s;}
+.nav-r.menu-open .hamb span:nth-child(1){transform:translateY(6px) rotate(45deg);}
+.nav-r.menu-open .hamb span:nth-child(2){opacity:0;}
+.nav-r.menu-open .hamb span:nth-child(3){transform:translateY(-6px) rotate(-45deg);}
 
 /* 인앱 브라우저 경고 배너 */
 #iabBanner{
@@ -235,16 +280,21 @@ body.iab-active{padding-top:84px;}
 <!-- NAV -->
 <nav>
   <a class="logo" href="#">역<span>易</span></a>
-  <div class="nav-r">
-    <a href="#entry">점괘 보기</a>
-    <a href="#concept">개념 이해</a>
-    <a href="#pricing">요금제</a>
-    <div id="navUser" class="nu" style="display:none;">
-      <span id="navName" onclick="openMypage()" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--paper3);transition:color .2s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color=''"></span>
-      <span class="ncnt" id="navCnt">0회</span>
-      <a href="#" onclick="doLogout()" style="font-size:12px;color:var(--ink3);">로그아웃</a>
+  <div class="nav-r" id="navR">
+    <div class="nav-links">
+      <a href="#entry">점괘 보기</a>
+      <a href="#concept">개념 이해</a>
+      <a href="#pricing">요금제</a>
+      <div id="navUser" class="nu" style="display:none;">
+        <span id="navName" onclick="openMypage()" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--paper3);transition:color .2s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color=''"></span>
+        <span class="ncnt" id="navCnt">0회</span>
+        <a href="#" onclick="doLogout()" style="font-size:12px;color:var(--ink3);">로그아웃</a>
+      </div>
     </div>
     <a href="#" class="nbtn" id="navLoginBtn" onclick="openMo('loginMo')">로그인</a>
+    <button class="hamb" id="hambBtn" onclick="document.getElementById('navR').classList.toggle('menu-open')" aria-label="메뉴">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
 
@@ -257,7 +307,7 @@ body.iab-active{padding-top:84px;}
 
 <!-- 오늘의 괘 (띠 배너) -->
 <div style="background:var(--ink);border-bottom:1px solid rgba(255,255,255,.08);">
-  <div style="max-width:980px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+  <div class="daily-banner-inner" style="max-width:980px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
     <span style="font-size:10px;letter-spacing:2px;color:var(--ink3);flex-shrink:0;">오늘의 괘</span>
     <span style="font-size:11px;color:var(--ink3);flex-shrink:0;" id="dailyTitle"></span>
     <span style="color:rgba(255,255,255,.15);">|</span>
