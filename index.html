@@ -1105,6 +1105,7 @@ function openDetailMo(type){
   }
 }
 
+function openMypage(){
   if(!CU) return;
   document.getElementById('mpName').textContent = UP?.name || CU.displayName || CU.email.split('@')[0];
   document.getElementById('mpEmail').textContent = CU.email || '—';
