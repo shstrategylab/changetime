@@ -697,22 +697,40 @@ body.iab-active{padding-top:84px;}
       </div>
     </div>
 
-    <!-- ── 월 구독 이상: 이달의 세운·월건 해설 ── -->
-    <div id="mpSeunBox" style="display:none;margin-bottom:20px;">
-      <p style="font-size:10px;letter-spacing:3px;color:var(--gold);margin-bottom:10px;">이달의 기운 — 세운 · 월건 해설</p>
-      <div style="background:var(--paper2);border-radius:8px;padding:16px 18px;font-size:13px;color:var(--ink2);line-height:1.9;" id="mpSeunContent"></div>
+    <!-- ── 월 구독 이상: 세운·월건 카드 ── -->
+    <div id="mpSeunBox" style="display:none;margin-bottom:12px;">
+      <div onclick="openDetailMo('seun')" style="cursor:pointer;background:var(--paper2);border:1px solid var(--paper3);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+        <div>
+          <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:4px;">이달의 기운</p>
+          <strong style="font-size:14px;font-family:'Noto Serif KR',serif;color:var(--ink);" id="mpSeunSummary">세운 · 월건 해설</strong>
+          <p style="font-size:11px;color:var(--ink3);margin-top:3px;" id="mpSeunDesc"></p>
+        </div>
+        <span style="font-size:18px;color:var(--paper3);margin-left:12px;">›</span>
+      </div>
     </div>
 
-    <!-- ── 연간 구독 전용: 연·월 운세 ── -->
-    <div id="mpYearUnseBox" style="display:none;margin-bottom:20px;">
-      <p style="font-size:10px;letter-spacing:3px;color:var(--gold);margin-bottom:10px;">연 · 월 운세 — 세운 기반 올해의 흐름</p>
-      <div style="background:var(--paper2);border-radius:8px;padding:16px 18px;font-size:13px;color:var(--ink2);line-height:1.9;" id="mpYearUnseContent"></div>
+    <!-- ── 연간 구독 전용: 연·월 운세 카드 ── -->
+    <div id="mpYearUnseBox" style="display:none;margin-bottom:12px;">
+      <div onclick="openDetailMo('yearse')" style="cursor:pointer;background:var(--paper2);border:1px solid var(--paper3);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+        <div>
+          <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:4px;">연간 전용 · 연 · 월 운세</p>
+          <strong style="font-size:14px;font-family:'Noto Serif KR',serif;color:var(--ink);" id="mpYearSummary">올해의 흐름 · 월별 기운</strong>
+          <p style="font-size:11px;color:var(--ink3);margin-top:3px;" id="mpYearDesc"></p>
+        </div>
+        <span style="font-size:18px;color:var(--paper3);margin-left:12px;">›</span>
+      </div>
     </div>
 
-    <!-- ── 연간 구독 전용: 인생 본괘 + 육룡 분석 ── -->
+    <!-- ── 연간 구독 전용: 인생 본괘 + 육룡 카드 ── -->
     <div id="mpYukryongBox" style="display:none;margin-bottom:20px;">
-      <p style="font-size:10px;letter-spacing:3px;color:var(--gold);margin-bottom:10px;">인생 본괘 · 육룡(六龍) 단계 진단</p>
-      <div style="background:var(--ink);border-radius:8px;padding:16px 18px;font-size:13px;color:#c8b898;line-height:1.9;" id="mpYukryongContent"></div>
+      <div onclick="openDetailMo('yukryong')" style="cursor:pointer;background:var(--ink);border:1px solid rgba(200,184,152,.2);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 16px rgba(0,0,0,.2)'" onmouseout="this.style.boxShadow=''">
+        <div>
+          <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:4px;">연간 전용 · 인생 본괘 · 육룡</p>
+          <strong style="font-size:14px;font-family:'Noto Serif KR',serif;color:#e8d8b8;" id="mpYukSummary">본괘 · 육룡 단계 진단</strong>
+          <p style="font-size:11px;color:#c8b898;margin-top:3px;" id="mpYukDesc"></p>
+        </div>
+        <span style="font-size:18px;color:rgba(200,184,152,.4);margin-left:12px;">›</span>
+      </div>
     </div>
 
     <div style="display:flex;gap:10px;margin-bottom:20px;">
@@ -727,6 +745,36 @@ body.iab-active{padding-top:84px;}
         회원 탈퇴
       </button>
     </div>
+  </div>
+</div>
+
+<!-- ═══ 세운·월건 상세 모달 ═══ -->
+<div class="mo" id="seunDetailMo">
+  <div class="md" style="max-width:580px;">
+    <button class="mdx" onclick="closeMo('seunDetailMo')">✕</button>
+    <p class="moeye">월 구독 전용</p>
+    <h2 class="motit">이달의 세운 · 월건 해설</h2>
+    <div id="seunDetailBody" style="margin-top:20px;"></div>
+  </div>
+</div>
+
+<!-- ═══ 연·월 운세 상세 모달 ═══ -->
+<div class="mo" id="yearUnseDetailMo">
+  <div class="md" style="max-width:580px;">
+    <button class="mdx" onclick="closeMo('yearUnseDetailMo')">✕</button>
+    <p class="moeye">연간 구독 전용</p>
+    <h2 class="motit">연 · 월 운세</h2>
+    <div id="yearUnseDetailBody" style="margin-top:20px;"></div>
+  </div>
+</div>
+
+<!-- ═══ 인생 본괘·육룡 상세 모달 ═══ -->
+<div class="mo" id="yukryongDetailMo">
+  <div class="md" style="max-width:580px;background:var(--ink);">
+    <button class="mdx" onclick="closeMo('yukryongDetailMo')" style="color:#c8b898;">✕</button>
+    <p class="moeye" style="color:var(--gold);">연간 구독 전용</p>
+    <h2 class="motit" style="color:#e8d8b8;">인생 본괘 · 육룡(六龍) 단계 진단</h2>
+    <div id="yukryongDetailBody" style="margin-top:20px;"></div>
   </div>
 </div>
 
@@ -961,7 +1009,102 @@ auth.getRedirectResult().then(async result => {
 async function doLogout(){ await auth.signOut(); toast('로그아웃되었습니다.'); }
 
 /* ══ 마이페이지 ══ */
-function openMypage(){
+function openDetailMo(type){
+  if(type==='seun' && window._seunDetail){
+    const {seun,wolgeon,seunOh,wolOh,OHNAMES,OHLONG,WOLGEONLONG} = window._seunDetail;
+    document.getElementById('seunDetailBody').innerHTML = `
+      <div style="background:var(--paper2);border-radius:10px;padding:20px 22px;margin-bottom:16px;">
+        <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:10px;">올해 세운(歲運)</p>
+        <strong style="font-family:'Noto Serif KR',serif;font-size:22px;color:var(--ink);">${seun}</strong>
+        <span style="font-size:13px;color:var(--ink3);margin-left:10px;">${OHNAMES[seunOh]||seunOh} 기운</span>
+        <p style="margin-top:12px;font-size:13px;color:var(--ink2);line-height:1.9;">${OHLONG[seunOh]||''}</p>
+        <div style="margin-top:14px;padding:12px 14px;background:#fff;border-radius:6px;border-left:3px solid var(--gold);font-size:12px;color:var(--ink3);line-height:1.8;">
+          점괘 해석 적용 — 세운의 오행이 본괘를 <strong>생(生)</strong>하면 길함이 배가되고, <strong>극(克)</strong>하면 현실의 방해 요인으로 읽습니다. 같은 오행(比)이면 기운이 더욱 강해집니다.
+        </div>
+      </div>
+      <div style="background:var(--paper2);border-radius:10px;padding:20px 22px;">
+        <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:10px;">이달 월건(月建)</p>
+        <strong style="font-family:'Noto Serif KR',serif;font-size:22px;color:var(--ink);">${wolgeon}</strong>
+        <span style="font-size:13px;color:var(--ink3);margin-left:10px;">${OHNAMES[wolOh]||wolOh} 기운</span>
+        <p style="margin-top:12px;font-size:13px;color:var(--ink2);line-height:1.9;">${WOLGEONLONG[wolOh]||''}</p>
+        <div style="margin-top:14px;padding:12px 14px;background:#fff;border-radius:6px;border-left:3px solid var(--pb);font-size:12px;color:var(--ink3);line-height:1.8;">
+          월건은 세운보다 빠르게 체감됩니다. 동효가 월건과 같은 오행이면 이달 기운이 특히 강하게 작용합니다. 매달 마이페이지에서 월건이 자동으로 바뀝니다.
+        </div>
+      </div>`;
+    closeMo('mypageMo');
+    openMo('seunDetailMo');
+  }
+  else if(type==='yearse' && window._yearDetail){
+    const {ilgan,ilOh,seun,relShort,relLong,monthData,year} = window._yearDetail;
+    const OHCOL = {木:'#3a7d44',火:'#c0392b',土:'#8B6914',金:'#5d6d7e',水:'#1a5276'};
+    let monthGrid = '';
+    monthData.forEach(m=>{
+      const col = m.score>0?'var(--fg)':m.score<0?'var(--red)':'var(--ink3)';
+      const icon = m.score>0?'▲':m.score<0?'▽':'—';
+      const bg = m.score>0?'rgba(76,153,0,.06)':m.score<0?'rgba(200,0,0,.06)':'var(--paper2)';
+      monthGrid += `
+        <div style="background:${bg};border-radius:8px;padding:12px 14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <strong style="font-size:13px;color:var(--ink);">${m.name}</strong>
+            <span style="font-size:11px;font-weight:600;color:${col};">${icon} ${m.score>0?'기운 강':m.score<0?'기운 약':'보통'}</span>
+          </div>
+          <p style="font-size:10px;color:var(--ink3);margin-bottom:2px;">월건 ${m.wol} (${m.wolOh||'?'})</p>
+          <p style="font-size:11px;color:var(--ink2);line-height:1.6;">${m.advice}</p>
+        </div>`;
+    });
+    document.getElementById('yearUnseDetailBody').innerHTML = `
+      <div style="background:var(--paper2);border-radius:10px;padding:20px 22px;margin-bottom:16px;">
+        <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:10px;">일간 ${ilgan}(${ilOh}) 기준 — ${seun}년 십성(十星)</p>
+        <strong style="font-family:'Noto Serif KR',serif;font-size:20px;color:var(--ink);">${relShort}</strong>
+        <p style="margin-top:12px;font-size:13px;color:var(--ink2);line-height:1.9;">${relLong}</p>
+      </div>
+      <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin:0 0 12px;">월별 기운 강약 — ${year}년</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">${monthGrid}</div>
+      <p style="font-size:11px;color:var(--ink3);margin-top:16px;line-height:1.7;">※ 월별 기운은 일간과 월건의 오행 관계로 산출합니다. 기운이 약한 달일수록 무리한 결정을 피하고, 강한 달에 중요한 일을 배치하십시오.</p>`;
+    closeMo('mypageMo');
+    openMo('yearUnseDetailMo');
+  }
+  else if(type==='yukryong' && window._yukDetail){
+    const {lifeGua,age,ryongStep,yr,YUKRYONG,ilgan,birthYear} = window._yukDetail;
+    let stepsHtml = '';
+    YUKRYONG.forEach((r,i)=>{
+      const isCur = i===ryongStep;
+      stepsHtml += `
+        <div style="display:flex;gap:14px;margin-bottom:${isCur?'0':'10px'};opacity:${isCur?1:0.45};">
+          <div style="width:36px;height:36px;min-width:36px;border-radius:50%;border:${isCur?'2px solid var(--gold)':'1px solid rgba(200,184,152,.3)'};display:flex;align-items:center;justify-content:center;font-size:11px;color:${isCur?'var(--gold)':'#c8b898'};">${r.num[0]}</div>
+          <div style="padding-top:6px;">
+            <strong style="font-size:13px;color:${isCur?'var(--gold)':'#c8b898'};">${r.name}</strong>
+            ${isCur?`
+              <p style="font-size:12px;color:#c8b898;margin-top:6px;line-height:1.8;">${r.long}</p>
+              <div style="margin-top:10px;padding:10px 14px;background:rgba(200,146,42,.12);border-radius:6px;border-left:2px solid var(--gold);">
+                <p style="font-size:11px;color:var(--goldl);line-height:1.7;">💡 이 시기의 처세 — ${r.advice}</p>
+              </div>`
+            :`<p style="font-size:11px;color:#a09080;margin-top:2px;">${r.short}</p>`}
+          </div>
+        </div>`;
+      if(i<5) stepsHtml += `<div style="width:1px;height:16px;background:rgba(200,184,152,.2);margin-left:18px;margin-bottom:10px;"></div>`;
+    });
+    document.getElementById('yukryongDetailBody').innerHTML = `
+      <div style="background:rgba(200,146,42,.08);border:1px solid rgba(200,146,42,.25);border-radius:10px;padding:20px 22px;margin-bottom:20px;">
+        <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:10px;">인생 본괘 — ${birthYear}년생 기준</p>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <span style="font-family:'Noto Serif KR',serif;font-size:40px;color:var(--gold);line-height:1;">${lifeGua.name[0]||'☯'}</span>
+          <div>
+            <strong style="font-family:'Noto Serif KR',serif;font-size:18px;color:#e8d8b8;">${lifeGua.name}</strong>
+            <span style="font-size:13px;color:#c8b898;margin-left:8px;">(${lifeGua.hanja})</span>
+            <p style="font-size:12px;color:#c8b898;margin-top:4px;">${lifeGua.keyword}</p>
+            <p style="font-size:12px;color:#a09080;margin-top:4px;line-height:1.7;">${lifeGua.desc}</p>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin:0 0 16px;">육룡 단계 진단 — 현재 ${age}세</p>
+      <div>${stepsHtml}</div>
+      <p style="font-size:11px;color:rgba(200,184,152,.5);margin-top:20px;line-height:1.7;">※ 육룡(六龍)은 건괘(乾卦) 여섯 효를 인생 시기에 대입한 것입니다. 나이 기준은 참고용이며 실제 기운은 점괘로 확인하십시오.</p>`;
+    closeMo('mypageMo');
+    openMo('yukryongDetailMo');
+  }
+}
+
   if(!CU) return;
   document.getElementById('mpName').textContent = UP?.name || CU.displayName || CU.email.split('@')[0];
   document.getElementById('mpEmail').textContent = CU.email || '—';
@@ -1000,17 +1143,25 @@ function openMypage(){
     const wolOh  = CHUNGAN_OHAENG[wolgeon[0]] || '';
     const OHNAMES = {木:'나무(木)',火:'불(火)',土:'흙(土)',金:'쇠(金)',水:'물(水)'};
     const OHCHAR  = {木:'성장·전진',火:'열정·표현',土:'안정·중재',金:'결단·수렴',水:'지혜·유연'};
-    document.getElementById('mpSeunContent').innerHTML = `
-      <div style="margin-bottom:10px;">
-        <span style="font-size:10px;letter-spacing:1px;color:var(--gold);">올해 세운(歲運)</span>
-        <strong style="display:block;font-size:15px;font-family:'Noto Serif KR',serif;color:var(--ink);margin-top:2px;">${seun} — ${OHNAMES[seunOh]||seunOh} 기운</strong>
-        <p style="margin-top:4px;font-size:12px;color:var(--ink3);">${OHCHAR[seunOh]||''}의 흐름이 강하게 작용하는 해입니다. 점괘에서 이 기운이 본괘를 생(生)하면 길함이 배가되고, 극(克)하면 현실 방해 요인으로 읽으십시오.</p>
-      </div>
-      <div style="border-top:1px solid var(--paper3);padding-top:10px;">
-        <span style="font-size:10px;letter-spacing:1px;color:var(--gold);">이달 월건(月建)</span>
-        <strong style="display:block;font-size:15px;font-family:'Noto Serif KR',serif;color:var(--ink);margin-top:2px;">${wolgeon} — ${OHNAMES[wolOh]||wolOh} 기운</strong>
-        <p style="margin-top:4px;font-size:12px;color:var(--ink3);">월건은 세운보다 빠르게 체감됩니다. 이달 점괘의 동효가 월건과 ${wolOh===seunOh?'같은 오행으로 기운이 강하게 발현됩니다.':'다른 오행이면 세운과의 균형을 살펴보십시오.'}</p>
-      </div>`;
+    const OHLONG  = {
+      木:'목(木) 기운은 봄의 기운으로 시작·성장·상승을 상징합니다. 새로운 일을 시작하거나 계획을 세우기에 유리한 흐름이며, 점괘에서 木 오행이 강하게 나타나면 추진력이 뒷받침된다고 읽습니다.',
+      火:'화(火) 기운은 여름의 기운으로 열정·표현·확산을 상징합니다. 대외 활동과 인맥, 홍보에 유리하며 감정 기복이 커질 수 있으니 조급함을 경계하십시오.',
+      土:'토(土) 기운은 환절기의 기운으로 안정·중재·정착을 상징합니다. 급격한 변화보다 현재 기반을 다지는 일이 길합니다. 중간자 역할이 부각되는 시기입니다.',
+      金:'금(金) 기운은 가을의 기운으로 결단·수렴·정리를 상징합니다. 불필요한 것을 쳐내고 핵심에 집중할 때입니다. 법·계약·규율과 관련된 일에 주의가 필요합니다.',
+      水:'수(水) 기운은 겨울의 기운으로 지혜·유연·저장을 상징합니다. 드러내기보다 내면을 채우고 다음 기회를 준비하는 시기입니다. 직관이 날카로워지는 때입니다.',
+    };
+    const WOLGEONLONG = {
+      木:'이달 월건이 木 기운입니다. 계획한 일을 실행에 옮기기 좋으며, 점괘의 본괘가 火·土라면 세운의 힘을 빌려 더욱 강해집니다.',
+      火:'이달 월건이 火 기운입니다. 감정·표현·인간관계가 두드러지는 달입니다. 급하게 판단하지 말고 전체 흐름을 보십시오.',
+      土:'이달 월건이 土 기운입니다. 변화보다 유지, 진취보다 수성(守成)이 유리합니다. 부동산·계약·거처 관련 사안에 신중하십시오.',
+      金:'이달 월건이 金 기운입니다. 마무리와 결산에 적합한 달입니다. 오래 끌어온 일을 정리하고 새 기준을 세우기에 좋습니다.',
+      水:'이달 월건이 水 기운입니다. 드러내기보다 관찰하고 준비하는 달입니다. 점괘에서 水가 왕성하면 유연하게 대응하면 길합니다.',
+    };
+    // 카드 요약
+    document.getElementById('mpSeunSummary').textContent = `${seun} 세운 · ${wolgeon} 월건`;
+    document.getElementById('mpSeunDesc').textContent = `${OHNAMES[seunOh]||seunOh} 기운 — ${OHCHAR[seunOh]||''}`;
+    // 상세용 데이터 저장
+    window._seunDetail = {seun, wolgeon, seunOh, wolOh, OHNAMES, OHLONG, WOLGEONLONG};
     seunBox.style.display = 'block';
   } else {
     seunBox.style.display = 'none';
@@ -1024,34 +1175,40 @@ function openMypage(){
     const seun = getSeun(d.getFullYear());
     const ilOh = CHUNGAN_OHAENG[ilgan] || '';
     const seunOh = CHUNGAN_OHAENG[seun[0]] || '';
-    let rel = '—';
+    let relShort = '—', relLong = '';
+    const RELDESC = {
+      '비겁':'동료·경쟁의 해입니다. 협력과 독립 사이의 균형이 중요하며, 경쟁자가 나타나거나 동업 기회가 생기기도 합니다. 주체성을 잃지 않으면서 연대하는 지혜가 필요합니다.',
+      '식상':'표현·창의의 해입니다. 새로운 시도와 배움이 길하고, 말·글·예술·교육 분야에서 성과가 나타납니다. 에너지가 넘치지만 지나치면 산만해질 수 있으니 집중할 것을 고르십시오.',
+      '재성':'재물·결실의 해입니다. 실질적 성과를 거두기 좋은 시기로, 노력한 것이 가시적인 형태로 돌아옵니다. 돈·부동산·자산과 관련된 결정을 이 시기에 내리면 유리합니다.',
+      '관성':'책임·규율의 해입니다. 원칙을 지키면 명예가 따르고, 직위나 역할이 확대될 수 있습니다. 다만 압박감과 책임 부담도 커지니, 무리하게 욕심 내지 마십시오.',
+      '인성':'학습·지원의 해입니다. 귀인의 도움을 받거나 실력을 쌓을 시기입니다. 배움에 투자하면 장기적으로 큰 결실이 됩니다. 어머니·스승·후원자와 관련된 인연이 깊어집니다.',
+    };
     if(ilOh && seunOh){
-      if(ilOh===seunOh) rel='비겁(比劫) — 동료·경쟁의 해. 협력과 독립 사이의 균형이 중요합니다.';
-      else if(SAENGSAENGGUK.生[ilOh]===seunOh) rel='식상(食傷) — 표현·창의의 해. 새로운 시도와 배움이 길합니다.';
-      else if(SAENGSAENGGUK.克[ilOh]===seunOh) rel='재성(財星) — 재물·결실의 해. 실질적 성과를 거두기 좋은 시기입니다.';
-      else if(SAENGSAENGGUK.克[seunOh]===ilOh) rel='관성(官星) — 책임·규율의 해. 원칙을 지키면 명예가 따릅니다.';
-      else if(SAENGSAENGGUK.生[seunOh]===ilOh) rel='인성(印星) — 학습·지원의 해. 귀인의 도움을 받거나 실력을 쌓을 시기입니다.';
+      if(ilOh===seunOh){relShort='비겁(比劫)';relLong=RELDESC['비겁'];}
+      else if(SAENGSAENGGUK.生[ilOh]===seunOh){relShort='식상(食傷)';relLong=RELDESC['식상'];}
+      else if(SAENGSAENGGUK.克[ilOh]===seunOh){relShort='재성(財星)';relLong=RELDESC['재성'];}
+      else if(SAENGSAENGGUK.克[seunOh]===ilOh){relShort='관성(官星)';relLong=RELDESC['관성'];}
+      else if(SAENGSAENGGUK.生[seunOh]===ilOh){relShort='인성(印星)';relLong=RELDESC['인성'];}
     }
     const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-    let monthRows = '';
+    const monthData = [];
     for(let m=0;m<12;m++){
       const mDate = new Date(d.getFullYear(), m, 15);
       const wol = getWolgeon(mDate);
       const wolOh = CHUNGAN_OHAENG[wol[0]]||'';
       const s2 = scoreOhaeng(wolOh, ilOh);
-      const icon = s2>0?'▲ 기운 강':s2<0?'▽ 기운 약':'— 보통';
-      const col = s2>0?'var(--fg)':s2<0?'var(--red)':'var(--ink3)';
-      monthRows += `<span style="font-size:11px;display:inline-block;width:48%;margin-bottom:4px;"><span style="color:var(--ink3);">${months[m]}</span> <span style="color:${col};font-weight:500;">${icon}</span></span>`;
+      const MADVICE = {
+        木:'활동과 시작에 집중하십시오.',火:'인간관계와 표현에 주력할 때입니다.',
+        土:'현재를 유지하고 기반을 다지십시오.',金:'마무리와 정리가 길합니다.',
+        水:'내면을 채우고 준비하는 달입니다.',
+      };
+      monthData.push({name:months[m], wol, wolOh, score:s2, advice:MADVICE[wolOh]||''});
     }
-    document.getElementById('mpYearUnseContent').innerHTML = `
-      <div style="margin-bottom:10px;">
-        <span style="font-size:10px;letter-spacing:1px;color:var(--gold);">일간 ${ilgan}(${ilOh}) 기준 — ${seun}년 십성</span>
-        <p style="margin-top:6px;font-size:13px;color:var(--ink2);line-height:1.8;">${rel}</p>
-      </div>
-      <div style="border-top:1px solid var(--paper3);padding-top:10px;margin-top:4px;">
-        <span style="font-size:10px;letter-spacing:1px;color:var(--gold);">월별 기운 강약</span>
-        <div style="margin-top:8px;">${monthRows}</div>
-      </div>`;
+    // 카드 요약
+    document.getElementById('mpYearSummary').textContent = `일간 ${ilgan} 기준 — ${seun}년 ${relShort}`;
+    document.getElementById('mpYearDesc').textContent = relLong.slice(0,28)+'…';
+    // 상세 저장
+    window._yearDetail = {ilgan, ilOh, seun, seunOh, relShort, relLong, monthData, year:d.getFullYear()};
     yearUnseBox.style.display = 'block';
   } else {
     yearUnseBox.style.display = 'none';
@@ -1061,41 +1218,37 @@ function openMypage(){
   const yukryongBox = document.getElementById('mpYukryongBox');
   if(isYear && s){
     const ilgan = getIlgan(s);
-    // 생년으로 인생 본괘 산출 (출생연도 기반 60갑자 인덱스)
     const birthYear = Number(s.year);
     const gIdx = ((birthYear - 1900) % 64 + 64) % 64;
     const lifeGua = G64[gIdx] || G64[0];
-    // 육룡 단계: 현재 나이 기반 (대략 10년 단위)
     const age = new Date().getFullYear() - birthYear;
     const ryongStep = Math.min(Math.floor(age / 10), 5);
     const YUKRYONG = [
-      {num:'1효', name:'잠룡(潛龍)', desc:'아직 때가 아닙니다. 실력을 쌓고 드러내지 마십시오.'},
-      {num:'2효', name:'현룡(見龍)', desc:'들판에 나타난 용. 귀인을 만나 능력을 펼칠 시기입니다.'},
-      {num:'3효', name:'건건(乾乾)', desc:'하루 종일 힘쓰고 경계하십시오. 전성기 직전의 긴장감.'},
-      {num:'4효', name:'약룡(躍龍)', desc:'도약의 시기. 결단하면 허물이 없습니다.'},
-      {num:'5효', name:'비룡(飛龍)', desc:'하늘을 나는 용. 대인을 만나면 이롭습니다. 절정의 시기.'},
-      {num:'6효', name:'항룡(亢龍)', desc:'너무 높이 오른 용. 지금은 물러설 때를 알아야 합니다.'},
+      {num:'1효',name:'잠룡(潛龍)',short:'실력을 쌓고 드러내지 마십시오.',
+       long:'잠룡물용(潛龍勿用) — 연못 속에 잠긴 용은 아직 날 때가 아닙니다. 이 시기는 스스로를 드러내거나 큰 결정을 내리기보다, 내면의 힘을 쌓고 역량을 기르는 데 집중할 때입니다. 섣불리 나서면 오히려 기회를 잃습니다. 기다림 자체가 전략입니다.',
+       advice:'이 시기에는 배움·수련·준비에 모든 에너지를 쏟으십시오. 눈에 띄지 않아도 괜찮습니다. 뿌리가 깊어야 나중에 높이 날 수 있습니다.'},
+      {num:'2효',name:'현룡(見龍)',short:'귀인을 만나 능력을 펼칠 시기.',
+       long:'현룡재전(見龍在田) — 용이 들판에 나타났습니다. 사람들 앞에 자신을 드러내고, 스승이나 귀인을 만나 가르침을 받을 때입니다. 실력을 쌓았다면 이제는 세상과 소통할 차례입니다. 대인(大人)을 봄이 이롭습니다.',
+       advice:'적극적으로 네트워크를 넓히고, 좋은 멘토를 찾으십시오. 사람들 앞에 나서는 일이 부담되더라도, 이 시기의 경험이 다음 도약의 밑거름이 됩니다.'},
+      {num:'3효',name:'건건(乾乾)',short:'전성기 직전의 긴장 — 하루 종일 힘쓰십시오.',
+       long:'군자종일건건(君子終日乾乾) — 군자는 하루 종일 쉬지 않고 힘쓰며, 저녁이 되어도 두려움을 놓지 않습니다. 가장 치열하게 일하는 시기입니다. 약진과 실수가 교차하며, 작은 허물이 생기더라도 자책하지 않아도 됩니다.',
+       advice:'완벽을 추구하되 작은 실수에 좌절하지 마십시오. 이 시기의 성실함이 이후 절정의 기반이 됩니다. 긴장을 유지하면서도 번아웃에 주의하십시오.'},
+      {num:'4효',name:'약룡(躍龍)',short:'도약의 시기 — 결단하면 허물이 없습니다.',
+       long:'혹약재연(或躍在淵) — 용이 연못에서 뛰어오르려 합니다. 나아갈 수도 있고 머물 수도 있습니다. 중요한 결단을 앞두고 있으며, 어느 쪽을 선택해도 허물이 없습니다. 지금까지 쌓아온 역량이 빛을 발하는 시기입니다.',
+       advice:'이 시기에는 과감한 결정이 길합니다. 지나치게 신중하다가 기회를 놓치는 것이 더 아깝습니다. 준비된 자에게 기회가 왔을 때 잡으십시오.'},
+      {num:'5효',name:'비룡(飛龍)',short:'하늘을 나는 용 — 절정의 시기.',
+       long:'비룡재천(飛龍在天) — 용이 하늘을 날고 있습니다. 이 단계는 능력과 위치, 인망이 모두 최고조에 달한 절정기입니다. 대인(大人)을 만나면 서로 이롭고, 하는 일마다 빛이 납니다. 하늘과 땅이 감응하는 때입니다.',
+       advice:'자신의 역할과 영향력을 충분히 발휘하십시오. 다만 절정에 있을 때일수록 겸손을 잃지 않는 것이 장수(長壽)의 비결입니다. 다음 단계를 미리 준비하십시오.'},
+      {num:'6효',name:'항룡(亢龍)',short:'너무 높이 오른 용 — 물러설 때를 아십시오.',
+       long:'항룡유회(亢龍有悔) — 지나치게 높이 오른 용은 후회가 있습니다. 이미 최고에 오른 뒤, 더 나아가려 하면 오히려 추락의 위험이 있습니다. 이 단계의 지혜는 집착하지 않고 내려놓는 것입니다. 다음 세대에 길을 열어주십시오.',
+       advice:'욕심을 버리고 전환을 준비하십시오. 새로운 분야에서 다시 잠룡이 되는 것을 두려워하지 마십시오. 내려놓음 자체가 다음 상승의 씨앗입니다.'},
     ];
     const yr = YUKRYONG[ryongStep];
-    document.getElementById('mpYukryongContent').innerHTML = `
-      <div style="margin-bottom:14px;">
-        <span style="font-size:10px;letter-spacing:2px;color:var(--gold);">인생 본괘</span>
-        <div style="display:flex;align-items:center;gap:12px;margin-top:6px;">
-          <span style="font-family:'Noto Serif KR',serif;font-size:32px;color:var(--gold);">${lifeGua.name[0]||'☯'}</span>
-          <div>
-            <strong style="font-family:'Noto Serif KR',serif;font-size:16px;color:var(--goldd);">${lifeGua.name} (${lifeGua.hanja})</strong>
-            <p style="font-size:12px;color:#c8b898;margin-top:2px;">${lifeGua.keyword} — ${lifeGua.desc}</p>
-          </div>
-        </div>
-      </div>
-      <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:14px;">
-        <span style="font-size:10px;letter-spacing:2px;color:var(--gold);">현재 육룡 단계 (${age}세 기준)</span>
-        <div style="margin-top:8px;padding:12px 14px;background:rgba(200,146,42,.12);border-radius:6px;border-left:3px solid var(--gold);">
-          <strong style="font-size:14px;color:var(--goldl);">${yr.num} · ${yr.name}</strong>
-          <p style="font-size:12px;color:#c8b898;margin-top:6px;line-height:1.8;">${yr.desc}</p>
-        </div>
-        <p style="font-size:11px;color:var(--ink3);margin-top:10px;line-height:1.7;">※ 육룡 단계는 건괘(乾卦)의 여섯 효를 인생 시기에 대입한 것입니다. 나이 기준은 참고용이며 실제 기운은 점괘로 확인하십시오.</p>
-      </div>`;
+    // 카드 요약
+    document.getElementById('mpYukSummary').textContent = `${lifeGua.name} · ${yr.name}`;
+    document.getElementById('mpYukDesc').textContent = yr.short;
+    // 상세 저장
+    window._yukDetail = {lifeGua, age, ryongStep, yr, YUKRYONG, ilgan, birthYear};
     yukryongBox.style.display = 'block';
   } else {
     yukryongBox.style.display = 'none';
