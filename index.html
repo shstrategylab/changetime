@@ -1041,9 +1041,11 @@ function getIlgan(saju) {
         // lunisolar.fromLunar({ year, month, day, isLeapMonth })
         const conv = lunisolar.fromLunar({ year: y, month: m, day: d, isLeapMonth: !!saju.isLeapMonth });
         const solarDate = conv.toDate(); // JS Date 객체 (UTC 양력)
-        y = solarDate.getUTCFullYear();
-        m = solarDate.getUTCMonth() + 1;
-        d = solarDate.getUTCDate();
+        // lunisolar.toDate()는 "로컬 자정"을 나타내므로 로컬 메서드로 추출해야 함
+        // (getUTC* 사용 시 KST 등에서 하루 밀리는 문제 발생)
+        y = solarDate.getFullYear();
+        m = solarDate.getMonth() + 1;
+        d = solarDate.getDate();
       } else {
         console.warn('[getIlgan] lunisolar 라이브러리 미로딩 — 음력 값을 양력으로 간주하고 계산합니다.');
       }
