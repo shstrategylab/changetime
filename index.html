@@ -277,13 +277,13 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
       </div>
       <div class="eico">☯</div>
       <h3 class="etit">사주 기반 정밀 점괘</h3>
-      <p style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:8px;font-family:'Noto Serif KR',serif;">내 명리와 연결된 깊은 해석</p>
-      <p class="edesc">생년월일시를 바탕으로 지금 내 대운·시운 맥락 위에서 점괘를 읽습니다. 같은 괘라도 내 사주와 연결하면 전혀 다른 메시지가 됩니다.</p>
+      <p style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:8px;font-family:'Noto Serif KR',serif;">육효학(六爻學) — 내 일간과 세운·월건·일진으로 읽는 왕쇠</p>
+      <p class="edesc">생년월일시로 산출한 일간(日干)을 기준으로, 올해 세운·이달 월건·오늘 일진이 본괘의 기운을 어떻게 강화하거나 억제하는지 판별합니다. 같은 괘라도 내 명리와 시운에 따라 전혀 다른 무게로 다가옵니다.</p>
       <div style="border-top:1px solid var(--paper3);margin:16px 0;"></div>
       <ul class="efeat">
         <li>즉석 점괘 전체 포함 <span class="ft ftp">충전·구독</span></li>
-        <li>인생 본괘 · 대운 맥락 연결 <span class="ft ftp">충전·구독</span></li>
-        <li>AI 심층 프롬프트 (사주 포함) <span class="ft ftp">충전·구독</span></li>
+        <li>세운 · 월건 · 일진 왕쇠 판별 <span class="ft ftp">충전·구독</span></li>
+        <li>AI 심층 프롬프트 (육효 포함) <span class="ft ftp">충전·구독</span></li>
       </ul>
       <p style="margin-top:16px;font-size:11px;color:var(--ink3);line-height:1.7;">💡 처음 이용 시 생년월일시를 한 번만 입력하면 이후엔 바로 시작됩니다.</p>
       <button class="ec-cta ec-cta-paid" onclick="event.stopPropagation();startDiv('paid')">사주 연동 점괘 시작 →</button>
@@ -925,11 +925,13 @@ const _G64_FALLBACK=[
 ];
 
 
-/* ══ 만세력 DB — /data/manse_100_db.json fetch 방식 ══ */
-// 구조: { "YYYY-MM-DD": "甲子", ... }  (양력 일진 데이터)
-let DAILY_ILJIN = {};         // 런타임 캐시 (fetch 완료 후 채워짐)
-let _manseReady = false;      // fetch 완료 여부
-let _mansePromise = null;     // 중복 fetch 방지
+/* ══ 만세력 DB — GitHub Pages 절대경로 fetch ══ */
+// 구조: { daily_cache: {"YYYY-MM-DD":"甲子",...}, wolgeon_cache: {"YYYY-MM":"壬午",...} }
+// wolgeon_cache가 없으면 getWolgeon() 수식 폴백 사용
+let DAILY_ILJIN = {};
+let WOLGEON_CACHE = {};   // {"YYYY-MM": "壬午"} — DB에 있으면 채워짐
+let _manseReady = false;
+let _mansePromise = null;
 
 async function ensureManse() {
   if (_manseReady) return;
@@ -940,7 +942,7 @@ async function ensureManse() {
       return r.json();
     })
     .then(data => {
-      // 구조: { description, base_setting, years, daily_cache: {"YYYY-MM-DD":"甲子",...} }
+      // 일진 캐시
       const cache = data.daily_cache || data;
       if (cache && typeof cache === 'object' && !Array.isArray(cache)) {
         Object.entries(cache).forEach(([k, v]) => {
@@ -949,18 +951,58 @@ async function ensureManse() {
           }
         });
       }
+      // 월건 캐시 (DB에 있을 경우)
+      if (data.wolgeon_cache && typeof data.wolgeon_cache === 'object') {
+        Object.entries(data.wolgeon_cache).forEach(([k, v]) => {
+          if (/^\d{4}-\d{2}$/.test(k) && typeof v === 'string') {
+            WOLGEON_CACHE[k] = v;
+          }
+        });
+        console.log('[만세력] 월건 캐시 로드 완료 —', Object.keys(WOLGEON_CACHE).length, '개월');
+      }
       _manseReady = true;
       console.log('[만세력] DB 로드 완료 —', Object.keys(DAILY_ILJIN).length, '일');
     })
     .catch(err => {
-      console.warn('[만세력] DB 로드 실패, 60甲子 수식 폴백 사용:', err.message);
-      _manseReady = true; // 실패해도 폴백으로 계속 동작
+      console.warn('[만세력] DB 로드 실패, 수식 폴백 사용:', err.message);
+      _manseReady = true;
     });
   return _mansePromise;
 }
 
 // 페이지 로드 즉시 fetch 시작
 ensureManse();
+
+/* ══ 절기 DB — 정밀 월건 계산용 ══ */
+// 구조: { "YYYY-MM-DD": "절기명" } 또는 { terms: [...] }
+// 있으면 JEOLGI_DAY 수식보다 정확한 입절일 사용
+let SOLAR_TERMS = {};   // { "YYYY-M": cutDay }  예) {"2026-6": 6}
+let _solarReady = false;
+
+(async function loadSolarTerms() {
+  try {
+    const r = await fetch('/changetime/data/solar_terms_db.js');
+    if (!r.ok) throw new Error('solar_terms fetch 실패');
+    const text = await r.text();
+    // JS 파일 형식 파싱 — 날짜 패턴 "YYYY-MM-DD" 추출
+    const matches = text.matchAll(/"(\d{4}-\d{2}-\d{2})"/g);
+    for (const m of matches) {
+      const [y, mo, d] = m[1].split('-').map(Number);
+      // 짝수 번째 절기(입절)만: 1월=소한, 3월=경칩, 5월=입하...
+      // 절기 순서상 홀수달 절기가 입절이므로 일단 모두 저장, getYeokWol에서 사용
+      const key = `${y}-${mo}`;
+      // 같은 달에 두 절기 중 더 앞선 날짜(입절)만 저장
+      if (!SOLAR_TERMS[key] || d < SOLAR_TERMS[key]) {
+        SOLAR_TERMS[key] = d;
+      }
+    }
+    _solarReady = true;
+    console.log('[절기DB] 로드 완료 —', Object.keys(SOLAR_TERMS).length, '개월');
+  } catch(e) {
+    console.warn('[절기DB] 로드 실패, JEOLGI_DAY 수식 폴백:', e.message);
+    _solarReady = true;
+  }
+})();
 
 // 60甲子 수식 폴백 — 양력 날짜로 일진 간지 계산
 function calcGanjiByDate(year, month, day) {
@@ -979,25 +1021,16 @@ function calcGanjiByDate(year, month, day) {
 // (아래 getTodayGanji / getIlgan 에서 실제 사용)
 void 0;  // ← 구 DAILY_ILJIN 끝 위치 표시자 (실제 큰 데이터는 제거됨)
 
-/* ══ 사주-주역 매칭 알고리즘 ══ */
+/* ══════════════════════════════════════════════════
+   육효학(六爻學) 엔진 — 세운 · 월건 · 일진 3단계 왕쇠 판별
+   ══════════════════════════════════════════════════ */
+
 const CHUNGAN_OHAENG = {甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'};
 const GUA_UPPER_LOWER = {
   '111':'乾','011':'兌','101':'離','001':'震',
   '110':'巽','010':'坎','100':'艮','000':'坤'
 };
 const GUA_OHAENG = {乾:'金',兌:'金',離:'火',震:'木',巽:'木',坎:'水',艮:'土',坤:'土'};
-const SIPSUNG = [
-  {rel:'비겁',theme:'인간관계 · 독립심 · 주체성',
-   interp:'나와 대등한 협력자 혹은 경쟁자가 나타나는 시기입니다. 주관을 뚜렷이 가지되 고집보다 소통을 앞세우십시오.'},
-  {rel:'식상',theme:'창의성 · 표현력 · 프로젝트 시작',
-   interp:'아이디어가 샘솟고 자신을 표출하기 좋은 때입니다. 새 프로젝트를 시작하거나 자신을 어필하기 유리하지만 말실수는 조심하십시오.'},
-  {rel:'재성',theme:'재물운 · 성과 · 결과물 확보',
-   interp:'내가 통제하고 쟁취할 수 있는 기운이 강해집니다. 투자·계약·비즈니스 성과를 내기에 가장 좋은 타이밍이니 결단력을 발휘하십시오.'},
-  {rel:'관성',theme:'직장운 · 명예 · 규율 · 리더십',
-   interp:'조직·직장·윗사람의 영향력이 강해지는 날입니다. 책임감 있게 의무를 다하면 인정을 받지만, 무리한 업무로 지치지 않도록 완급을 조절하십시오.'},
-  {rel:'인성',theme:'문서운 · 학업 · 계약 · 귀인의 도움',
-   interp:'나를 지탱하고 도와주는 에너지가 들어옵니다. 공부·자격증·계약서 작성에 유리하며 귀인이나 멘토를 만나 시야가 넓어질 수 있습니다.'}
-];
 
 // 생극(相生·相克) 관계
 const SAENGSAENGGUK = {
@@ -1011,21 +1044,129 @@ const JIJI_OHAENG = {
   午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水'
 };
 
+const SIPSUNG = [
+  {rel:'비겁',theme:'인간관계 · 독립심 · 주체성',
+   interp:'나와 대등한 협력자 혹은 경쟁자가 나타나는 시기입니다. 주관을 뚜렷이 가지되 고집보다 소통을 앞세우십시오.'},
+  {rel:'식상',theme:'창의성 · 표현력 · 프로젝트 시작',
+   interp:'아이디어가 샘솟고 자신을 표출하기 좋은 때입니다. 새 프로젝트를 시작하거나 자신을 어필하기 유리하지만 말실수는 조심하십시오.'},
+  {rel:'재성',theme:'재물운 · 성과 · 결과물 확보',
+   interp:'내가 통제하고 쟁취할 수 있는 기운이 강해집니다. 투자·계약·비즈니스 성과를 내기에 가장 좋은 타이밍이니 결단력을 발휘하십시오.'},
+  {rel:'관성',theme:'직장운 · 명예 · 규율 · 리더십',
+   interp:'조직·직장·윗사람의 영향력이 강해지는 날입니다. 책임감 있게 의무를 다하면 인정을 받지만, 무리한 업무로 지치지 않도록 완급을 조절하십시오.'},
+  {rel:'인성',theme:'문서운 · 학업 · 계약 · 귀인의 도움',
+   interp:'나를 지탱하고 도와주는 에너지가 들어옵니다. 공부·자격증·계약서 작성에 유리하며 귀인이나 멘토를 만나 시야가 넓어질 수 있습니다.'}
+];
+
+/* ──────────────────────────────────────────────
+   세운(歲運) 계산 — 올해 연간지
+   기준: 1984년 = 甲子년
+   ────────────────────────────────────────────── */
+const HEAVENLY10 = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const EARTHLY12  = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+
+function getSeun(year) {
+  // 갑자(甲子) 기준: 1984
+  const diff = year - 1984;
+  const gan = HEAVENLY10[((diff % 10) + 10) % 10];
+  const ji  = EARTHLY12 [((diff % 12) + 12) % 12];
+  return gan + ji;
+}
+
+/* ──────────────────────────────────────────────
+   월건(月建) 계산 — 절기 기준 월건 간지
+   육효학에서 月은 절기(節)가 바뀌는 시점 기준.
+   절기 근사: 매월 4~8일(입춘·경칩·청명…), 20~21일(우수·춘분…) 두 절기.
+   월건은 앞 절기(입절)만 기준으로 삼음.
+
+   입절 순서 (1~12월 절기, 대략 양력 날짜):
+     1월-소한(1/5), 2월-입춘(2/4), 3월-경칩(3/6),
+     4월-청명(4/5), 5월-입하(5/6), 6월-망종(6/6),
+     7월-소서(7/7), 8월-입추(8/7), 9월-백로(9/8),
+     10월-한로(10/8),11월-입동(11/7),12월-대설(12/7)
+
+   절기 이전이면 전달 월건 적용.
+   월건 천간: 연간 천간 오행 × 오자술(五子術) 공식.
+   ────────────────────────────────────────────── */
+
+// 절기 근사일 (월별 입절 일자, ±1일 오차 감수)
+const JEOLGI_DAY = [5, 4, 6, 5, 6, 6, 7, 7, 8, 8, 7, 7]; // 1~12월
+
+// 절기 기준 역월(曆月) 번호 산출 (1=寅月~12=丑月, 인월 기준)
+function getYeokWol(date) {
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  const y = date.getFullYear();
+  // 절기 DB 우선, 없으면 JEOLGI_DAY 수식
+  const key = `${y}-${m}`;
+  const cutDay = SOLAR_TERMS[key] || JEOLGI_DAY[m - 1];
+  let yeokWol = d >= cutDay ? m : m - 1;
+  if (yeokWol <= 0) yeokWol += 12;
+  return yeokWol;
+}
+
+// 오자술(五子術): 연간 천간 → 월건 천간 기준 (인월=1월건)
+// 甲己년: 丙寅, 乙庚년: 戊寅, 丙辛년: 庚寅, 丁壬년: 壬寅, 戊癸년: 甲寅
+const WOLGEON_BASE_GAN = {甲:2,己:2, 乙:4,庚:4, 丙:6,辛:6, 丁:8,壬:8, 戊:0,癸:0};
+// 인월(寅) 천간 인덱스 (0=甲)
+
+// 지지: 인(寅)=2번째(인덱스2)부터 시작
+const WOLGEON_JI_START = 2; // 寅
+
+function getWolgeon(date) {
+  // DB 캐시 우선 사용 (wolgeon_cache가 있을 때)
+  const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
+  if (WOLGEON_CACHE[key]) return WOLGEON_CACHE[key];
+  // 수식 폴백
+  const year = date.getFullYear();
+  const yeokWol = getYeokWol(date);
+  const yeonGan = getSeun(year)[0];
+  const baseGanIdx = WOLGEON_BASE_GAN[yeonGan] ?? 0;
+  const ganIdx = (baseGanIdx + (yeokWol - 1)) % 10;
+  const jiIdx  = (WOLGEON_JI_START + (yeokWol - 1)) % 12;
+  return HEAVENLY10[ganIdx] + EARTHLY12[jiIdx];
+}
+
+/* ──────────────────────────────────────────────
+   육효 왕쇠 종합 판별
+   세운(×1) · 월건(×2) · 일진(×3) 가중 합산
+   — 월건은 세운보다 직접적, 일진은 가장 즉각적
+   ────────────────────────────────────────────── */
+
 /**
- * 1단계: 일간 vs 상괘 오행 → 십성(十星) 결정  [주역 영역]
- * 2단계: 일진 천간·지지가 상괘를 生/克/同 → 십성 발현 강도 결정  [사주 영역]
- *
- * @param {string} ilgan     - 사주 일간 천간 (甲乙丙...)
- * @param {string} todayGanji - 오늘 일진 간지 (丁巳 등)
- * @param {string} guaKey    - 본괘 6비트 이진 키
- * @returns {{ rel, theme, interp, strength, strengthLabel }} | null
+ * 단일 간지 한 글자(천간 or 지지 오행)가 괘 오행에 미치는 점수
+ * 生·同 → +1 / 克 → -1 / 피克(극당함) → -0.5 / 무관 → 0
  */
-function getSipsung(ilgan, todayGanji, guaKey) {
-  if (!ilgan || !todayGanji || !guaKey) return null;
+function scoreOhaeng(srcOhaeng, guaOhaeng) {
+  if (!srcOhaeng || !guaOhaeng) return 0;
+  if (srcOhaeng === guaOhaeng)                        return  1;   // 동기(同氣)
+  if (SAENGSAENGGUK.生[srcOhaeng] === guaOhaeng)     return  1;   // 生해줌
+  if (SAENGSAENGGUK.克[srcOhaeng] === guaOhaeng)     return -1;   // 克함
+  if (SAENGSAENGGUK.克[guaOhaeng] === srcOhaeng)     return -0.5; // 극당함(쇠)
+  return 0;
+}
+
+function ganji2score(ganji, guaOhaeng, weight) {
+  if (!ganji || ganji.length < 2) return 0;
+  const go = CHUNGAN_OHAENG[ganji[0]] || null;
+  const jo = JIJI_OHAENG[ganji[1]]    || null;
+  return (scoreOhaeng(go, guaOhaeng) + scoreOhaeng(jo, guaOhaeng)) * weight;
+}
+
+/**
+ * 육효학 종합 왕쇠 판별
+ * @param {string} ilgan      - 사주 일간 (甲乙丙...)
+ * @param {string} ilgaoji    - 오늘 일진 간지 (丁巳 등)
+ * @param {string} wolgeon    - 이번달 월건 간지
+ * @param {string} seun       - 올해 세운 간지
+ * @param {string} guaKey     - 본괘 6비트 이진 키
+ * @returns {object|null}
+ */
+function getYukHyo(ilgan, ilgaoji, wolgeon, seun, guaKey) {
+  if (!ilgan || !ilgaoji || !guaKey) return null;
   const ilOhaeng = CHUNGAN_OHAENG[ilgan];
   if (!ilOhaeng) return null;
 
-  // ── 1단계: 본괘 상괘 오행으로 십성 결정 ──
+  // 1단계 — 본괘 상괘 오행 → 십성(일간 기준)
   const upperTri = GUA_UPPER_LOWER[guaKey.slice(3)] || '乾';
   const guaOhaeng = GUA_OHAENG[upperTri] || '金';
 
@@ -1037,49 +1178,52 @@ function getSipsung(ilgan, todayGanji, guaKey) {
   else if (SAENGSAENGGUK.生[guaOhaeng] === ilOhaeng) rel = '인성';
   else return null;
 
-  // ── 2단계: 일진 천간·지지가 상괘 오행에 미치는 영향 → 강도 산출 ──
-  const ganChar  = todayGanji[0];          // 천간 (丁)
-  const jiChar   = todayGanji[1];          // 지지 (巳)
-  const ganOhaeng = CHUNGAN_OHAENG[ganChar] || null;
-  const jiOhaeng  = JIJI_OHAENG[jiChar]    || null;
+  // 2단계 — 세운·월건·일진 가중 합산 (-9 ~ +9)
+  const seunScore   = ganji2score(seun,    guaOhaeng, 1); // 세운 ×1
+  const wolScore    = ganji2score(wolgeon, guaOhaeng, 2); // 월건 ×2
+  const ilScore     = ganji2score(ilgaoji, guaOhaeng, 3); // 일진 ×3
+  const total       = seunScore + wolScore + ilScore;
 
-  // 천간·지지 각각이 상괘를 어떻게 대하는지 점수화
-  // 生해주면 +1(왕), 同오행이면 +1(왕), 克하면 -1(쇠), 극당하면 0(평)
-  function score(iljinOhaeng) {
-    if (!iljinOhaeng) return 0;
-    if (iljinOhaeng === guaOhaeng)                        return 1;  // 동기(同氣) — 강화
-    if (SAENGSAENGGUK.生[iljinOhaeng] === guaOhaeng)     return 1;  // 生해줌 — 강화
-    if (SAENGSAENGGUK.克[iljinOhaeng] === guaOhaeng)     return -1; // 克함 — 약화
-    return 0; // 무관
-  }
-  const total = score(ganOhaeng) + score(jiOhaeng); // -2 ~ +2
+  // 3단계 — 왕쇠 등급
+  let strength, strengthLabel;
+  if      (total >=  5) { strength = 'strong';   strengthLabel = '왕(旺) — 강하게 발현'; }
+  else if (total >=  2) { strength = 'moderate'; strengthLabel = '상(相) — 발현';        }
+  else if (total >=  0) { strength = 'neutral';  strengthLabel = '휴(休) — 보통';        }
+  else if (total >= -3) { strength = 'weak';     strengthLabel = '수(囚) — 약화';        }
+  else                  { strength = 'blocked';  strengthLabel = '사(死) — 강하게 억제'; }
 
-  let strength, strengthLabel, strengthNote;
-  if (total >= 2) {
-    strength = 'strong';
-    strengthLabel = '강하게 발현';
-    strengthNote = `오늘 일진(${todayGanji})의 천간·지지가 모두 이 기운을 북돋아, ${rel} 테마가 매우 강하게 작용합니다.`;
-  } else if (total === 1) {
-    strength = 'moderate';
-    strengthLabel = '발현';
-    strengthNote = `오늘 일진(${todayGanji})이 이 기운을 부분적으로 지지하여, ${rel} 테마가 안정적으로 작용합니다.`;
-  } else if (total === 0) {
-    strength = 'neutral';
-    strengthLabel = '보통';
-    strengthNote = `오늘 일진(${todayGanji})은 이 기운에 중립적으로, ${rel} 테마가 평이하게 흐릅니다.`;
-  } else if (total === -1) {
-    strength = 'weak';
-    strengthLabel = '약화';
-    strengthNote = `오늘 일진(${todayGanji})이 이 기운을 일부 억제하여, ${rel} 테마가 온전히 발휘되기 어렵습니다. 무리하지 마십시오.`;
-  } else {
-    strength = 'blocked';
-    strengthLabel = '강하게 억제';
-    strengthNote = `오늘 일진(${todayGanji})의 천간·지지가 모두 이 기운을 억누르고 있습니다. ${rel} 테마를 억지로 밀기보다 때를 기다리는 것이 현명합니다.`;
+  // 세운·월건·일진별 한줄 설명
+  function ganji2note(ganji, weight, label) {
+    if (!ganji) return null;
+    const go = CHUNGAN_OHAENG[ganji[0]] || '?';
+    const jo = JIJI_OHAENG[ganji[1]]    || '?';
+    const s  = (scoreOhaeng(go, guaOhaeng) + scoreOhaeng(jo, guaOhaeng)) * weight;
+    if (s > 0)  return `${label}(${ganji}) ✚ 괘 기운을 북돋음`;
+    if (s < 0)  return `${label}(${ganji}) ✖ 괘 기운을 억제`;
+    return      `${label}(${ganji}) ─ 중립`;
   }
+
+  const notes = [
+    ganji2note(seun,    1, '세운'),
+    ganji2note(wolgeon, 2, '월건'),
+    ganji2note(ilgaoji, 3, '일진'),
+  ].filter(Boolean).join(' / ');
+
+  const strengthNote =
+    `세운(${seun||'?'}) · 월건(${wolgeon||'?'}) · 일진(${ilgaoji}) 종합: ${notes}. ` +
+    `${rel} 테마가 ${strengthLabel.split('—')[1]?.trim()||strengthLabel} 작용합니다.`;
 
   const base = SIPSUNG.find(s => s.rel === rel);
   if (!base) return null;
-  return { ...base, strength, strengthLabel, strengthNote };
+  return { ...base, strength, strengthLabel,
+    strengthNote, seun, wolgeon, ilgaoji,
+    guaOhaeng, total };
+}
+
+// 하위 호환 — 구버전 getSipsung 호출부 대응
+function getSipsung(ilgan, todayGanji, guaKey) {
+  const d = new Date();
+  return getYukHyo(ilgan, todayGanji, getWolgeon(d), getSeun(d.getFullYear()), guaKey);
 }
 
 /**
@@ -1328,34 +1472,53 @@ async function showResult(){
       </div>`;
   }
 
-  // 사주-주역 십성 매칭 (사주 점괘+유료+사주 보유자)
+  // 육효학 왕쇠 판별 (사주 점괘 + 유료 + 사주 보유자)
   let sipsungHtml = '';
   if(divType==='paid' && isPaid && UP?.saju) {
-    const ilgan = getIlgan(UP.saju);
-    const todayGanji = getTodayGanji();
-    const ss = getSipsung(ilgan, todayGanji, key);
+    const ilgan      = getIlgan(UP.saju);
+    const ilgaoji    = getTodayGanji();
+    const _today     = new Date();
+    const wolgeon    = getWolgeon(_today);
+    const seun       = getSeun(_today.getFullYear());
+    const ss         = getYukHyo(ilgan, ilgaoji, wolgeon, seun, key);
     if(ss && ilgan) {
       const ilOhaeng = CHUNGAN_OHAENG[ilgan] || '';
+      const bgMap = {strong:'rgba(200,146,42,.3)',moderate:'rgba(200,146,42,.15)',neutral:'rgba(255,255,255,.08)',weak:'rgba(139,32,32,.25)',blocked:'rgba(139,32,32,.4)'};
+      const clMap = {strong:'var(--goldl)',moderate:'var(--gold)',neutral:'var(--ink3)',weak:'#c87070',blocked:'#e08080'};
+      function gajiBadge(ganji, label) {
+        if(!ganji||ganji.length<2) return '';
+        const go = CHUNGAN_OHAENG[ganji[0]]||null;
+        const jo = JIJI_OHAENG[ganji[1]]||null;
+        const s  = scoreOhaeng(go,ss.guaOhaeng)+scoreOhaeng(jo,ss.guaOhaeng);
+        const icon = s>0?'✚':s<0?'✖':'─';
+        const col  = s>0?'#6dbf8a':s<0?'#e08080':'var(--ink3)';
+        return `<span style="font-size:10px;color:${col};margin-right:12px;letter-spacing:.5px;">${icon} ${label} <strong style="font-family:'Noto Serif KR',serif;">${ganji}</strong></span>`;
+      }
       sipsungHtml = `
         <div style="margin-top:20px;padding:16px 18px;background:linear-gradient(135deg,var(--ink) 0%,#2d2010 100%);border-radius:10px;border:1px solid rgba(200,146,42,.25);">
-          <p style="font-size:10px;letter-spacing:3px;color:var(--gold);margin-bottom:10px;">✦ 사주 × 주역 연동 — 오늘의 명리 테마</p>
+          <p style="font-size:10px;letter-spacing:3px;color:var(--gold);margin-bottom:10px;">✦ 육효학(六爻學) — 세운 · 월건 · 일진 왕쇠 판별</p>
           <div style="display:flex;align-items:flex-start;gap:14px;">
             <div style="text-align:center;flex-shrink:0;">
               <div style="font-family:'Noto Serif KR',serif;font-size:28px;color:var(--gold);line-height:1;">${ilgan}</div>
               <div style="font-size:9px;color:var(--ink3);margin-top:3px;letter-spacing:1px;">일간 · ${ilOhaeng}</div>
             </div>
             <div style="flex:1;">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
                 <span style="font-size:13px;font-weight:600;color:var(--goldl);">${ss.rel} (${ss.theme})</span>
-                <span style="font-size:10px;padding:2px 8px;border-radius:10px;letter-spacing:1px;
-                  background:${{strong:'rgba(200,146,42,.3)',moderate:'rgba(200,146,42,.15)',neutral:'rgba(255,255,255,.08)',weak:'rgba(139,32,32,.25)',blocked:'rgba(139,32,32,.4)'}[ss.strength]};
-                  color:${{strong:'var(--goldl)',moderate:'var(--gold)',neutral:'var(--ink3)',weak:'#c87070',blocked:'#e08080'}[ss.strength]};">
+                <span style="font-size:10px;padding:2px 10px;border-radius:10px;letter-spacing:1px;
+                  background:${bgMap[ss.strength]};color:${clMap[ss.strength]};">
                   ${ss.strengthLabel}
                 </span>
               </div>
-              <div style="font-size:12px;color:#c8b898;line-height:1.8;">${ss.interp}</div>
-              <div style="font-size:11px;color:var(--ink3);margin-top:8px;line-height:1.7;">${ss.strengthNote}</div>
-              ${todayGanji?`<div style="font-size:10px;color:var(--ink3);margin-top:6px;letter-spacing:1px;">오늘 일진: ${todayGanji}</div>`:''}
+              <div style="font-size:12px;color:#c8b898;line-height:1.8;margin-bottom:10px;">${ss.interp}</div>
+              <div style="margin-bottom:8px;">
+                ${gajiBadge(seun,   '세운')}
+                ${gajiBadge(wolgeon,'월건')}
+                ${gajiBadge(ilgaoji,'일진')}
+              </div>
+              <div style="font-size:11px;color:var(--ink3);line-height:1.8;border-top:1px solid rgba(255,255,255,.07);padding-top:8px;">
+                ${ss.strengthNote}
+              </div>
             </div>
           </div>
         </div>`;
@@ -1513,11 +1676,14 @@ function buildPrompt(q,gua,moving,key){
   // 사주-주역 연동 정보 (사주 점괘일 때만)
   const ilgan = (divType==='paid' && UP?.saju) ? getIlgan(UP.saju) : null;
   const todayGanji = divType==='paid' ? getTodayGanji() : null;
-  const ss = (ilgan && key) ? getSipsung(ilgan, todayGanji, key) : null;
+  const _pd = new Date();
+  const _wolgeon = divType==='paid' ? getWolgeon(_pd) : null;
+  const _seun    = divType==='paid' ? getSeun(_pd.getFullYear()) : null;
+  const ss = (ilgan && key) ? getYukHyo(ilgan, todayGanji, _wolgeon, _seun, key) : null;
   const sipsungLine = divType!=='paid'
     ? null
     : ss
-      ? `일간: ${ilgan}(${CHUNGAN_OHAENG[ilgan]||''}) / 오늘 일진: ${todayGanji||'미확인'} / 십성 테마: ${ss.rel}(${ss.theme}) / 발현 강도: ${ss.strengthLabel} / ${ss.strengthNote}`
+      ? `일간: ${ilgan}(${CHUNGAN_OHAENG[ilgan]||''}) / 세운: ${_seun||'?'} / 월건: ${_wolgeon||'?'} / 일진: ${todayGanji||'?'} / 십성: ${ss.rel}(${ss.theme}) / 왕쇠: ${ss.strengthLabel} / ${ss.strengthNote}`
       : '미입력 또는 산출 불가';
 
   return `당신은 주역(周易) 해설가입니다. 아래 점괘 데이터를 바탕으로 읽는 사람이 주역 지식 없이도 바로 이해할 수 있는 해설을 작성해 주세요.
@@ -1526,7 +1692,7 @@ function buildPrompt(q,gua,moving,key){
 📋 점괘 데이터
 ━━━━━━━━━━━━━━━━━━━━
 날짜: ${dateStr}
-${divType==='paid' ? `생년월일시: ${saju}\n` : ''}${sipsungLine !== null ? `사주×주역 연동: ${sipsungLine}\n` : ''}질문: "${q}"
+${divType==='paid' ? `생년월일시: ${saju}\n세운: ${_seun||'?'} / 월건: ${_wolgeon||'?'} / 일진: ${todayGanji||'?'}\n` : ''}${sipsungLine !== null ? `육효 왕쇠: ${sipsungLine}\n` : ''}질문: "${q}"
 본괘: ${gua.name} (${gua.hanja}) — ${gua.meaning}
 괘 핵심의미: ${gua.desc}
 키워드: ${gua.keyword}
@@ -1582,7 +1748,7 @@ ${moving.length>0
 ⚠️ 필수 주의사항
 ━━━━━━━━━━━━━━━━━━━━
 • 효사·괘사·동효·지괘·처세술·이기론 등 전문용어를 결과물에 그대로 노출하지 마세요. 풀어서 설명하거나 아예 쓰지 마세요.
-${sipsungLine ? '• 사주×주역 연동 정보가 있으면 "지금 당신에게는 ~한 에너지가 강하게 작용합니다" 식으로 자연스럽게 녹이세요.\n' : ''}• 각 카드의 핵심 키워드는 반드시 **볼드** 처리하세요.
+${sipsungLine ? '• 육효 왕쇠 정보(세운·월건·일진)가 있으면 "지금 이 시기는 ~한 기운이 작용합니다" 식으로 자연스럽게 녹이세요. 전문용어(왕·쇠·월건 등)는 쓰지 마세요.\n' : ''}• 각 카드의 핵심 키워드는 반드시 **볼드** 처리하세요.
 • "길합니다", "흉합니다" 같은 단정 표현은 쓰지 마세요.`;
 }
 
@@ -1714,8 +1880,7 @@ const CONC=[
     <p>주역점은 생년월일이 필요 없습니다. "지금 내가 고민하는 이 상황에서 어떤 태도를 취해야 하는가"라는 현재의 구체적 질문에 답합니다. 조선의 왕들이 전쟁이나 외교 같은 중요한 국가적 결정 앞에서 주역점을 친 이유가 여기 있습니다. 타고난 운명이 아니라, 지금 이 순간 어떻게 행동할 것인가를 묻는 것입니다.</p>
     <div class="hl">사주팔자가 인생 전체의 기상 예보라면, 주역은 오늘 우산을 들고 나가야 할지, 처마 밑에서 기다려야 할지를 알려주는 현재의 나침반입니다.</div>
     <h4>이 서비스에서 두 가지를 결합하는 이유</h4>
-    <p>사주로 인생의 큰 흐름(대운)을 파악하고, 주역점으로 지금 이 순간의 구체적 형세를 읽으면 훨씬 입체적인 통찰을 얻을 수 있습니다. 사주 기반 정밀 점괘는 이 두 가지를 연결해 "지금 내 대운의 어느 지점에서 이 형세가 나왔는가"를 함께 해석합니다.</p>
-  `},
+    <p>사주로 일간(日干, 나를 나타내는 기준 오행)을 산출하고, 주역으로 뽑은 본괘(상괘 오행)에 대해 올해 세운(歲運) · 이달 월건(月建) · 오늘 일진(日辰)이 그 기운을 얼마나 북돋거나 억제하는지를 판별합니다. 이것이 육효학(六爻學)의 왕쇠(旺衰) 판별법입니다. 같은 괘가 나와도 세운이 相生이면 길함이 배가되고, 일진이 相克이면 현실에서 방해가 생깁니다. 정밀 점괘는 이 맥락을 함께 제공합니다.</p>`},
   {e:'05 · 학문',t:'주역의 학문적 뿌리 — 성리학과 이기론',b:`
     <p>주역은 단순한 점술 도구가 아니라 동양 철학 전체의 뿌리입니다. 주역에서 출발한 사상의 흐름을 이해하면 점괘 해석의 깊이가 전혀 달라집니다.</p>
     <h4>주역 → 성리학으로</h4>
