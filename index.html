@@ -413,33 +413,33 @@ body.iab-active{padding-top:84px;}
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px;">
 
     <!-- 세운·월건 (월 구독 이상) -->
-    <div style="border-radius:var(--r);border:1px solid var(--paper3);background:#fff;padding:24px;position:relative;overflow:hidden;cursor:pointer;" onclick="openPreviewCard('sub')">
+    <div style="border-radius:var(--r);border:1px solid var(--paper3);background:#fff;padding:24px;position:relative;overflow:hidden;cursor:pointer;" onclick="openPreviewCard('sub','seun')">
       <div style="font-size:10px;letter-spacing:2px;color:var(--fg);background:var(--fb);padding:2px 10px;border-radius:10px;display:inline-block;margin-bottom:14px;">월 구독 이상</div>
       <div style="font-size:28px;margin-bottom:10px;">🌿</div>
       <h3 style="font-family:'Noto Serif KR',serif;font-size:16px;font-weight:600;color:var(--ink);margin-bottom:8px;">이달의 세운 · 월건 해설</h3>
       <p style="font-size:12px;color:var(--ink3);line-height:1.7;margin-bottom:16px;">올해의 기운(세운)과 이번 달의 흐름(월건)이 내 점괘에 어떻게 작용하는지 자동으로 풀어드립니다.</p>
-      <div style="background:var(--paper2);border-radius:6px;padding:10px 14px;filter:blur(3px);pointer-events:none;font-size:12px;color:var(--ink2);line-height:1.8;">2026년 세운 丙午 — 火 기운이 강하게 작용하는 해. 이달 월건 壬午는...</div>
-      <div style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--gold);">구독하면 열람 →</div>
+      <div id="pvSeunBody" style="background:var(--paper2);border-radius:6px;padding:10px 14px;filter:blur(3px);pointer-events:none;font-size:12px;color:var(--ink2);line-height:1.8;">2026년 세운 丙午 — 火 기운이 강하게 작용하는 해. 이달 월건 壬午는...</div>
+      <div id="pvSeunCta" style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--gold);">구독하면 열람 →</div>
     </div>
 
     <!-- 연·월 운세 (연간 구독) -->
-    <div style="border-radius:var(--r);border:1px solid var(--gold);background:#fff;padding:24px;position:relative;overflow:hidden;cursor:pointer;" onclick="openPreviewCard('year')">
+    <div style="border-radius:var(--r);border:1px solid var(--gold);background:#fff;padding:24px;position:relative;overflow:hidden;cursor:pointer;" onclick="openPreviewCard('year','yearse')">
       <div style="font-size:10px;letter-spacing:2px;color:var(--pb);background:var(--pp);padding:2px 10px;border-radius:10px;display:inline-block;margin-bottom:14px;">연간 구독 전용</div>
       <div style="font-size:28px;margin-bottom:10px;">📅</div>
       <h3 style="font-family:'Noto Serif KR',serif;font-size:16px;font-weight:600;color:var(--ink);margin-bottom:8px;">연 · 월 운세</h3>
       <p style="font-size:12px;color:var(--ink3);line-height:1.7;margin-bottom:16px;">내 사주 일간과 올해 세운을 결합해 연간 흐름과 월별 기운의 강약을 자동으로 분석합니다.</p>
-      <div style="background:var(--paper2);border-radius:6px;padding:10px 14px;filter:blur(3px);pointer-events:none;font-size:12px;color:var(--ink2);line-height:1.8;">일간 甲木 기준 — 올해 丙午년은 식상(食傷) 운으로 창의·표현의 기운이...</div>
-      <div style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--gold);">연간 구독하면 열람 →</div>
+      <div id="pvYearBody" style="background:var(--paper2);border-radius:6px;padding:10px 14px;filter:blur(3px);pointer-events:none;font-size:12px;color:var(--ink2);line-height:1.8;">일간 甲木 기준 — 올해 丙午년은 식상(食傷) 운으로 창의·표현의 기운이...</div>
+      <div id="pvYearCta" style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--gold);">연간 구독하면 열람 →</div>
     </div>
 
     <!-- 인생 본괘 + 육룡 (연간 구독) -->
-    <div style="border-radius:var(--r);border:1px solid var(--gold);background:#fff;padding:24px;position:relative;overflow:hidden;cursor:pointer;" onclick="openPreviewCard('year')">
+    <div style="border-radius:var(--r);border:1px solid var(--gold);background:#fff;padding:24px;position:relative;overflow:hidden;cursor:pointer;" onclick="openPreviewCard('year','yukryong')">
       <div style="font-size:10px;letter-spacing:2px;color:var(--pb);background:var(--pp);padding:2px 10px;border-radius:10px;display:inline-block;margin-bottom:14px;">연간 구독 전용</div>
       <div style="font-size:28px;margin-bottom:10px;">☯</div>
       <h3 style="font-family:'Noto Serif KR',serif;font-size:16px;font-weight:600;color:var(--ink);margin-bottom:8px;">인생 본괘 · 육룡 단계 진단</h3>
       <p style="font-size:12px;color:var(--ink3);line-height:1.7;margin-bottom:16px;">생년월일로 산출한 인생 본괘와 지금 내가 건괘 육룡 중 어느 단계에 있는지 진단합니다.</p>
-      <div style="background:var(--paper2);border-radius:6px;padding:10px 14px;filter:blur(3px);pointer-events:none;font-size:12px;color:var(--ink2);line-height:1.8;">인생 본괘: 풍뢰익(風雷益) — 더함의 시기. 현재 육룡 3단계 군자종일건건...</div>
-      <div style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--gold);">연간 구독하면 열람 →</div>
+      <div id="pvYukBody" style="background:var(--paper2);border-radius:6px;padding:10px 14px;filter:blur(3px);pointer-events:none;font-size:12px;color:var(--ink2);line-height:1.8;">인생 본괘: 풍뢰익(風雷益) — 더함의 시기. 현재 육룡 3단계 군자종일건건...</div>
+      <div id="pvYukCta" style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--gold);">연간 구독하면 열람 →</div>
     </div>
 
   </div>
@@ -898,21 +898,53 @@ async function loadUP(uid){
   UP = s.val()||{};
   updateCnt();
 }
-function openPreviewCard(req){
+function openPreviewCard(req, type){
   // req: 'sub' (월 구독 이상) | 'year' (연간 구독)
+  // type: 'seun' | 'yearse' | 'yukryong' — 등급 충족 시 바로 열 상세 팝업
   if(!CU){ openMo('loginMo'); toast('로그인 후 이용 가능합니다.'); return; }
   const sub = UP?.subscribed||false;
   const isYear = sub && (UP?.subType === 'year');
   const ok = req==='year' ? isYear : sub;
   if(ok){
-    openMypage();
-    openMo('mypageMo');
+    openMypage(); // window._seunDetail / _yearDetail / _yukDetail 채움
+    if(type==='yearse' && !window._yearDetail){
+      toast('사주 정보를 먼저 입력해 주세요.');
+      openMo('sajuMo');
+      return;
+    }
+    if(type==='yukryong' && !window._yukDetail){
+      toast('사주 정보를 먼저 입력해 주세요.');
+      openMo('sajuMo');
+      return;
+    }
+    openDetailMo(type);
   } else if(req==='year' && sub){
     toast('연간 구독 전용 콘텐츠입니다. 연간 구독으로 업그레이드해 주세요.');
     openPayMo('subscribe_year');
   } else {
     openPayMo(req==='year' ? 'subscribe_year' : 'subscribe');
   }
+}
+
+function unlockPreviewBoxes(){
+  const sub = UP?.subscribed||false;
+  const isYear = sub && (UP?.subType === 'year');
+  const set = (bodyId, ctaId, unlocked, ctaText)=>{
+    const body = document.getElementById(bodyId);
+    const cta  = document.getElementById(ctaId);
+    if(!body||!cta) return;
+    if(unlocked){
+      body.style.filter = 'none';
+      body.style.pointerEvents = 'auto';
+    } else {
+      body.style.filter = 'blur(3px)';
+      body.style.pointerEvents = 'none';
+    }
+    cta.textContent = ctaText;
+  };
+  set('pvSeunBody','pvSeunCta', sub,  sub  ? '열람하기 →' : '구독하면 열람 →');
+  set('pvYearBody','pvYearCta', isYear, isYear ? '열람하기 →' : '연간 구독하면 열람 →');
+  set('pvYukBody','pvYukCta',  isYear, isYear ? '열람하기 →' : '연간 구독하면 열람 →');
 }
 
 function unlockDeepContent(){
@@ -937,6 +969,7 @@ function updateCnt(){
   const cnt = UP?.remainCount||0;
   const usedToday = UP?.freeUsedToday||0;
   unlockDeepContent();
+  unlockPreviewBoxes();
   const freeLeft = Math.max(0, 3 - usedToday);
   let label;
   if(sub) label = '무제한';
