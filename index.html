@@ -816,8 +816,47 @@ async function confirmWithdraw(){
   }
 }
 
-/* ══ 64괘 전체 데이터 ══ */
-const G64=[
+/* ══ 64괘 + 384효사 DB — fetch 방식 ══ */
+let G64 = [];           // 런타임 배열 (fetch 후 채워짐)
+let ICHING384 = {};     // { "1": { hex, korean_name, lines:{ "1":{position,text_ko,comment_ko}, ... } }, ... }
+let _ichingReady = false;
+let _ichingPromise = null;
+
+async function ensureIching() {
+  if (_ichingReady) return;
+  if (_ichingPromise) return _ichingPromise;
+  _ichingPromise = fetch('/changetime/data/iching_384_korean.json')
+    .then(r => { if (!r.ok) throw new Error('iching_384 fetch 실패: ' + r.status); return r.json(); })
+    .then(data => {
+      ICHING384 = data;
+      // G64 배열 재구성 (id 1~64 순서)
+      G64 = Array.from({length: 64}, (_, i) => {
+        const entry = data[String(i + 1)];
+        if (!entry) return null;
+        return {
+          id:      i + 1,
+          name:    _G64_FALLBACK[i]?.name    || entry.korean_name || '',
+          hanja:   _G64_FALLBACK[i]?.hanja   || entry.trad_chinese || '',
+          meaning: _G64_FALLBACK[i]?.meaning  || '',
+          keyword: _G64_FALLBACK[i]?.keyword  || '',
+          desc:    _G64_FALLBACK[i]?.desc     || '',
+          action:  _G64_FALLBACK[i]?.action   || '',
+        };
+      });
+      _ichingReady = true;
+      console.log('[주역DB] 384효사 로드 완료 —', Object.keys(ICHING384).length, '괘');
+    })
+    .catch(err => {
+      console.warn('[주역DB] fetch 실패, 폴백 데이터 사용:', err.message);
+      G64 = [..._G64_FALLBACK];
+      _ichingReady = true;
+    });
+  return _ichingPromise;
+}
+ensureIching();
+
+/* ══ 64괘 기본 데이터 (폴백 · 괘명/키워드/행동지침) ══ */
+const _G64_FALLBACK=[
   {id:1,name:"중천건",hanja:"重天乾",meaning:"하늘",keyword:"강건함",desc:"순수한 에너지와 추진력, 창조적 시작",action:"자신의 능력을 믿고 당당히 나아가십시오. 정점에서의 겸손이 다음 상승을 만듭니다."},
   {id:2,name:"중지곤",hanja:"重地坤",meaning:"땅",keyword:"유순함",desc:"포용력과 수용성, 서포트와 헌신",action:"지금은 주도보다 협력과 포용을 택하십시오. 묵묵히 맡은 바를 다하면 반드시 결실이 옵니다."},
   {id:3,name:"수뢰둔",hanja:"水雷屯",meaning:"풀",keyword:"어려운 시작",desc:"어려움 속에서 때를 기다리는 인내",action:"억지로 밀고 나가지 마십시오. 묵묵히 실력을 쌓고 조력자를 구하십시오. 기다림이 지혜입니다."},
@@ -1229,6 +1268,7 @@ function resetCoins(){['c1','c2','c3'].forEach(id=>{const e=document.getElementB
 
 /* ══ 결과 ══ */
 async function showResult(){
+  await ensureIching(); // 384효사 DB 로드 보장
   const key=throws.map(s=>(s===7||s===9)?'1':'0').join('');
   const moving=throws.map((s,i)=>(s===6||s===9)?i+1:null).filter(Boolean);
   const gua=getGua(key);
@@ -1282,17 +1322,31 @@ async function showResult(){
     }
   }
 
-  // 동효 해석
-  const movHtml = moving.length>0 ? `
+  // 동효 해석 (384효사 DB 연결)
+  let movHtml = '';
+  if (moving.length > 0) {
+    const lineEntries = ICHING384[String(gua.id)];
+    let lineHtml = '';
+    if (isPaid && lineEntries && lineEntries.lines) {
+      lineHtml = moving.map(y => {
+        const line = lineEntries.lines[String(y)];
+        if (!line) return '';
+        return `<div style="margin-top:14px;padding:14px 16px;background:var(--paper2);border-radius:8px;border-left:3px solid var(--gold);">
+          <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">${y}효 (${line.position})</p>
+          <p style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;font-family:'Noto Serif KR',serif;">${line.text_ko}</p>
+          <p style="font-size:13px;color:var(--ink2);line-height:1.8;">${line.comment_ko}</p>
+        </div>`;
+      }).join('');
+    }
+    movHtml = `
     <div style="margin-top:20px;">
       <p class="rstit">동효 (動爻) — 변화를 예고하는 자리</p>
       <p class="rtxt">${moving.map(y=>y+'효').join(', ')}에서 변화의 기운이 감지됩니다.
-      ${isPaid
-        ? '이 자리는 지금 상황에서 가장 역동적으로 움직이는 지점입니다. 변화를 두려워하지 말되, 그 변화가 어떤 방향으로 흘러가는지를 냉정하게 읽어야 합니다.'
-        : '<span style="color:var(--pb);font-size:12px;">(효사 상세 해석은 유료 기능입니다)</span>'}
+      ${isPaid ? '' : '<span style="color:var(--pb);font-size:12px;">(효사 상세 해석은 유료 기능입니다)</span>'}
       </p>
+      ${lineHtml}
       ${isPaid ? jiGuaHtml : ''}
-    </div>` : '';
+    </div>`;
 
   // 유료 AI 프롬프트
   let paidHtml='';
@@ -1411,7 +1465,10 @@ function buildPrompt(q,gua,moving,key){
   const saju=UP?.saju
     ?`${UP.saju.year}년 ${UP.saju.month}월 ${UP.saju.day}일 ${UP.saju.hour} (${UP.saju.calType==='lunar'?'음력':'양력'})`
     :'미입력';
-  const movStr=moving.length>0?moving.map(y=>y+'효').join(', '):'없음';
+  const movStr=moving.length>0?moving.map(y=>{
+    const line = ICHING384[String(gua.id)]?.lines?.[String(y)];
+    return line ? `${y}효(${line.position}): ${line.text_ko}` : `${y}효`;
+  }).join('\n  '):'없음';
   // 사주-주역 연동 정보 (사주 점괘일 때만)
   const ilgan = (divType==='paid' && UP?.saju) ? getIlgan(UP.saju) : null;
   const todayGanji = divType==='paid' ? getTodayGanji() : null;
