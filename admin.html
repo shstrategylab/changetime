@@ -564,7 +564,7 @@ async function confirmApprove(){
     const {cnt,isSub,subType}=prodToGrant(p.product);
     if(isSub){
       updates['users/'+p.uid+'/subscribed']=true;
-      updates['users/'+p.uid+'/subscribeType']=subType;
+      updates['users/'+p.uid+'/subType']=subType;
       updates['users/'+p.uid+'/subscribeStart']=Date.now();
     } else {
       const uSnap=await db.ref('users/'+p.uid+'/remainCount').once('value');
