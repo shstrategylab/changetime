@@ -699,7 +699,7 @@ body.iab-active{padding-top:84px;}
 
     <!-- ── 월 구독 이상: 세운·월건 카드 ── -->
     <div id="mpSeunBox" style="display:none;margin-bottom:12px;">
-      <div onclick="openDetailMo('seun')" style="cursor:pointer;background:var(--paper2);border:1px solid var(--paper3);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+      <div onclick="openDetailNewTab('seun')" style="cursor:pointer;background:var(--paper2);border:1px solid var(--paper3);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
         <div>
           <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:4px;">이달의 기운</p>
           <strong style="font-size:14px;font-family:'Noto Serif KR',serif;color:var(--ink);" id="mpSeunSummary">세운 · 월건 해설</strong>
@@ -711,7 +711,7 @@ body.iab-active{padding-top:84px;}
 
     <!-- ── 연간 구독 전용: 연·월 운세 카드 ── -->
     <div id="mpYearUnseBox" style="display:none;margin-bottom:12px;">
-      <div onclick="openDetailMo('yearse')" style="cursor:pointer;background:var(--paper2);border:1px solid var(--paper3);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+      <div onclick="openDetailNewTab('yearse')" style="cursor:pointer;background:var(--paper2);border:1px solid var(--paper3);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
         <div>
           <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:4px;">연간 전용 · 연 · 월 운세</p>
           <strong style="font-size:14px;font-family:'Noto Serif KR',serif;color:var(--ink);" id="mpYearSummary">올해의 흐름 · 월별 기운</strong>
@@ -723,7 +723,7 @@ body.iab-active{padding-top:84px;}
 
     <!-- ── 연간 구독 전용: 인생 본괘 + 육룡 카드 ── -->
     <div id="mpYukryongBox" style="display:none;margin-bottom:20px;">
-      <div onclick="openDetailMo('yukryong')" style="cursor:pointer;background:var(--ink);border:1px solid rgba(200,184,152,.2);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 16px rgba(0,0,0,.2)'" onmouseout="this.style.boxShadow=''">
+      <div onclick="openDetailNewTab('yukryong')" style="cursor:pointer;background:var(--ink);border:1px solid rgba(200,184,152,.2);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 16px rgba(0,0,0,.2)'" onmouseout="this.style.boxShadow=''">
         <div>
           <p style="font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:4px;">연간 전용 · 인생 본괘 · 육룡</p>
           <strong style="font-size:14px;font-family:'Noto Serif KR',serif;color:#e8d8b8;" id="mpYukSummary">본괘 · 육룡 단계 진단</strong>
@@ -1009,6 +1009,46 @@ auth.getRedirectResult().then(async result => {
 async function doLogout(){ await auth.signOut(); toast('로그아웃되었습니다.'); }
 
 /* ══ 마이페이지 ══ */
+/* ── 마이페이지 상세 → 새 탭 열기 ── */
+function openDetailNewTab(type){
+  // window._seunDetail / _yearDetail / _yukDetail 데이터를 sessionStorage에 저장 후 새 탭
+  try {
+    if(type==='seun'   && window._seunDetail)   sessionStorage.setItem('_seunDetail',   JSON.stringify(window._seunDetail));
+    if(type==='yearse' && window._yearDetail)   sessionStorage.setItem('_yearDetail',   JSON.stringify(window._yearDetail));
+    if(type==='yukryong' && window._yukDetail)  sessionStorage.setItem('_yukDetail',    JSON.stringify(window._yukDetail));
+  } catch(e){}
+  const url = location.href.replace(/#.*$/,'') + '#detail-' + type;
+  window.open(url, '_blank');
+}
+
+/* ── 새 탭에서 hash 감지 → 해당 상세 모달 자동 오픈 ── */
+(function(){
+  const hash = location.hash;
+  if(!hash.startsWith('#detail-')) return;
+  const type = hash.replace('#detail-','');
+  // 데이터 복원
+  try {
+    const sd = sessionStorage.getItem('_seunDetail');
+    const yd = sessionStorage.getItem('_yearDetail');
+    const ud = sessionStorage.getItem('_yukDetail');
+    if(sd) window._seunDetail  = JSON.parse(sd);
+    if(yd) window._yearDetail  = JSON.parse(yd);
+    if(ud) window._yukDetail   = JSON.parse(ud);
+  } catch(e){}
+
+  // DOM 로드 완료 후 모달 열기
+  function tryOpen(){
+    if(type==='seun')      openDetailMo('seun');
+    else if(type==='yearse')   openDetailMo('yearse');
+    else if(type==='yukryong') openDetailMo('yukryong');
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', ()=> setTimeout(tryOpen, 400));
+  } else {
+    setTimeout(tryOpen, 400);
+  }
+})();
+
 function openDetailMo(type){
   if(type==='seun' && window._seunDetail){
     const {seun,wolgeon,seunOh,wolOh,OHNAMES,OHLONG,WOLGEONLONG} = window._seunDetail;
