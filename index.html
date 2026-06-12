@@ -999,42 +999,87 @@ const SIPSUNG = [
    interp:'나를 지탱하고 도와주는 에너지가 들어옵니다. 공부·자격증·계약서 작성에 유리하며 귀인이나 멘토를 만나 시야가 넓어질 수 있습니다.'}
 ];
 
-// 생성(相生) 관계: 木→火→土→金→水→木
+// 생극(相生·相克) 관계
 const SAENGSAENGGUK = {
   生: {木:'火',火:'土',土:'金',金:'水',水:'木'},
   克: {木:'土',火:'金',土:'水',金:'木',水:'火'}
 };
 
+// 지지(地支) 오행
+const JIJI_OHAENG = {
+  子:'水',丑:'土',寅:'木',卯:'木',辰:'土',巳:'火',
+  午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水'
+};
+
 /**
- * 일간(日干) 오행과 오늘 괘 오행으로 십성(十星) 도출
- * @param {string} ilgan - 일간 천간 (甲乙丙...)
- * @param {string} todayGanji - 오늘 일진 간지 (丙辰 등)
- * @param {string} guaKey - 6비트 이진 키 (본괘)
+ * 1단계: 일간 vs 상괘 오행 → 십성(十星) 결정  [주역 영역]
+ * 2단계: 일진 천간·지지가 상괘를 生/克/同 → 십성 발현 강도 결정  [사주 영역]
+ *
+ * @param {string} ilgan     - 사주 일간 천간 (甲乙丙...)
+ * @param {string} todayGanji - 오늘 일진 간지 (丁巳 등)
+ * @param {string} guaKey    - 본괘 6비트 이진 키
+ * @returns {{ rel, theme, interp, strength, strengthLabel }} | null
  */
 function getSipsung(ilgan, todayGanji, guaKey) {
   if (!ilgan || !todayGanji || !guaKey) return null;
   const ilOhaeng = CHUNGAN_OHAENG[ilgan];
   if (!ilOhaeng) return null;
 
-  // 오늘 괘 상괘 오행으로 매칭 (일진 간지 기준 + 괘 상괘 오행 결합)
+  // ── 1단계: 본괘 상괘 오행으로 십성 결정 ──
   const upperTri = GUA_UPPER_LOWER[guaKey.slice(3)] || '乾';
   const guaOhaeng = GUA_OHAENG[upperTri] || '金';
 
   let rel;
-  if (ilOhaeng === guaOhaeng) {
-    rel = '비겁';
-  } else if (SAENGSAENGGUK.生[ilOhaeng] === guaOhaeng) {
-    rel = '식상';
-  } else if (SAENGSAENGGUK.克[ilOhaeng] === guaOhaeng) {
-    rel = '재성';
-  } else if (SAENGSAENGGUK.克[guaOhaeng] === ilOhaeng) {
-    rel = '관성';
-  } else if (SAENGSAENGGUK.生[guaOhaeng] === ilOhaeng) {
-    rel = '인성';
-  } else {
-    return null;
+  if (ilOhaeng === guaOhaeng)                        rel = '비겁';
+  else if (SAENGSAENGGUK.生[ilOhaeng] === guaOhaeng) rel = '식상';
+  else if (SAENGSAENGGUK.克[ilOhaeng] === guaOhaeng) rel = '재성';
+  else if (SAENGSAENGGUK.克[guaOhaeng] === ilOhaeng) rel = '관성';
+  else if (SAENGSAENGGUK.生[guaOhaeng] === ilOhaeng) rel = '인성';
+  else return null;
+
+  // ── 2단계: 일진 천간·지지가 상괘 오행에 미치는 영향 → 강도 산출 ──
+  const ganChar  = todayGanji[0];          // 천간 (丁)
+  const jiChar   = todayGanji[1];          // 지지 (巳)
+  const ganOhaeng = CHUNGAN_OHAENG[ganChar] || null;
+  const jiOhaeng  = JIJI_OHAENG[jiChar]    || null;
+
+  // 천간·지지 각각이 상괘를 어떻게 대하는지 점수화
+  // 生해주면 +1(왕), 同오행이면 +1(왕), 克하면 -1(쇠), 극당하면 0(평)
+  function score(iljinOhaeng) {
+    if (!iljinOhaeng) return 0;
+    if (iljinOhaeng === guaOhaeng)                        return 1;  // 동기(同氣) — 강화
+    if (SAENGSAENGGUK.生[iljinOhaeng] === guaOhaeng)     return 1;  // 生해줌 — 강화
+    if (SAENGSAENGGUK.克[iljinOhaeng] === guaOhaeng)     return -1; // 克함 — 약화
+    return 0; // 무관
   }
-  return SIPSUNG.find(s => s.rel === rel) || null;
+  const total = score(ganOhaeng) + score(jiOhaeng); // -2 ~ +2
+
+  let strength, strengthLabel, strengthNote;
+  if (total >= 2) {
+    strength = 'strong';
+    strengthLabel = '강하게 발현';
+    strengthNote = `오늘 일진(${todayGanji})의 천간·지지가 모두 이 기운을 북돋아, ${rel} 테마가 매우 강하게 작용합니다.`;
+  } else if (total === 1) {
+    strength = 'moderate';
+    strengthLabel = '발현';
+    strengthNote = `오늘 일진(${todayGanji})이 이 기운을 부분적으로 지지하여, ${rel} 테마가 안정적으로 작용합니다.`;
+  } else if (total === 0) {
+    strength = 'neutral';
+    strengthLabel = '보통';
+    strengthNote = `오늘 일진(${todayGanji})은 이 기운에 중립적으로, ${rel} 테마가 평이하게 흐릅니다.`;
+  } else if (total === -1) {
+    strength = 'weak';
+    strengthLabel = '약화';
+    strengthNote = `오늘 일진(${todayGanji})이 이 기운을 일부 억제하여, ${rel} 테마가 온전히 발휘되기 어렵습니다. 무리하지 마십시오.`;
+  } else {
+    strength = 'blocked';
+    strengthLabel = '강하게 억제';
+    strengthNote = `오늘 일진(${todayGanji})의 천간·지지가 모두 이 기운을 억누르고 있습니다. ${rel} 테마를 억지로 밀기보다 때를 기다리는 것이 현명합니다.`;
+  }
+
+  const base = SIPSUNG.find(s => s.rel === rel);
+  if (!base) return null;
+  return { ...base, strength, strengthLabel, strengthNote };
 }
 
 /**
@@ -1300,9 +1345,17 @@ async function showResult(){
               <div style="font-size:9px;color:var(--ink3);margin-top:3px;letter-spacing:1px;">일간 · ${ilOhaeng}</div>
             </div>
             <div style="flex:1;">
-              <div style="font-size:13px;font-weight:600;color:var(--goldl);margin-bottom:5px;">${ss.rel} (${ss.theme})</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+                <span style="font-size:13px;font-weight:600;color:var(--goldl);">${ss.rel} (${ss.theme})</span>
+                <span style="font-size:10px;padding:2px 8px;border-radius:10px;letter-spacing:1px;
+                  background:${{strong:'rgba(200,146,42,.3)',moderate:'rgba(200,146,42,.15)',neutral:'rgba(255,255,255,.08)',weak:'rgba(139,32,32,.25)',blocked:'rgba(139,32,32,.4)'}[ss.strength]};
+                  color:${{strong:'var(--goldl)',moderate:'var(--gold)',neutral:'var(--ink3)',weak:'#c87070',blocked:'#e08080'}[ss.strength]};">
+                  ${ss.strengthLabel}
+                </span>
+              </div>
               <div style="font-size:12px;color:#c8b898;line-height:1.8;">${ss.interp}</div>
-              ${todayGanji?`<div style="font-size:10px;color:var(--ink3);margin-top:8px;letter-spacing:1px;">오늘 일진: ${todayGanji}</div>`:''}
+              <div style="font-size:11px;color:var(--ink3);margin-top:8px;line-height:1.7;">${ss.strengthNote}</div>
+              ${todayGanji?`<div style="font-size:10px;color:var(--ink3);margin-top:6px;letter-spacing:1px;">오늘 일진: ${todayGanji}</div>`:''}
             </div>
           </div>
         </div>`;
@@ -1464,7 +1517,7 @@ function buildPrompt(q,gua,moving,key){
   const sipsungLine = divType!=='paid'
     ? null
     : ss
-      ? `일간: ${ilgan}(${CHUNGAN_OHAENG[ilgan]||''}) / 오늘 일진: ${todayGanji||'미확인'} / 십성 테마: ${ss.rel}(${ss.theme})`
+      ? `일간: ${ilgan}(${CHUNGAN_OHAENG[ilgan]||''}) / 오늘 일진: ${todayGanji||'미확인'} / 십성 테마: ${ss.rel}(${ss.theme}) / 발현 강도: ${ss.strengthLabel} / ${ss.strengthNote}`
       : '미입력 또는 산출 불가';
 
   return `당신은 주역(周易) 해설가입니다. 아래 점괘 데이터를 바탕으로 읽는 사람이 주역 지식 없이도 바로 이해할 수 있는 해설을 작성해 주세요.
@@ -1499,7 +1552,7 @@ ${divType==='paid' ? `생년월일시: ${saju}\n` : ''}${sipsungLine !== null ? 
 ## 🔀 지금 변하고 있는 것
 **핵심 키워드: (1~2개, 예: 균열 / 전환점)**
 ${moving.length>0
-  ? `${movStr} 자리에서 변화가 일어나고 있습니다. 이 변화가 질문자에게 실제로 무엇을 의미하는지, 지금 어떤 지점이 흔들리거나 달라지고 있는지를 2~3문장으로 설명하세요. "효사", "동효" 같은 용어는 쓰지 마세요.`
+  ? `[참고 — 변화가 감지된 자리의 메시지]\n${movStr}\n\n위 메시지를 참고해, 이 변화가 질문자에게 실제로 무엇을 의미하는지, 지금 어떤 지점이 흔들리거나 달라지고 있는지를 2~3문장으로 설명하세요. "효사", "동효" 같은 용어는 쓰지 마세요.`
   : `현재는 안정된 상태입니다. 변화보다 유지가 핵심인 지금 이 국면이 질문자에게 무엇을 의미하는지 2~3문장으로 설명하세요.`}
 
 ---
