@@ -894,7 +894,7 @@ let _mansePromise = null;     // 중복 fetch 방지
 async function ensureManse() {
   if (_manseReady) return;
   if (_mansePromise) return _mansePromise;
-  _mansePromise = fetch('/data/manse_100_db.json')
+  _mansePromise = fetch('/changetime/data/manse_100_db.json')
     .then(r => {
       if (!r.ok) throw new Error('manse_100_db fetch 실패: ' + r.status);
       return r.json();
