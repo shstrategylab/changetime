@@ -329,8 +329,17 @@ tr:hover td{background:var(--paper);}
       </div>
       <div class="card">
         <div class="card-head">
-          <div><h3>사용 기록</h3><p>최근 200건 표시</p></div>
-          <button class="btn-refresh" onclick="loadRecords()">새로고침</button>
+          <div><h3>사용 기록</h3><p id="recordCountLabel">최근 20건 표시</p></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select id="recordLimit" onchange="renderRecords()" style="padding:6px 10px;border:1px solid var(--paper3);border-radius:6px;font-size:12px;font-family:'Noto Sans KR',sans-serif;color:var(--ink2);background:#fff;">
+              <option value="20" selected>20개</option>
+              <option value="50">50개</option>
+              <option value="100">100개</option>
+              <option value="200">200개</option>
+              <option value="all">전체</option>
+            </select>
+            <button class="btn-refresh" onclick="loadRecords()">새로고침</button>
+          </div>
         </div>
         <div id="recordTableWrap">
           <div class="empty"><div class="ico">🔮</div><p>데이터 로딩 중...</p></div>
@@ -745,11 +754,28 @@ async function loadRecords(){
   }
 
   if(!recordsData.length){el.innerHTML='<div class="empty"><div class="ico">🔮</div><p>점괘 기록이 없습니다.</p></div>';return;}
+  renderRecords();
+  }catch(err){
+    console.error('loadRecords 오류:',err);
+    if(statsEl) statsEl.innerHTML=`<span style="color:var(--red);">통계 로딩 실패: ${esc(err.message)}</span>`;
+    if(el) el.innerHTML=`<div class="empty"><div class="ico">⚠️</div><p>데이터 로딩 실패: ${esc(err.message)}</p><p style="font-size:11px;color:var(--ink3);margin-top:6px;">Firebase 권한(rules) 또는 네트워크 문제일 수 있습니다.</p></div>`;
+  }
+}
+
+function renderRecords(){
+  const el=document.getElementById('recordTableWrap');
+  const labelEl=document.getElementById('recordCountLabel');
+  if(!recordsData.length){el.innerHTML='<div class="empty"><div class="ico">🔮</div><p>점괘 기록이 없습니다.</p></div>';return;}
+  const sel=document.getElementById('recordLimit');
+  const limitVal=sel?sel.value:'20';
+  const limit=limitVal==='all'?recordsData.length:parseInt(limitVal,10);
+  const rows=recordsData.slice(0,limit);
+  if(labelEl) labelEl.textContent=limitVal==='all'?`전체 ${recordsData.length}건 표시`:`최근 ${rows.length}건 표시 (전체 ${recordsData.length}건)`;
   el.innerHTML=`<table>
     <thead><tr>
       <th>일시</th><th>구분</th><th>회원</th><th>점괘</th><th>키워드</th><th>질문</th><th>종류</th><th>관리</th>
     </tr></thead>
-    <tbody>${recordsData.slice(0,200).map(r=>`<tr>
+    <tbody>${rows.map(r=>`<tr>
       <td style="font-size:12px;">${fmtDate(r.date)}</td>
       <td><span class="badge ${r.isMember?'b-charge':'b-free'}">${r.isMember?'회원':'비회원'}</span></td>
       <td style="font-size:12px;">${esc(r.userName)}<br><span style="color:var(--ink3);font-size:11px;">${esc(r.userEmail)}</span></td>
@@ -760,11 +786,6 @@ async function loadRecords(){
       <td>${!r.isMember?`<button class="btn btn-cancel btn-sm" onclick="deleteGuestRecord('${r.id}')">삭제</button>`:'<span style="font-size:11px;color:var(--ink3);">-</span>'}</td>
     </tr>`).join('')}</tbody>
   </table>`;
-  }catch(err){
-    console.error('loadRecords 오류:',err);
-    if(statsEl) statsEl.innerHTML=`<span style="color:var(--red);">통계 로딩 실패: ${esc(err.message)}</span>`;
-    if(el) el.innerHTML=`<div class="empty"><div class="ico">⚠️</div><p>데이터 로딩 실패: ${esc(err.message)}</p><p style="font-size:11px;color:var(--ink3);margin-top:6px;">Firebase 권한(rules) 또는 네트워크 문제일 수 있습니다.</p></div>`;
-  }
 }
 
 async function deleteGuestRecord(id){
