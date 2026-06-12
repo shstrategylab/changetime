@@ -201,9 +201,36 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
   .mbtns{gap:4px;}
   .mbtn{padding:4px 8px;font-size:10px;}
 }
+
+/* 인앱 브라우저 경고 배너 */
+#iabBanner{
+  position:fixed;top:0;left:0;right:0;z-index:9999;
+  background:var(--ink);color:var(--goldd);
+  padding:14px 16px;font-size:13px;line-height:1.6;text-align:center;
+  box-shadow:0 2px 12px rgba(0,0,0,.25);
+  display:none;
+}
+#iabBanner b{color:var(--goldl);}
+#iabBanner .iab-close{
+  position:absolute;top:8px;right:14px;cursor:pointer;color:var(--ink3);
+  font-size:16px;line-height:1;
+}
+#iabBanner .iab-btn{
+  display:inline-block;margin-top:8px;background:var(--gold);color:var(--ink);
+  padding:8px 18px;border-radius:20px;font-size:12px;font-weight:600;
+  text-decoration:none;cursor:pointer;border:none;
+}
+body.iab-active{padding-top:84px;}
 </style>
 </head>
 <body>
+
+<!-- 인앱 브라우저 경고 배너 -->
+<div id="iabBanner">
+  <span class="iab-close" onclick="document.getElementById('iabBanner').style.display='none';document.body.classList.remove('iab-active');">✕</span>
+  <div id="iabMsg"><b>구글 로그인은 인앱 브라우저에서 차단됩니다.</b><br>아래 버튼을 눌러 외부 브라우저로 열어주세요.</div>
+  <button class="iab-btn" id="iabOpenBtn">외부 브라우저로 열기</button>
+</div>
 
 <!-- NAV -->
 <nav>
@@ -1916,6 +1943,36 @@ function openConcept(i){
   document.getElementById('cBody').innerHTML=c.b;
   openMo('conceptMo');
 }
+
+/* ══ 인앱 브라우저 감지 및 처리 ══ */
+(function(){
+  const ua = navigator.userAgent.toLowerCase();
+  const isKakao = /kakaotalk/i.test(ua);
+  const isInApp = /kakaotalk|instagram|fban|fbav|line\/|naver(?!.*safari)|everytimeapp/i.test(ua);
+
+  if(!isInApp) return;
+
+  const banner = document.getElementById('iabBanner');
+  const btn = document.getElementById('iabOpenBtn');
+  const msg = document.getElementById('iabMsg');
+
+  banner.style.display = 'block';
+  document.body.classList.add('iab-active');
+
+  if(isKakao){
+    msg.innerHTML = '<b>구글 로그인은 카카오톡 인앱 브라우저에서 차단됩니다.</b><br>아래 버튼을 눌러 외부 브라우저(크롬/사파리)로 열어주세요.';
+    btn.onclick = function(){
+      location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
+    };
+  } else {
+    msg.innerHTML = '<b>구글 로그인은 이 앱의 인앱 브라우저에서 차단됩니다.</b><br>우측 상단 메뉴(⋮ 또는 ···)에서 "다른 브라우저로 열기"를 선택해주세요.';
+    btn.onclick = function(){
+      // 일부 앱은 외부 브라우저 강제 이동을 지원하지 않으므로 안내만 강화
+      msg.innerHTML = '<b>우측 상단 메뉴(⋮ 또는 ···)를 눌러</b><br>"다른 브라우저로 열기" 또는 "Chrome으로 열기"를 선택해주세요.';
+    };
+  }
+})();
+
 
 /* ══ 유틸 ══ */
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;}
