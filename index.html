@@ -771,6 +771,7 @@ function updateCnt(){
 /* ══ 인증 ══ */
 async function doGoogleLogin(){
   const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
   try{
     // 인앱 브라우저(카카오톡, 네이버 앱 등) 감지 → redirect 방식 사용
     const ua = navigator.userAgent.toLowerCase();
@@ -799,6 +800,7 @@ async function doGoogleLogin(){
     if(err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment'){
       // 팝업 차단 시 자동으로 redirect로 재시도
       const provider2 = new firebase.auth.GoogleAuthProvider();
+      provider2.setCustomParameters({ prompt: 'select_account' });
       await auth.signInWithRedirect(provider2);
     } else if(err.code !== 'auth/popup-closed-by-user'){
       toast('로그인 실패: '+err.message);
