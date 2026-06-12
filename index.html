@@ -497,7 +497,7 @@ body.iab-active{padding-top:84px;}
         <li style="color:var(--gold);font-weight:500;">인생 본괘 분석 <span style="font-size:10px;background:var(--goldd);color:var(--ink);padding:1px 6px;border-radius:3px;margin-left:4px;">연간 전용</span></li>
         <li style="color:var(--gold);font-weight:500;">육룡(六龍) 단계 진단 <span style="font-size:10px;background:var(--goldd);color:var(--ink);padding:1px 6px;border-radius:3px;margin-left:4px;">연간 전용</span></li>
       </ul>
-      <button class="btnplan" style="background:var(--gold);color:var(--ink);" onclick="openPayMo('subscribe')">연간 구독 신청</button>
+      <button class="btnplan" style="background:var(--gold);color:var(--ink);" onclick="openPayMo('subscribe_year')">연간 구독 신청</button>
     </div>
   </div>
   <p style="text-align:center;margin-top:14px;font-size:11px;color:var(--ink3);">인생 본괘 + 육룡 분석은 현재 개발 중으로, 연간 구독 가입 시 출시 즉시 제공됩니다.</p>
@@ -740,7 +740,7 @@ body.iab-active{padding-top:84px;}
     <label class="inplbl">전화번호</label><input class="inp" id="payPhone" placeholder="010-0000-0000">
     <label class="inplbl">이메일</label><input class="inp" id="payEmail" placeholder="example@email.com">
     <label class="inplbl">상품 선택</label>
-    <select class="inp" id="payProd">
+    <select class="inp" id="payProd" onchange="toggleSubNotice()">
       <option value="">-- 선택하세요 --</option>
       <option value="charge5">충전 5,000원 (10회)</option>
       <option value="charge10">충전 10,000원 (25회)</option>
@@ -748,6 +748,9 @@ body.iab-active{padding-top:84px;}
       <option value="sub_month">월 구독 19,900원</option>
       <option value="sub_year">연 구독 179,000원 (약 25% 할인)</option>
     </select>
+    <div id="subNotice" style="display:none;margin-top:8px;padding:10px 12px;background:var(--pp);border-radius:8px;font-size:12px;color:var(--ink2);line-height:1.6;">
+      💡 구독 전환 시 보유하신 잔여 충전횟수는 소멸되지 않고 그대로 유지됩니다. 구독 해지 후에도 이어서 사용하실 수 있어요.
+    </div>
     <div class="bankbox">
       <strong>입금 계좌 안내</strong><br>
       은행명: 우리은행 &nbsp;|&nbsp; 예금주: 역易 서비스(박찬수)<br>
@@ -2105,9 +2108,16 @@ function openPayMo(type='charge'){
   openMo('payMo');
 }
 
+function toggleSubNotice(){
+  const v=document.getElementById('payProd').value;
+  document.getElementById('subNotice').style.display=(v==='sub_month'||v==='sub_year')?'block':'none';
+}
+
 function setPayType(t){
-  document.getElementById('payTit').textContent=t==='subscribe'?'구독 신청':'충전하기';
+  document.getElementById('payTit').textContent=(t==='subscribe'||t==='subscribe_year')?'구독 신청':'충전하기';
   if(t==='subscribe')document.getElementById('payProd').value='sub_month';
+  if(t==='subscribe_year')document.getElementById('payProd').value='sub_year';
+  toggleSubNotice();
   // 회원 정보 자동 입력
   if(CU){
     document.getElementById('payName').value=UP?.name||CU.displayName||'';
