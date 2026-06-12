@@ -194,7 +194,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
   .daily-side{order:-1;}
 }
 @media(max-width:680px){
-  .egrid,.cgrid,.pgrid{grid-template-columns:1fr;}
+  .egrid,.cgrid,.pgrid,#pricing .secw > div{grid-template-columns:1fr;}
   nav{padding:0 16px;}
   .nav-r{position:relative;}
   .md{padding:28px 20px;}
@@ -329,7 +329,7 @@ body.iab-active{padding-top:84px;}
     <div class="ec free" onclick="startDiv('free')">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <span class="ebdg bf">즉석 · 개인 명리 무관</span>
-        <span style="font-size:11px;color:var(--fg);background:var(--fb);padding:3px 9px;border-radius:10px;font-weight:500;">무료 1회 / 충전·구독 무제한</span>
+        <span style="font-size:11px;color:var(--fg);background:var(--fb);padding:3px 9px;border-radius:10px;font-weight:500;">무료 3회 / 충전·구독 무제한</span>
       </div>
       <div class="eico">🪙</div>
       <h3 class="etit">즉석 점괘</h3>
@@ -394,18 +394,17 @@ body.iab-active{padding-top:84px;}
 <section class="secw" id="pricing">
   <p class="slbl" style="text-align:center;">요금제</p>
   <h2 class="stit" style="text-align:center;">나에게 맞는 방식으로</h2>
-  <div class="pgrid">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:24px;">
     <div class="pc">
       <p class="pplan">무료</p>
       <p class="pprice">0원</p>
-      <p class="punit">하루 1회 제공</p>
+      <p class="punit">하루 3회 제공</p>
       <ul class="pfeat">
-        <li>즉석 점괘 하루 1회</li>
+        <li>즉석 점괘 하루 3회</li>
         <li>괘명 + 괘사 + 행동 지침</li>
-        <li>오늘의 일일 운세</li>
         <li>개념 콘텐츠 전체</li>
       </ul>
-      <button class="btnplan" onclick="startDiv('free')">회원가입 후 무료 시작</button>
+      <button class="btnplan" onclick="startDiv('free')">무료 시작</button>
     </div>
     <div class="pc feat">
       <p class="pplan">충전형</p>
@@ -414,26 +413,40 @@ body.iab-active{padding-top:84px;}
       <ul class="pfeat">
         <li>동효 · 효사 · 지괘 해석</li>
         <li>AI 해설 프롬프트 복사</li>
-        <li>점괘 기록 보관 30일</li>
+        <li>점괘 기록 보관 3일</li>
         <li>5,000원 = 10회</li>
         <li>10,000원 = 25회</li>
+        <li>30,000원 = 80회</li>
       </ul>
       <button class="btnplan" onclick="openPayMo('charge')">충전하기</button>
     </div>
     <div class="pc">
-      <p class="pplan">구독형</p>
+      <p class="pplan">월 구독</p>
       <p class="pprice">19,900원</p>
       <p class="punit">월 정액 / 전 기능 무제한</p>
       <ul class="pfeat">
         <li>모든 기능 무제한</li>
         <li>사주 기반 정밀 점괘</li>
-        <li>연 · 월 운세</li>
-        <li>인생 본괘 + 육룡 분석</li>
-        <li>점괘 기록 전체 보관</li>
+        <li>세운 · 월건 · 일진 왕쇠 판별</li>
+        <li>점괘 기록 보관 7일</li>
       </ul>
       <button class="btnplan" onclick="openPayMo('subscribe')">구독 신청</button>
     </div>
+    <div class="pc" style="border-color:var(--gold);position:relative;overflow:hidden;">
+      <div style="position:absolute;top:12px;right:-22px;background:var(--gold);color:var(--ink);font-size:10px;font-weight:600;padding:3px 28px;transform:rotate(35deg);letter-spacing:1px;">연간 특전</div>
+      <p class="pplan" style="color:var(--gold);">연 구독</p>
+      <p class="pprice">179,000원</p>
+      <p class="punit">연 정액 · 월 환산 14,900원 (25% 할인)</p>
+      <ul class="pfeat">
+        <li>월 구독 전 기능 포함</li>
+        <li>점괘 기록 보관 7일</li>
+        <li style="color:var(--gold);font-weight:500;">인생 본괘 분석 <span style="font-size:10px;background:var(--goldd);color:var(--ink);padding:1px 6px;border-radius:3px;margin-left:4px;">연간 전용</span></li>
+        <li style="color:var(--gold);font-weight:500;">육룡(六龍) 단계 진단 <span style="font-size:10px;background:var(--goldd);color:var(--ink);padding:1px 6px;border-radius:3px;margin-left:4px;">연간 전용</span></li>
+      </ul>
+      <button class="btnplan" style="background:var(--gold);color:var(--ink);" onclick="openPayMo('subscribe')">연간 구독 신청</button>
+    </div>
   </div>
+  <p style="text-align:center;margin-top:14px;font-size:11px;color:var(--ink3);">인생 본괘 + 육룡 분석은 현재 개발 중으로, 연간 구독 가입 시 출시 즉시 제공됩니다.</p>
 </section>
 
 <footer style="background:var(--ink);color:#7a6040;text-align:center;padding:32px 24px;font-size:12px;line-height:2;">
@@ -764,7 +777,7 @@ function updateCnt(){
   const sub = UP?.subscribed||false;
   const cnt = UP?.remainCount||0;
   const usedToday = UP?.freeUsedToday||0;
-  const freeLeft = Math.max(0, 1 - usedToday);
+  const freeLeft = Math.max(0, 3 - usedToday);
   let label;
   if(sub) label = '무제한';
   else if(cnt > 0) label = cnt+'회';
@@ -859,7 +872,7 @@ function openMypage(){
   if(sub){ document.getElementById('mpCnt').textContent = '무제한 (구독)'; }
   else if(cnt>0){ document.getElementById('mpCnt').textContent = cnt + '회'; }
   else {
-    const freeLeft = Math.max(0, 1 - (UP?.freeUsedToday||0));
+    const freeLeft = Math.max(0, 3 - (UP?.freeUsedToday||0));
     document.getElementById('mpCnt').textContent = '오늘 무료 ' + freeLeft + '회 남음';
   }
   // 사주
@@ -1425,8 +1438,8 @@ async function startDiv(type){
   }
   const usedToday = UP?.freeUsedToday||0;
   // 1회 이상 사용했으면 차단 (0 → 허용 / 1 이상 → 차단)
-  if(usedToday>=1 && !UP?.subscribed && !(UP?.remainCount>0)){
-    toast('오늘 무료 횟수(1회)를 사용했습니다. 충전 후 이용하세요.');
+  if(usedToday>=3 && !UP?.subscribed && !(UP?.remainCount>0)){
+    toast('오늘 무료 횟수(3회)를 사용했습니다. 충전 후 이용하세요.');
     openPayMo('charge');return;
   }
   startCoin();
@@ -1721,11 +1734,32 @@ async function showResult(){
 
   // 사용 기록 저장 및 횟수 처리
   if(CU){
-    // 점괘 기록 저장
-    await db.ref('users/'+CU.uid+'/records').push({
-      date:Date.now(), key, guaName:gua.name, hanja:gua.hanja,
-      keyword:gua.keyword, question:q, moving, divType
-    });
+    // 보관 기간 설정: 구독=7일, 충전=3일, 무료=0일(저장 안 함)
+    const keepDays = isSub ? 7 : hasCharge ? 3 : 0;
+
+    // 만료된 기록 자동 삭제
+    if(keepDays > 0){
+      const recSnap = await db.ref('users/'+CU.uid+'/records').once('value');
+      if(recSnap.exists()){
+        const now = Date.now();
+        const deletes = {};
+        recSnap.forEach(child => {
+          const rec = child.val();
+          const ageDays = (now - (rec.date||0)) / 86400000;
+          if(ageDays > keepDays) deletes['users/'+CU.uid+'/records/'+child.key] = null;
+        });
+        if(Object.keys(deletes).length > 0) await db.ref().update(deletes);
+      }
+    }
+
+    // 점괘 기록 저장 (유료 회원만)
+    if(keepDays > 0){
+      await db.ref('users/'+CU.uid+'/records').push({
+        date:Date.now(), key, guaName:gua.name, hanja:gua.hanja,
+        keyword:gua.keyword, question:q, moving, divType,
+        expireAfterDays: keepDays
+      });
+    }
 
     if(isPaid && hasCharge && !isSub){
       // 충전 횟수 차감 (구독 아닌 유료 충전 회원)
