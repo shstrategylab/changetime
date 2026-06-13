@@ -224,7 +224,21 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
   .nav-r .nu .ncnt{font-size:10px;padding:2px 6px;}
   .nav-r .nu #navName{max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
-/* 4기운 칩 */
+  /* 오늘의 괘 배너 - 모바일 1줄 처리 */
+  .daily-banner-inner{
+    flex-wrap:nowrap!important;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .daily-banner-inner::-webkit-scrollbar{display:none;}
+  .daily-banner-inner > span{flex-shrink:0!important;}
+  .daily-banner-inner #dDesc{
+    flex:0 0 auto!important;
+    max-width:160px;
+  }
+}
+/* 4기운 칩 — 전역 (미디어쿼리 무관) */
 .gua-chip{
   display:inline-flex;align-items:center;gap:5px;
   background:rgba(200,146,42,.11);border:1px solid rgba(200,146,42,.22);
@@ -247,20 +261,6 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
 #synBody::-webkit-scrollbar-track{background:rgba(255,255,255,.04);}
 #synBody::-webkit-scrollbar-thumb{background:rgba(200,146,42,.28);border-radius:2px;}
 
-  /* 오늘의 괘 배너 - 모바일 1줄 처리 */
-  .daily-banner-inner{
-    flex-wrap:nowrap!important;
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
-  }
-  .daily-banner-inner::-webkit-scrollbar{display:none;}
-  .daily-banner-inner > span{flex-shrink:0!important;}
-  .daily-banner-inner #dDesc{
-    flex:0 0 auto!important;
-    max-width:160px;
-  }
-}
 .hamb{
   display:none;background:none;border:none;cursor:pointer;
   width:32px;height:32px;align-items:center;justify-content:center;
