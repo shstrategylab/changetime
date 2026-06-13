@@ -788,7 +788,7 @@ body.iab-active{padding-top:84px;}
 <!-- ═══ 세운·월건 상세 모달 ═══ -->
 <div class="mo mo-top" id="seunDetailMo">
   <div class="md" style="max-width:580px;">
-    <button class="mdx" onclick="closeMo('seunDetailMo');openMo('mypageMo');">✕</button>
+    <button class="mdx" onclick="closeMo('seunDetailMo'); if(!window._openedFromPreview) openMo('mypageMo'); window._openedFromPreview=false;">✕</button>
     <p class="moeye">월 구독 전용</p>
     <h2 class="motit">이달의 세운 · 월건 해설</h2>
     <div id="seunDetailBody" style="margin-top:20px;"></div>
@@ -798,7 +798,7 @@ body.iab-active{padding-top:84px;}
 <!-- ═══ 연·월 운세 상세 모달 ═══ -->
 <div class="mo mo-top" id="yearUnseDetailMo">
   <div class="md" style="max-width:580px;">
-    <button class="mdx" onclick="closeMo('yearUnseDetailMo');openMo('mypageMo');">✕</button>
+    <button class="mdx" onclick="closeMo('yearUnseDetailMo'); if(!window._openedFromPreview) openMo('mypageMo'); window._openedFromPreview=false;">✕</button>
     <p class="moeye">연간 구독 전용</p>
     <h2 class="motit">연 · 월 운세</h2>
     <div id="yearUnseDetailBody" style="margin-top:20px;"></div>
@@ -808,7 +808,7 @@ body.iab-active{padding-top:84px;}
 <!-- ═══ 인생 본괘·육룡 상세 모달 ═══ -->
 <div class="mo mo-top" id="yukryongDetailMo">
   <div class="md" style="max-width:580px;background:var(--ink);">
-    <button class="mdx" onclick="closeMo('yukryongDetailMo');openMo('mypageMo');" style="color:#c8b898;">✕</button>
+    <button class="mdx" onclick="closeMo('yukryongDetailMo'); if(!window._openedFromPreview) openMo('mypageMo'); window._openedFromPreview=false;" style="color:#c8b898;">✕</button>
     <p class="moeye" style="color:var(--gold);">연간 구독 전용</p>
     <h2 class="motit" style="color:#e8d8b8;">인생 본괘 · 육룡(六龍) 단계 진단</h2>
     <div id="yukryongDetailBody" style="margin-top:20px;"></div>
@@ -818,7 +818,7 @@ body.iab-active{padding-top:84px;}
 <!-- ═══ 점괘 기록 상세 모달 ═══ -->
 <div class="mo mo-top" id="recordDetailMo">
   <div class="md" style="max-width:560px;">
-    <button class="mdx" onclick="closeMo('recordDetailMo');openMo('mypageMo');">✕</button>
+    <button class="mdx" onclick="closeMo('recordDetailMo'); if(!window._openedFromPreview) openMo('mypageMo'); window._openedFromPreview=false;">✕</button>
     <p class="moeye">점괘 기록</p>
     <h2 class="motit" id="rdTitle" style="margin-bottom:4px;"></h2>
     <p style="font-size:11px;color:var(--ink3);margin-bottom:20px;" id="rdMeta"></p>
@@ -1016,13 +1016,13 @@ function showRenewBanner(status, type, remainDays){
 }
 function openPreviewCard(req, type){
   // req: 'sub' (월 구독 이상) | 'year' (연간 구독)
-  // type: 'seun' | 'yearse' | 'yukryong' — 등급 충족 시 바로 열 상세 팝업
+  // type: 'seun' | 'yearse' | 'yukryong' — 등급 충족 시 바로 상세 팝업만 열기
   if(!CU){ openMo('loginMo'); toast('로그인 후 이용 가능합니다.'); return; }
   const sub = UP?.subscribed||false;
   const isYear = sub && (UP?.subType === 'year');
   const ok = req==='year' ? isYear : sub;
   if(ok){
-    // 상세 데이터만 채우고 마이페이지 모달은 열지 않음
+    // _seunDetail / _yearDetail / _yukDetail 데이터 채우기 (마이페이지 열지 않음)
     populateMypageData();
     if(type==='yearse' && !window._yearDetail){
       toast('사주 정보를 먼저 입력해 주세요.');
@@ -1034,6 +1034,8 @@ function openPreviewCard(req, type){
       openMo('sajuMo');
       return;
     }
+    // 미리보기에서 열린 경우 X 버튼은 마이페이지 없이 그냥 닫도록 플래그 설정
+    window._openedFromPreview = true;
     openDetailMo(type);
   } else if(req==='year' && sub){
     toast('연간 구독 전용 콘텐츠입니다. 연간 구독으로 업그레이드해 주세요.');
@@ -1616,6 +1618,7 @@ function populateMypageData(){
 
 function openMypage(){
   if(!CU) return;
+  window._openedFromPreview = false; // 마이페이지 직접 진입
   document.getElementById('mpName').textContent = UP?.name || CU.displayName || CU.email.split('@')[0];
   document.getElementById('mpEmail').textContent = CU.email || '—';
   const joined = UP?.createdAt ? new Date(UP.createdAt) : (CU.metadata?.creationTime ? new Date(CU.metadata.creationTime) : null);
