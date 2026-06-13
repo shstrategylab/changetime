@@ -302,6 +302,14 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
 #synBody::-webkit-scrollbar-thumb{background:rgba(200,146,42,.28);border-radius:2px;}
 
   /* 오늘의 괘 배너 - 모바일 1줄 처리 */
+  <div id="changetime/daily-cards-wrap"></div>
+  <script>
+    fetch('/data/daily-cards.html')
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById('daily-cards-wrap').innerHTML = html;
+      });
+  </script>
   .daily-banner-inner{
     flex-wrap:nowrap!important;
     overflow-x:auto;
