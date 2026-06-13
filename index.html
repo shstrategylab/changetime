@@ -284,6 +284,7 @@ body.iab-active{padding-top:84px;}
   <div class="nav-r" id="navR">
     <div id="navUser" class="nu" style="display:none;">
       <span id="navName" onclick="openMypage()" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--paper3);transition:color .2s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color=''"></span>
+      <span id="navGrade" style="font-size:11px;color:var(--ink3);letter-spacing:.5px;"></span>
       <span class="ncnt" id="navCnt">0회</span>
     </div>
     <div class="nav-links">
@@ -1090,6 +1091,26 @@ function updateCnt(){
   unlockDeepContent();
   unlockPreviewBoxes();
   const freeLeft = Math.max(0, 3 - usedToday);
+
+  // 등급 뱃지
+  const gradeEl = document.getElementById('navGrade');
+  if(gradeEl){
+    if(isYear){
+      gradeEl.textContent = '연간구독';
+      gradeEl.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:10px;background:#f0eaf8;color:#5a3d8a;font-weight:600;letter-spacing:.5px;';
+    } else if(sub){
+      gradeEl.textContent = '월구독';
+      gradeEl.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:10px;background:#e8e0f8;color:#5a3d8a;font-weight:600;letter-spacing:.5px;';
+    } else if(cnt > 0){
+      gradeEl.textContent = '충전보유';
+      gradeEl.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:10px;background:#d0e8f8;color:#1a5fa8;font-weight:600;letter-spacing:.5px;';
+    } else {
+      gradeEl.textContent = '무료';
+      gradeEl.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:10px;background:var(--paper2);color:var(--ink3);font-weight:500;letter-spacing:.5px;';
+    }
+  }
+
+  // 잔여 횟수
   let label;
   if(sub) label = '무제한';
   else if(cnt > 0) label = cnt+'회';
