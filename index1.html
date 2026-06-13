@@ -224,7 +224,56 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
   .nav-r .nu .ncnt{font-size:10px;padding:2px 6px;}
   .nav-r .nu #navName{max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
-/* 4기운 칩 */
+/* ══ 오늘의 괘 — 4박스 카드 ══ */
+.dc-box{
+  position:relative;overflow:hidden;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;padding:20px 18px 18px;
+  cursor:pointer;transition:border-color .2s,background .2s;
+  min-height:210px;
+}
+.dc-box:hover{
+  border-color:rgba(200,146,42,.45);
+  background:rgba(200,146,42,.06);
+}
+.dc-bg-char{
+  position:absolute;top:-8px;right:-4px;
+  font-family:'Noto Serif KR',serif;font-size:88px;font-weight:700;
+  color:rgba(255,255,255,.04);line-height:1;user-select:none;pointer-events:none;
+}
+.dc-label{
+  font-size:9px;letter-spacing:2.5px;color:var(--gold);
+  text-transform:uppercase;margin-bottom:5px;
+}
+.dc-sub{
+  font-size:10px;color:var(--ink3);margin-bottom:14px;letter-spacing:.5px;
+}
+.dc-name{
+  font-family:'Noto Serif KR',serif;font-size:26px;font-weight:700;
+  color:var(--goldl);line-height:1;margin-bottom:3px;
+}
+.dc-hanja{
+  font-size:10px;color:var(--ink3);letter-spacing:1px;margin-bottom:10px;
+}
+.dc-kw-pill{
+  display:inline-block;font-size:10px;letter-spacing:1.5px;
+  background:rgba(200,146,42,.16);border:1px solid rgba(200,146,42,.3);
+  color:var(--gold);padding:3px 10px;border-radius:2px;margin-bottom:12px;
+}
+.dc-desc{
+  font-size:11px;color:#9a8e7a;line-height:1.75;
+}
+@media(max-width:680px){
+  #dailyCardGrid{grid-template-columns:repeat(2,1fr)!important;}
+  .dc-box{min-height:160px;}
+  .dc-name{font-size:22px;}
+}
+@media(max-width:400px){
+  #dailyCardGrid{grid-template-columns:1fr!important;}
+}
+
+/* 기존 칩 스타일 유지 (모달 내 배지용) */
 .gua-chip{
   display:inline-flex;align-items:center;gap:5px;
   background:rgba(200,146,42,.11);border:1px solid rgba(200,146,42,.22);
@@ -335,53 +384,75 @@ body.iab-active{padding-top:84px;}
   <p class="hero-sub">미래 예언이 아닌, 지금 이 순간의 형세를 읽고 어떻게 나아갈지를 스스로 묻는 도구입니다</p>
 </section>
 
-<!-- 오늘의 괘 (4기운 칩 배너) -->
-<div style="background:var(--ink);border-bottom:1px solid rgba(255,255,255,.08);">
-  <div class="daily-banner-inner" style="max-width:980px;margin:0 auto;padding:8px 24px;display:flex;align-items:center;gap:10px;">
+<!-- ══ 오늘의 괘 — 4박스 카드 ══ -->
+<section id="dailySection" style="background:var(--ink);padding:0 0 28px;">
 
-    <!-- 날짜 레이블 -->
-    <span style="font-size:10px;letter-spacing:2px;color:var(--ink3);flex-shrink:0;white-space:nowrap;">오늘의 괘</span>
-    <span style="font-size:10px;color:var(--ink3);flex-shrink:0;white-space:nowrap;" id="dailyTitle"></span>
-    <span style="color:rgba(255,255,255,.12);flex-shrink:0;">|</span>
-    <span style="font-size:9px;color:rgba(200,146,42,.5);flex-shrink:0;white-space:nowrap;letter-spacing:.5px;">괘 클릭 → 상세</span>
-
-    <!-- 天 카드칩 -->
-    <div class="gua-chip" id="guaChip0" onclick="openGuaDetail(0)" style="cursor:pointer;" title="천기 상세보기">
-      <span class="gua-chip-eye">天</span>
-      <span class="gua-chip-name" id="dcName0">—</span>
-      <span class="gua-chip-kw" id="dcKw0"></span>
+  <!-- 상단 바: 날짜 + 절기 + 종합해석 -->
+  <div style="max-width:980px;margin:0 auto;padding:14px 24px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07);">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:10px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;">오늘의 괘</span>
+      <span style="color:rgba(255,255,255,.15);">·</span>
+      <span style="font-size:12px;color:var(--ink3);" id="dailyTitle"></span>
+      <span style="font-size:11px;color:rgba(200,146,42,.55);" id="dailyJeolgi"></span>
     </div>
-    <!-- 地 카드칩 -->
-    <div class="gua-chip" id="guaChip1" onclick="openGuaDetail(1)" style="cursor:pointer;" title="지운 상세보기">
-      <span class="gua-chip-eye">地</span>
-      <span class="gua-chip-name" id="dcName1">—</span>
-      <span class="gua-chip-kw" id="dcKw1"></span>
-    </div>
-    <!-- 國 카드칩 -->
-    <div class="gua-chip" id="guaChip2" onclick="openGuaDetail(2)" style="cursor:pointer;" title="국운 상세보기">
-      <span class="gua-chip-eye">國</span>
-      <span class="gua-chip-name" id="dcName2">—</span>
-      <span class="gua-chip-kw" id="dcKw2"></span>
-    </div>
-    <!-- 市 카드칩 -->
-    <div class="gua-chip" id="guaChip3" onclick="openGuaDetail(3)" style="cursor:pointer;" title="시운 상세보기">
-      <span class="gua-chip-eye">市</span>
-      <span class="gua-chip-name" id="dcName3">—</span>
-      <span class="gua-chip-kw" id="dcKw3"></span>
-    </div>
-
-    <span style="color:rgba(255,255,255,.12);flex-shrink:0;">|</span>
-
-    <!-- 종합해석 버튼 -->
     <button class="syn-btn" onclick="openSynthesisMo()">☯&nbsp;종합해석</button>
-
-    <!-- 레거시 id 유지 (다른 JS 참조용, 숨김) -->
-    <span id="dName" style="display:none"></span>
-    <span id="dHj"   style="display:none"></span>
-    <span id="dDesc" style="display:none"></span>
-    <span id="dKws"  style="display:none"></span>
   </div>
-</div>
+
+  <!-- 4박스 그리드 -->
+  <div style="max-width:980px;margin:0 auto;padding:20px 24px 0;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;" id="dailyCardGrid">
+
+    <!-- 天氣 카드 -->
+    <div class="dc-box" id="dcBox0" onclick="openGuaDetail(0)">
+      <div class="dc-bg-char">天</div>
+      <div class="dc-label">천기 · 天氣</div>
+      <div class="dc-sub" id="dcSub0">날씨 기운</div>
+      <div class="dc-name" id="dcName0">—</div>
+      <div class="dc-hanja" id="dcHanja0"></div>
+      <div class="dc-kw-pill" id="dcKw0"></div>
+      <div class="dc-desc" id="dcDesc0"></div>
+    </div>
+
+    <!-- 地運 카드 -->
+    <div class="dc-box" id="dcBox1" onclick="openGuaDetail(1)">
+      <div class="dc-bg-char">地</div>
+      <div class="dc-label">지운 · 地運</div>
+      <div class="dc-sub" id="dcSub1">절기 기운</div>
+      <div class="dc-name" id="dcName1">—</div>
+      <div class="dc-hanja" id="dcHanja1"></div>
+      <div class="dc-kw-pill" id="dcKw1"></div>
+      <div class="dc-desc" id="dcDesc1"></div>
+    </div>
+
+    <!-- 國運 카드 -->
+    <div class="dc-box" id="dcBox2" onclick="openGuaDetail(2)">
+      <div class="dc-bg-char">國</div>
+      <div class="dc-label">국운 · 國運</div>
+      <div class="dc-sub" id="dcSub2">사회 정세</div>
+      <div class="dc-name" id="dcName2">—</div>
+      <div class="dc-hanja" id="dcHanja2"></div>
+      <div class="dc-kw-pill" id="dcKw2"></div>
+      <div class="dc-desc" id="dcDesc2"></div>
+    </div>
+
+    <!-- 時運 카드 -->
+    <div class="dc-box" id="dcBox3" onclick="openGuaDetail(3)">
+      <div class="dc-bg-char">市</div>
+      <div class="dc-label">시운 · 時運</div>
+      <div class="dc-sub" id="dcSub3">경제 흐름</div>
+      <div class="dc-name" id="dcName3">—</div>
+      <div class="dc-hanja" id="dcHanja3"></div>
+      <div class="dc-kw-pill" id="dcKw3"></div>
+      <div class="dc-desc" id="dcDesc3"></div>
+    </div>
+
+  </div>
+
+  <!-- 레거시 id 유지 (JS 참조용, 숨김) -->
+  <span id="dName" style="display:none"></span>
+  <span id="dHj"   style="display:none"></span>
+  <span id="dDesc" style="display:none"></span>
+  <span id="dKws"  style="display:none"></span>
+</section>
 
 <!-- ══ 천지인 종합해석 모달 ══ -->
 <div class="mo" id="synthesisMo">
@@ -2567,14 +2638,42 @@ function openGuaDetail(idx){
 }
 
 function _renderChips(){
+  const subLabels=['날씨 기운','절기 기운','사회 정세','경제 흐름'];
+
   for(let i=0;i<4;i++){
     const d=_dgd[i];
-    if(!d?.g)continue;
-    const ne=document.getElementById('dcName'+i);
-    const ke=document.getElementById('dcKw'+i);
-    if(ne)ne.textContent=d.g.name;
-    if(ke)ke.textContent=d.g.keyword;
+    if(!d?.g) continue;
+    const g=d.g;
+
+    // 카드 필드 채우기
+    const set=(id,val)=>{ const el=document.getElementById(id+i); if(el) el.textContent=val||''; };
+    set('dcName', g.name);
+    set('dcHanja', (g.hanja||'')+(g.meaning?' · '+g.meaning:''));
+    set('dcKw', g.keyword);
+    set('dcDesc', g.desc);
+
+    // sub — 실시간 맥락이 있으면 우선
+    const subEl=document.getElementById('dcSub'+i);
+    if(subEl){
+      if(i===0 && d.wx)       subEl.textContent=d.wx+(d.temp?' '+d.temp:'');
+      else if(i===1 && d.jg)  subEl.textContent=d.jg+' 절기 '+d.di+'일째';
+      else if(i===3 && d.krw) subEl.textContent='USD/KRW '+d.krw;
+      else                    subEl.textContent=subLabels[i];
+    }
   }
+
+  // 절기 부제 (상단 바)
+  const jg=_dgd[1];
+  const jeolgiEl=document.getElementById('dailyJeolgi');
+  if(jeolgiEl && jg?.jg){
+    jeolgiEl.textContent=`${jg.jg} 절기 ${jg.di}일째 · ${jg.nj}까지 ${jg.nj?Math.max(0,
+      (()=>{const now=new Date();const _s=_JUNGGI.slice().sort((a,b)=>a.m*100+a.d-(b.m*100+b.d));
+      const ni=_s.findIndex(x=>x.n===jg.nj);const nx=ni>=0?_s[ni]:null;
+      if(!nx)return 0;const nd=new Date(now.getFullYear(),nx.m-1,nx.d);
+      return Math.ceil((nd-now)/86400000);})()
+    ):0}일`;
+  }
+
   // 레거시 id 유지
   const g=_dgd[0]?.g;
   if(g){
