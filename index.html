@@ -1366,7 +1366,7 @@ function openDetailMo(type){
     const h2 = monthData.slice(6,12);
     const avg = arr => arr.reduce((s,m)=>s+m.score,0)/arr.length;
     const a1=avg(h1), a2=avg(h2);
-    const h1Eval = a1>0.3?'기운이 강한 상반기':'a1<-0.3?\'상대적으로 조심이 필요한 상반기\':\'비교적 무난한 상반기\'';
+    const h1Eval = a1>0.3?'기운이 강한 상반기':a1<-0.3?'상대적으로 조심이 필요한 상반기':'비교적 무난한 상반기';
     const halfSummary = (arr, label) => {
       const strong = arr.filter(m=>m.score>0).map(m=>m.name).join('·');
       const weak   = arr.filter(m=>m.score<0).map(m=>m.name).join('·');
@@ -2294,7 +2294,7 @@ async function startDiv(type){
     if(UP){UP.freeUsedToday=0;UP.freeResetDate=today;}
   }
   const usedToday = UP?.freeUsedToday||0;
-  // 1회 이상 사용했으면 차단 (0 → 허용 / 1 이상 → 차단)
+  // 무료 횟수 초과 차단 (3회 미만 → 허용 / 3회 이상 → 차단)
   if(usedToday>=3 && !UP?.subscribed && !(UP?.remainCount>0)){
     toast('오늘 무료 횟수(3회)를 사용했습니다. 충전 후 이용하세요.');
     openPayMo('charge');return;
