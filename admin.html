@@ -305,7 +305,9 @@ tr:hover td{background:var(--paper);}
           <input type="text" id="memberSearch" placeholder="이름 또는 이메일 검색..." oninput="renderMembers()">
           <select id="memberFilter" onchange="renderMembers()">
             <option value="">전체</option>
-            <option value="subscribed">구독 중</option>
+            <option value="subscribed">구독 중 (전체)</option>
+            <option value="sub_month">월 구독</option>
+            <option value="sub_year">연간 구독</option>
             <option value="charged">충전 보유</option>
             <option value="free">무료</option>
           </select>
@@ -563,6 +565,9 @@ async function confirmApprove(){
       updates['users/'+p.uid+'/subscribed']=true;
       updates['users/'+p.uid+'/subType']=subType;
       updates['users/'+p.uid+'/subscribeStart']=Date.now();
+      // 만료 타임스탬프 저장 (30일 or 365일)
+      const durMs=subType==='year'?365*24*60*60*1000:30*24*60*60*1000;
+      updates['users/'+p.uid+'/subscribeExpire']=Date.now()+durMs;
     } else {
       const uSnap=await db.ref('users/'+p.uid+'/remainCount').once('value');
       const cur=uSnap.val()||0;
@@ -619,12 +624,36 @@ async function loadMembers(){
   renderDashMembers();
 }
 
+/* ══ 구독 만료일 계산 헬퍼 ══ */
+function subExpireAt(m){
+  if(!m.subscribed || !m.subscribeStart) return null;
+  const dur = m.subType==='year' ? 365*24*60*60*1000 : 30*24*60*60*1000;
+  return m.subscribeStart + dur;
+}
+function subRemainDays(m){
+  const exp = subExpireAt(m);
+  if(!exp) return null;
+  return Math.ceil((exp - Date.now()) / (24*60*60*1000));
+}
+function subBadge(m){
+  if(!m.subscribed) return '';
+  const days = subRemainDays(m);
+  if(days === null) return '<span class="badge b-sub">구독 중</span>';
+  const label = m.subType==='year' ? '연간구독' : '월구독';
+  if(days <= 0)  return `<span class="badge b-admin">만료됨</span>`;
+  if((m.subType==='year' && days<=30)||(m.subType!=='year' && days<=7))
+    return `<span class="badge" style="background:#fff3cd;color:#856404;">${label} D-${days}</span>`;
+  return `<span class="badge b-sub">${label}</span>`;
+}
+
 function renderMembers(){
   const search=document.getElementById('memberSearch')?.value?.toLowerCase()||'';
   const filter=document.getElementById('memberFilter')?.value||'';
   let filtered=membersData.filter(m=>{
     if(search&&!m.name?.toLowerCase().includes(search)&&!m.email?.toLowerCase().includes(search))return false;
     if(filter==='subscribed'&&!m.subscribed)return false;
+    if(filter==='sub_month'&&!(m.subscribed&&m.subType==='month'))return false;
+    if(filter==='sub_year'&&!(m.subscribed&&m.subType==='year'))return false;
     if(filter==='charged'&&!(m.remainCount>0&&!m.subscribed))return false;
     if(filter==='free'&&(m.subscribed||m.remainCount>0))return false;
     return true;
@@ -633,22 +662,31 @@ function renderMembers(){
   if(!filtered.length){el.innerHTML='<div class="empty"><div class="ico">👥</div><p>검색 결과가 없습니다.</p></div>';return;}
   el.innerHTML=`<table>
     <thead><tr>
-      <th>가입일</th><th>이름</th><th>이메일</th><th>상태</th><th>잔여 횟수</th><th>사주</th><th>관리</th>
+      <th>가입일</th><th>이름</th><th>이메일</th><th>상태</th><th>잔여 횟수</th><th>구독 만료일</th><th>사주</th><th>관리</th>
     </tr></thead>
-    <tbody>${filtered.map(m=>`<tr>
+    <tbody>${filtered.map(m=>{
+      const expAt=subExpireAt(m);
+      const days=subRemainDays(m);
+      let expCell='-';
+      if(expAt){
+        const color=days<=0?'var(--red)':((m.subType==='year'&&days<=30)||(m.subType!=='year'&&days<=7))?'#856404':'var(--ink3)';
+        expCell=`<span style="font-size:11px;color:${color};">${fmtDate(expAt)}${days!==null?'<br>('+( days<=0?'만료':'D-'+days)+')':''}</span>`;
+      }
+      return `<tr>
       <td style="font-size:12px;">${fmtDate(m.createdAt)}</td>
       <td><strong>${esc(m.name||'-')}</strong></td>
       <td style="font-size:12px;">${esc(m.email||'-')}</td>
       <td>
         ${m.role==='admin'?'<span class="badge b-admin">관리자</span>':''}
-        ${m.subscribed?'<span class="badge b-sub">구독 중</span>':''}
+        ${subBadge(m)}
         ${!m.subscribed&&m.remainCount>0?'<span class="badge b-charge">충전 보유</span>':''}
         ${!m.subscribed&&!(m.remainCount>0)&&m.role!=='admin'?'<span class="badge b-free">무료</span>':''}
       </td>
       <td style="font-weight:600;">${m.subscribed?'∞':(m.remainCount||0)+'회'}</td>
+      <td>${expCell}</td>
       <td style="font-size:11px;color:var(--ink3);">${m.saju?m.saju.year+'년 '+m.saju.month+'월':'미입력'}</td>
       <td><button class="btn btn-edit btn-sm" onclick="openMember('${m.uid}')">수정</button></td>
-    </tr>`).join('')}</tbody>
+    </tr>`;}).join('')}</tbody>
   </table>`;
 }
 
