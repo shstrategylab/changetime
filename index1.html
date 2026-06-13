@@ -2420,72 +2420,100 @@ function initDaily(){
   const el=document.getElementById('dailyTitle');
   if(el) el.textContent=ds;
 
+  // G64가 아직 비어있으면 ensureIching 완료 후 재시도
+  if(!G64 || G64.length===0){
+    ensureIching().then(()=>initDaily());
+    return;
+  }
+
   // ── 오늘의 실데이터 고정 ──────────────────────────
-  // 天氣: 서울 구름조금 18~27°C → 풍천소축(9번)
   _dgd[0]={
-    g: G64[8],  // 풍천소축 (index 8 = id 9)
+    g: G64[8],  // 풍천소축 (id 9)
     label:'천기·天氣',
     wx:'구름조금', temp:'18~27°C',
-    realCtx:'서울 · 오늘 구름조금, 최저 18°C / 최고 27°C',
+    realCtx:'서울 · 구름조금, 최저 18°C / 최고 27°C',
     realDesc:'바람이 하늘 위를 지나는 형상 — 큰 비는 없으나 구름이 오가니 완전히 맑지도 않습니다. 잠시 막힌 듯 보여도 곧 순환합니다.'
   };
-  // 地運: 망종 절기 7일째 → 풍뢰익(42번)
   _dgd[1]={
-    g: G64[41], // 풍뢰익 (index 41 = id 42)
+    g: G64[41], // 풍뢰익 (id 42)
     label:'지운·地運',
     jg:'망종', di:7, nj:'하지',
     realCtx:'망종(芒種) 절기 7일째 · 씨앗을 심는 시기',
     realDesc:'망종은 보리를 거두고 모를 심는 절기입니다. 익괘(益)는 더함·유익의 괘 — 땅의 기운이 씨앗을 키우듯 지금 시작한 일에는 이로움이 더해집니다.'
   };
-  // 國運: 6월 시드 → 귀매괘(54번)
   _dgd[2]={
-    g: G64[53], // 뇌택귀매 (index 53 = id 54)
+    g: G64[53], // 뇌택귀매 (id 54)
     label:'국운·國運',
     realCtx:'2026년 6월 · 월간 국운 시드',
     realDesc:'귀매(歸妹)는 "분수에 맞는 자리로 돌아감"의 괘입니다. 절차를 무시한 서두름을 경계하고, 각자의 위치와 역할을 분명히 할 때 국면이 안정됩니다.'
   };
-  // 時運: USD/KRW 1,518원대 (강한 약세) → 중수감(29번)
   _dgd[3]={
-    g: G64[28], // 중수감 (index 28 = id 29)
+    g: G64[28], // 중수감 (id 29)
     label:'시운·時運',
     krw:'1,518원',
     realCtx:'USD/KRW 1,518원대 · 원화 강한 약세',
     realDesc:'감괘(坎)는 험난한 물길이 거듭되는 위험의 괘입니다. 달러 강세·원화 약세가 지속되는 지금, 섣불리 나서기보다 진실한 마음으로 버티면 반드시 돌파구가 생깁니다.'
   };
-  // ────────────────────────────────────────────────
 
   _renderChips();
 
-  // 날씨 API (실패해도 고정 데이터 유지)
+  // 날씨 API — 성공하면 천기 괘·맥락 업데이트
   fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,weathercode,windspeed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=Asia/Seoul')
-    .then(r=>r.json()).then(d=>{
-      const w=d.current;
-      const tmax=d.daily?.temperature_2m_max?.[0];
-      const tmin=d.daily?.temperature_2m_min?.[0];
+    .then(r=>r.json()).then(data=>{
+      const w=data.current;
+      const tmax=data.daily?.temperature_2m_max?.[0];
+      const tmin=data.daily?.temperature_2m_min?.[0];
       const wl=w.weathercode===0?'맑음':w.weathercode<=3?'구름조금':w.weathercode<=48?'흐림':w.weathercode<=67?'비':'소나기';
-      const tempRange=tmin!=null&&tmax!=null?`${Math.round(tmin)}~${Math.round(tmax)}°C`:w.temperature_2m+'°C';
-      const wGuaIdx=(_wmoGua(w.weathercode,w.temperature_2m));
+      const tempRange=(tmin!=null&&tmax!=null)?`${Math.round(tmin)}~${Math.round(tmax)}°C`:`${Math.round(w.temperature_2m)}°C`;
+      const wCode=w.weathercode, wTemp=w.temperature_2m;
+      const guaId=_wmoGua(wCode,wTemp);
+      const newG=G64[guaId-1]||_dgd[0].g;
+      const wDescMap={
+        '맑음':'맑은 하늘의 순수한 기운이 흐릅니다. 에너지가 충만하니 결단하기 좋은 날입니다.',
+        '구름조금':'바람이 하늘 위를 지나는 형상 — 큰 비는 없으나 구름이 오가니 완전히 맑지도 않습니다. 잠시 막힌 듯 보여도 곧 순환합니다.',
+        '흐림':'하늘이 두꺼운 구름에 덮인 형세입니다. 섣불리 나서기보다 상황을 관찰하며 때를 기다리십시오.',
+        '비':'비가 내려 땅을 적시는 형세입니다. 흘러가는 물처럼 저항하지 말고 유연하게 대처하십시오.',
+        '소나기':'갑작스러운 소나기처럼 충격이 오더라도 흔들리지 마십시오. 지나고 나면 하늘이 맑아집니다.'
+      };
       _dgd[0]=Object.assign(_dgd[0],{
-        g:G64[wGuaIdx-1]||_dgd[0].g,
-        wx:wl, temp:tempRange,
-        realCtx:`서울 · 오늘 ${wl}, ${tempRange}`,
+        g: newG,
+        wx: wl, temp: tempRange,
+        realCtx: `서울 · ${wl}, ${tempRange}`,
+        realDesc: wDescMap[wl]||_dgd[0].realDesc
       });
       _renderChips();
-    }).catch(()=>{});
+    }).catch(()=>{ /* 고정 데이터 유지 */ });
 
-  // 환율 API (실패해도 고정 데이터 유지)
+  // 환율 API — 성공하면 시운 괘·맥락 업데이트
   fetch('https://api.frankfurter.app/latest?from=USD&to=KRW')
-    .then(r=>r.json()).then(d=>{
-      const krw=d.rates?.KRW;
-      if(!krw)return;
-      let i; if(krw>1400)i=29; else if(krw>1350)i=12; else if(krw>1300)i=47; else if(krw>1250)i=11; else i=14;
+    .then(r=>r.json()).then(data=>{
+      const krw=data.rates?.KRW;
+      if(!krw) return;
+      let guaId;
+      if(krw>1450) guaId=29;      // 중수감 — 극도 위험
+      else if(krw>1400) guaId=29; // 중수감 — 위험
+      else if(krw>1350) guaId=12; // 천지비 — 막힘
+      else if(krw>1300) guaId=47; // 택수곤 — 곤경
+      else if(krw>1250) guaId=11; // 지천태 — 평화
+      else guaId=14;               // 화천대유 — 풍요
+      const krwStr=Math.round(krw).toLocaleString()+'원';
+      const trend=krw>1450?'극도 약세':krw>1400?'강한 약세':krw>1350?'약세':krw>1300?'보통':krw>1250?'강세':'강한 강세';
+      const krwDescMap={
+        '극도 약세':'원화가 극도로 약세인 지금, 감괘(坎)의 험난함이 시장을 지배합니다. 방어적 자세를 유지하고 섣불리 움직이지 마십시오.',
+        '강한 약세':'감괘(坎)는 험난한 물길이 거듭되는 위험의 괘입니다. 달러 강세·원화 약세 국면에서 섣불리 나서기보다 진실한 마음으로 버티면 반드시 돌파구가 생깁니다.',
+        '약세':'비괘(否)의 막힘처럼 원화가 눌려 있습니다. 억지로 추진하기보다 내실을 다지며 기다리십시오.',
+        '보통':'환율이 안정된 구간입니다. 곤괘(困)의 형세이니 말보다 행동으로 증명할 때입니다.',
+        '강세':'태괘(泰)의 소통처럼 원화 강세가 흐름을 뚫었습니다. 적극적으로 나아갈 때입니다.',
+        '강한 강세':'대유괘(大有)의 풍요처럼 원화가 강합니다. 지금의 풍요를 나누며 미래를 대비하십시오.'
+      };
       _dgd[3]=Object.assign(_dgd[3],{
-        g:G64[i-1]||_dgd[3].g,
-        krw:Math.round(krw).toLocaleString()+'원',
-        realCtx:`USD/KRW ${Math.round(krw).toLocaleString()}원 · ${krw>1400?'원화 강한 약세':krw>1350?'원화 약세':krw>1300?'원화 보통':'원화 강세'}`,
+        g: G64[guaId-1]||_dgd[3].g,
+        krw: krwStr,
+        realCtx: `USD/KRW ${krwStr} · 원화 ${trend}`,
+        realDesc: krwDescMap[trend]||_dgd[3].realDesc
       });
       _renderChips();
-    }).catch(()=>{});
+    }).catch(()=>{ /* 고정 데이터 유지 */ });
 }
 
 /* ══ 개별 괘 상세 모달 ══ */
