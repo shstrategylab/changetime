@@ -224,6 +224,29 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
   .nav-r .nu .ncnt{font-size:10px;padding:2px 6px;}
   .nav-r .nu #navName{max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
+/* 4기운 칩 */
+.gua-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(200,146,42,.11);border:1px solid rgba(200,146,42,.22);
+  border-radius:3px;padding:4px 10px;flex-shrink:0;
+}
+.gua-chip-eye{font-size:9px;letter-spacing:1px;color:var(--ink3);}
+.gua-chip-name{font-family:'Noto Serif KR',serif;font-size:14px;font-weight:700;color:var(--goldl);}
+.gua-chip-kw{font-size:9px;color:var(--gold);}
+/* 종합해석 버튼 */
+.syn-btn{
+  flex-shrink:0;background:rgba(200,146,42,.16);
+  border:1px solid rgba(200,146,42,.38);color:var(--goldl);
+  font-size:11px;letter-spacing:1.5px;padding:5px 14px;border-radius:3px;
+  cursor:pointer;font-family:'Noto Sans KR',sans-serif;
+  transition:background .2s;white-space:nowrap;
+}
+.syn-btn:hover{background:rgba(200,146,42,.32);}
+/* 모달 본문 스크롤바 */
+#synBody::-webkit-scrollbar{width:4px;}
+#synBody::-webkit-scrollbar-track{background:rgba(255,255,255,.04);}
+#synBody::-webkit-scrollbar-thumb{background:rgba(200,146,42,.28);border-radius:2px;}
+
   /* 오늘의 괘 배너 - 모바일 1줄 처리 */
   .daily-banner-inner{
     flex-wrap:nowrap!important;
@@ -232,7 +255,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
     scrollbar-width:none;
   }
   .daily-banner-inner::-webkit-scrollbar{display:none;}
-  .daily-banner-inner > span, .daily-banner-inner > button{flex-shrink:0!important;}
+  .daily-banner-inner > span{flex-shrink:0!important;}
   .daily-banner-inner #dDesc{
     flex:0 0 auto!important;
     max-width:160px;
@@ -247,11 +270,6 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
 .nav-r.menu-open .hamb span:nth-child(1){transform:translateY(6px) rotate(45deg);}
 .nav-r.menu-open .hamb span:nth-child(2){opacity:0;}
 .nav-r.menu-open .hamb span:nth-child(3){transform:translateY(-6px) rotate(-45deg);}
-
-/* 종합해석 모달 스크롤바 */
-#synthBody::-webkit-scrollbar{width:4px;}
-#synthBody::-webkit-scrollbar-track{background:rgba(255,255,255,.05);}
-#synthBody::-webkit-scrollbar-thumb{background:rgba(200,146,42,.3);border-radius:2px;}
 
 /* 인앱 브라우저 경고 배너 */
 #iabBanner{
@@ -312,77 +330,84 @@ body.iab-active{padding-top:84px;}
   <p class="hero-sub">미래 예언이 아닌, 지금 이 순간의 형세를 읽고 어떻게 나아갈지를 스스로 묻는 도구입니다</p>
 </section>
 
-<!-- 오늘의 괘 (띠 배너 — 천지인 4기운) -->
+<!-- 오늘의 괘 (4기운 칩 배너) -->
 <div style="background:var(--ink);border-bottom:1px solid rgba(255,255,255,.08);">
-  <div class="daily-banner-inner" style="max-width:980px;margin:0 auto;padding:9px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-    <!-- 날짜 -->
-    <span style="font-size:10px;letter-spacing:2px;color:var(--ink3);flex-shrink:0;">오늘의 괘</span>
-    <span style="font-size:10px;color:var(--ink3);flex-shrink:0;" id="dailyTitle"></span>
+  <div class="daily-banner-inner" style="max-width:980px;margin:0 auto;padding:8px 24px;display:flex;align-items:center;gap:10px;">
+
+    <!-- 날짜 레이블 -->
+    <span style="font-size:10px;letter-spacing:2px;color:var(--ink3);flex-shrink:0;white-space:nowrap;">오늘의 괘</span>
+    <span style="font-size:10px;color:var(--ink3);flex-shrink:0;white-space:nowrap;" id="dailyTitle"></span>
     <span style="color:rgba(255,255,255,.12);flex-shrink:0;">|</span>
 
-    <!-- 천기 칩 -->
-    <span id="chip0" style="display:inline-flex;align-items:center;gap:5px;background:rgba(200,146,42,.12);border:1px solid rgba(200,146,42,.22);border-radius:3px;padding:3px 10px;flex-shrink:0;cursor:default;">
-      <span style="font-size:9px;letter-spacing:1px;color:var(--ink3);">天</span>
-      <span style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:700;color:var(--goldl);" id="dName0">—</span>
-      <span style="font-size:9px;color:var(--gold);" id="dKw0"></span>
-    </span>
-    <!-- 지운 칩 -->
-    <span id="chip1" style="display:inline-flex;align-items:center;gap:5px;background:rgba(200,146,42,.12);border:1px solid rgba(200,146,42,.22);border-radius:3px;padding:3px 10px;flex-shrink:0;cursor:default;">
-      <span style="font-size:9px;letter-spacing:1px;color:var(--ink3);">地</span>
-      <span style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:700;color:var(--goldl);" id="dName1">—</span>
-      <span style="font-size:9px;color:var(--gold);" id="dKw1"></span>
-    </span>
-    <!-- 국운 칩 -->
-    <span id="chip2" style="display:inline-flex;align-items:center;gap:5px;background:rgba(200,146,42,.12);border:1px solid rgba(200,146,42,.22);border-radius:3px;padding:3px 10px;flex-shrink:0;cursor:default;">
-      <span style="font-size:9px;letter-spacing:1px;color:var(--ink3);">國</span>
-      <span style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:700;color:var(--goldl);" id="dName2">—</span>
-      <span style="font-size:9px;color:var(--gold);" id="dKw2"></span>
-    </span>
-    <!-- 시운 칩 -->
-    <span id="chip3" style="display:inline-flex;align-items:center;gap:5px;background:rgba(200,146,42,.12);border:1px solid rgba(200,146,42,.22);border-radius:3px;padding:3px 10px;flex-shrink:0;cursor:default;">
-      <span style="font-size:9px;letter-spacing:1px;color:var(--ink3);">市</span>
-      <span style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:700;color:var(--goldl);" id="dName3">—</span>
-      <span style="font-size:9px;color:var(--gold);" id="dKw3"></span>
-    </span>
+    <!-- 天 카드칩 -->
+    <div class="gua-chip" id="guaChip0">
+      <span class="gua-chip-eye">天</span>
+      <span class="gua-chip-name" id="dcName0">—</span>
+      <span class="gua-chip-kw" id="dcKw0"></span>
+    </div>
+    <!-- 地 카드칩 -->
+    <div class="gua-chip" id="guaChip1">
+      <span class="gua-chip-eye">地</span>
+      <span class="gua-chip-name" id="dcName1">—</span>
+      <span class="gua-chip-kw" id="dcKw1"></span>
+    </div>
+    <!-- 國 카드칩 -->
+    <div class="gua-chip" id="guaChip2">
+      <span class="gua-chip-eye">國</span>
+      <span class="gua-chip-name" id="dcName2">—</span>
+      <span class="gua-chip-kw" id="dcKw2"></span>
+    </div>
+    <!-- 市 카드칩 -->
+    <div class="gua-chip" id="guaChip3">
+      <span class="gua-chip-eye">市</span>
+      <span class="gua-chip-name" id="dcName3">—</span>
+      <span class="gua-chip-kw" id="dcKw3"></span>
+    </div>
 
-    <!-- 구분선 + 종합해석 버튼 -->
-    <span style="color:rgba(255,255,255,.12);flex-shrink:0;margin-left:2px;">|</span>
-    <button onclick="openSynthesisMo()" style="flex-shrink:0;background:rgba(200,146,42,.18);border:1px solid rgba(200,146,42,.4);color:var(--goldl);font-size:11px;letter-spacing:1.5px;padding:4px 14px;border-radius:3px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;white-space:nowrap;"
-      onmouseover="this.style.background='rgba(200,146,42,.35)'" onmouseout="this.style.background='rgba(200,146,42,.18)'">
-      ☯ 종합해석
-    </button>
+    <span style="color:rgba(255,255,255,.12);flex-shrink:0;">|</span>
 
-    <!-- 숨겨진 레거시 id 유지 (JS 호환) -->
+    <!-- 종합해석 버튼 -->
+    <button class="syn-btn" onclick="openSynthesisMo()">☯&nbsp;종합해석</button>
+
+    <!-- 레거시 id 유지 (다른 JS 참조용, 숨김) -->
     <span id="dName" style="display:none"></span>
-    <span id="dHj" style="display:none"></span>
+    <span id="dHj"   style="display:none"></span>
     <span id="dDesc" style="display:none"></span>
-    <span id="dKws" style="display:none"></span>
+    <span id="dKws"  style="display:none"></span>
   </div>
 </div>
 
-<!-- 천지인 종합해석 모달 -->
-<div class="mo" id="synthesisMo" style="z-index:350;">
-  <div class="md" style="max-width:640px;background:var(--ink);padding:0;border-radius:14px;overflow:hidden;">
-    <button class="mdx" onclick="closeMo('synthesisMo')" style="color:var(--ink3);z-index:10;">✕</button>
-    <!-- 모달 헤더 -->
-    <div style="padding:28px 32px 20px;border-bottom:1px solid rgba(255,255,255,.07);position:relative;">
-      <p style="font-size:9px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;">CHEONJIIN · 天地人</p>
-      <h2 style="font-family:'Noto Serif KR',serif;font-size:20px;font-weight:700;color:var(--goldl);margin-bottom:4px;">천지인 삼재 종합해석</h2>
-      <p style="font-size:11px;color:var(--ink3);" id="synthDateLine">오늘의 외부 형세 — 하늘 · 땅 · 나라 · 시장</p>
+<!-- ══ 천지인 종합해석 모달 ══ -->
+<div class="mo" id="synthesisMo">
+  <div style="background:var(--ink);border-radius:14px;max-width:620px;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.5);">
+
+    <!-- 닫기 -->
+    <button class="mdx" onclick="closeMo('synthesisMo')" style="color:var(--ink3);">✕</button>
+
+    <!-- 헤더 -->
+    <div style="padding:26px 28px 18px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;">
+      <p style="font-size:9px;letter-spacing:3px;color:var(--gold);margin-bottom:7px;">CHEONJIIN · 天地人 三才</p>
+      <h2 style="font-family:'Noto Serif KR',serif;font-size:19px;font-weight:700;color:var(--goldl);margin-bottom:3px;">천지인 삼재 종합해석</h2>
+      <p style="font-size:11px;color:var(--ink3);" id="synDateLine">하늘 · 땅 · 나라 · 시장 — 오늘의 외부 형세</p>
     </div>
+
     <!-- 4괘 배지 -->
-    <div style="padding:18px 32px 0;display:flex;gap:8px;flex-wrap:wrap;" id="synthBadges"></div>
+    <div style="padding:16px 28px 0;flex-shrink:0;display:flex;gap:8px;flex-wrap:wrap;" id="synBadges"></div>
+
     <!-- 구분선 -->
-    <div style="margin:16px 32px 0;height:1px;background:rgba(255,255,255,.07);"></div>
-    <!-- 해석 본문 -->
-    <div style="padding:20px 32px 0;max-height:52vh;overflow-y:auto;" id="synthBody">
-      <p style="font-size:13px;color:var(--ink3);text-align:center;padding:32px 0;letter-spacing:1px;">네 기운을 종합하는 중…</p>
+    <div style="margin:14px 28px 0;height:1px;background:rgba(255,255,255,.07);flex-shrink:0;"></div>
+
+    <!-- 해석 본문 (스크롤) -->
+    <div id="synBody" style="padding:18px 28px 0;overflow-y:auto;flex:1;">
+      <p style="font-size:13px;color:var(--ink3);text-align:center;padding:36px 0;letter-spacing:1px;">네 기운을 종합하는 중…</p>
     </div>
-    <!-- 오늘의 태도 -->
-    <div id="synthAction" style="display:none;margin:16px 32px 28px;background:rgba(200,146,42,.12);border:1px solid rgba(200,146,42,.25);border-radius:8px;padding:14px 16px;">
+
+    <!-- 오늘의 태도 (하단 고정) -->
+    <div id="synAction" style="display:none;margin:14px 28px 26px;background:rgba(200,146,42,.12);border:1px solid rgba(200,146,42,.25);border-radius:8px;padding:14px 16px;flex-shrink:0;">
       <p style="font-size:9px;letter-spacing:2px;color:var(--gold);margin-bottom:7px;">오늘 취해야 할 태도</p>
-      <p style="font-size:13px;color:var(--goldl);line-height:1.8;font-family:'Noto Serif KR',serif;" id="synthActionText"></p>
+      <p style="font-size:13px;color:var(--goldl);line-height:1.8;font-family:'Noto Serif KR',serif;" id="synActionText"></p>
     </div>
+
   </div>
 </div>
 
@@ -2305,162 +2330,152 @@ function getGua(key){
 }
 
 /* ══ 오늘의 괘 ══ */
-/* ══ 천지인 4괘 데이터 ══ */
-let _dailyGuaData = [{},{},{},{}];
-const _DAILY_DOMAINS = ['천기·天氣','지운·地運','국운·國運','시운·時運'];
-
-function weatherToGuaIdx(wmo, temp) {
-  if(wmo===0) return temp>30?29:1;
-  if(wmo<=3) return temp<5?6:11;
-  if(wmo<=48) return 29;
-  if(wmo<=67) return 39;
-  if(wmo<=77) return 52;
-  if(wmo<=82) return 3;
-  return 40;
-}
-
-const JUNGGI_LIST = [
-  {month:1,day:6,name:'소한'},{month:1,day:20,name:'대한'},
-  {month:2,day:4,name:'입춘'},{month:2,day:19,name:'우수'},
-  {month:3,day:6,name:'경칩'},{month:3,day:21,name:'춘분'},
-  {month:4,day:5,name:'청명'},{month:4,day:20,name:'곡우'},
-  {month:5,day:6,name:'입하'},{month:5,day:21,name:'소만'},
-  {month:6,day:6,name:'망종'},{month:6,day:21,name:'하지'},
-  {month:7,day:7,name:'소서'},{month:7,day:23,name:'대서'},
-  {month:8,day:7,name:'입추'},{month:8,day:23,name:'처서'},
-  {month:9,day:8,name:'백로'},{month:9,day:23,name:'추분'},
-  {month:10,day:8,name:'한로'},{month:10,day:23,name:'상강'},
-  {month:11,day:7,name:'입동'},{month:11,day:22,name:'소설'},
-  {month:12,day:7,name:'대설'},{month:12,day:22,name:'동지'}
+/* ══ 천지인 4괘 ══ */
+const _JUNGGI=[
+  {m:1,d:6,n:'소한'},{m:1,d:20,n:'대한'},
+  {m:2,d:4,n:'입춘'},{m:2,d:19,n:'우수'},
+  {m:3,d:6,n:'경칩'},{m:3,d:21,n:'춘분'},
+  {m:4,d:5,n:'청명'},{m:4,d:20,n:'곡우'},
+  {m:5,d:6,n:'입하'},{m:5,d:21,n:'소만'},
+  {m:6,d:6,n:'망종'},{m:6,d:21,n:'하지'},
+  {m:7,d:7,n:'소서'},{m:7,d:23,n:'대서'},
+  {m:8,d:7,n:'입추'},{m:8,d:23,n:'처서'},
+  {m:9,d:8,n:'백로'},{m:9,d:23,n:'추분'},
+  {m:10,d:8,n:'한로'},{m:10,d:23,n:'상강'},
+  {m:11,d:7,n:'입동'},{m:11,d:22,n:'소설'},
+  {m:12,d:7,n:'대설'},{m:12,d:22,n:'동지'}
 ];
-const JUNGGI_TO_GUA = {
-  소한:29,대한:52,입춘:24,우수:3,경칩:51,춘분:11,청명:5,곡우:42,
+const _JG2GUA={소한:29,대한:52,입춘:24,우수:3,경칩:51,춘분:11,청명:5,곡우:42,
   입하:1,소만:14,망종:43,하지:44,소서:13,대서:30,입추:33,처서:12,
-  백로:6,추분:2,한로:23,상강:15,입동:16,소설:7,대설:24,동지:24
-};
+  백로:6,추분:2,한로:23,상강:15,입동:16,소설:7,대설:24,동지:24};
 
-function getCurrentJunggi(now) {
-  const m=now.getMonth()+1, d=now.getDate();
-  let cur=null, next=null, daysInto=0;
-  const sorted=JUNGGI_LIST.slice().sort((a,b)=>a.month*100+a.day-(b.month*100+b.day));
-  for(let i=0;i<sorted.length;i++){
-    const s=sorted[i], nm=s.month*100+s.day, cm=m*100+d;
-    if(nm<=cm){cur=s;daysInto=cm-nm;next=sorted[(i+1)%sorted.length];}
+let _dgd=[{},{},{},{}]; // daily gua data
+
+function _getJg(now){
+  const m=now.getMonth()+1,d=now.getDate();
+  const s=_JUNGGI.slice().sort((a,b)=>a.m*100+a.d-(b.m*100+b.d));
+  let cur=s[s.length-1],next=s[0],di=0;
+  for(let i=0;i<s.length;i++){
+    if(s[i].m*100+s[i].d<=m*100+d){cur=s[i];di=m*100+d-(s[i].m*100+s[i].d);next=s[(i+1)%s.length];}
   }
-  if(!cur){cur=sorted[sorted.length-1];next=sorted[0];daysInto=0;}
-  return {cur, next, daysInto};
+  return{cur,next,daysInto:di};
+}
+function _wmoGua(c,t){
+  if(c===0)return t>30?29:1; if(c<=3)return t<5?6:11;
+  if(c<=48)return 29; if(c<=67)return 39;
+  if(c<=77)return 52; if(c<=82)return 3; return 40;
 }
 
 function initDaily(){
-  const n=new Date();
-  const ds=`${n.getFullYear()}년 ${n.getMonth()+1}월 ${n.getDate()}일`;
-  const titleEl=document.getElementById('dailyTitle');
-  if(titleEl) titleEl.textContent=ds;
+  const now=new Date();
+  const ds=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`;
+  const el=document.getElementById('dailyTitle');
+  if(el) el.textContent=ds;
 
-  // ── 지운: 절기 기반 ──
-  const jg = getCurrentJunggi(n);
-  const jgIdx = (JUNGGI_TO_GUA[jg.cur.name]||1)-1;
-  const gJi = G64[jgIdx];
-  _dailyGuaData[1] = {g:gJi, domain:'지운·地運', eye:'地', junggi:jg.cur.name, daysInto:jg.daysInto, nextJg:jg.next.name};
+  // 지운 — 절기
+  const jg=_getJg(now);
+  const jiIdx=(_JG2GUA[jg.cur.n]||1)-1;
+  _dgd[1]={g:G64[jiIdx],label:'지운·地運',jg:jg.cur.n,di:jg.daysInto,nj:jg.next.n};
 
-  // ── 국운: 월 시드 ──
-  const seed2=(n.getFullYear()*100+n.getMonth())%64;
-  const gNa=G64[seed2];
-  _dailyGuaData[2] = {g:gNa, domain:'국운·國運', eye:'國'};
+  // 국운 — 월 시드
+  const ns=(now.getFullYear()*100+now.getMonth())%64;
+  _dgd[2]={g:G64[ns],label:'국운·國運'};
 
-  // ── 천기: 날씨 API (fallback: 날짜 시드) ──
-  const wxFallbackIdx = (n.getFullYear()*10000+(n.getMonth()+1)*100+n.getDate()+7)%64;
-  _dailyGuaData[0] = {g:G64[wxFallbackIdx], domain:'천기·天氣', eye:'天', wxLabel:'—', temp:'—'};
+  // 천기 — 날씨 API (fallback: 날짜 시드)
+  const wfb=(now.getFullYear()*10000+(now.getMonth()+1)*100+now.getDate()+7)%64;
+  _dgd[0]={g:G64[wfb],label:'천기·天氣',wx:'',temp:''};
 
-  // ── 시운: 환율 API (fallback: 월 시드) ──
-  const fxFallbackIdx = (n.getFullYear()*100+(n.getMonth()+1))%64;
-  _dailyGuaData[3] = {g:G64[fxFallbackIdx], domain:'시운·時運', eye:'市', krw:'—'};
+  // 시운 — 환율 API (fallback: 월 시드)
+  const efb=(now.getFullYear()*100+(now.getMonth()+1))%64;
+  _dgd[3]={g:G64[efb],label:'시운·時運',krw:''};
 
-  // 칩 즉시 렌더 (fallback 값으로)
-  renderDailyChips();
+  _renderChips();
 
   // 날씨 API
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=37.0&longitude=127.0&current=temperature_2m,weathercode,windspeed_10m,apparent_temperature&timezone=Asia/Seoul')
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=37.0&longitude=127.0&current=temperature_2m,weathercode,windspeed_10m&timezone=Asia/Seoul')
     .then(r=>r.json()).then(d=>{
-      const wx=d.current;
-      const wmoLabel = (c)=>c===0?'맑음':c<=3?'구름':c<=48?'흐림':c<=67?'비':c<=77?'눈':'소나기';
-      const idx=weatherToGuaIdx(wx.weathercode,wx.temperature_2m);
-      _dailyGuaData[0]={g:G64[idx],domain:'천기·天氣',eye:'天',wxLabel:wmoLabel(wx.weathercode),temp:wx.temperature_2m+'°C'};
-      renderDailyChips();
+      const w=d.current;
+      const wl=w.weathercode===0?'맑음':w.weathercode<=3?'구름':w.weathercode<=48?'흐림':w.weathercode<=67?'비':'소나기';
+      _dgd[0]={g:G64[_wmoGua(w.weathercode,w.temperature_2m)],label:'천기·天氣',wx:wl,temp:w.temperature_2m+'°C'};
+      _renderChips();
     }).catch(()=>{});
 
   // 환율 API
   fetch('https://api.frankfurter.app/latest?from=USD&to=KRW')
     .then(r=>r.json()).then(d=>{
       const krw=d.rates?.KRW;
-      if(!krw) return;
-      let idx;
-      if(krw>1400)idx=29; else if(krw>1350)idx=12; else if(krw>1300)idx=47; else if(krw>1250)idx=11; else idx=14;
-      _dailyGuaData[3]={g:G64[idx],domain:'시운·時運',eye:'市',krw:krw.toFixed(0)+'원'};
-      renderDailyChips();
+      if(!krw)return;
+      let i; if(krw>1400)i=29; else if(krw>1350)i=12; else if(krw>1300)i=47; else if(krw>1250)i=11; else i=14;
+      _dgd[3]={g:G64[i],label:'시운·時運',krw:Math.round(krw).toLocaleString()+'원'};
+      _renderChips();
     }).catch(()=>{});
 }
 
-function renderDailyChips(){
-  const labels=['天','地','國','市'];
+function _renderChips(){
   for(let i=0;i<4;i++){
-    const d=_dailyGuaData[i];
-    if(!d||!d.g) continue;
-    const nameEl=document.getElementById('dName'+i);
-    const kwEl=document.getElementById('dKw'+i);
-    if(nameEl) nameEl.textContent=d.g.name;
-    if(kwEl) kwEl.textContent=d.g.keyword;
+    const d=_dgd[i];
+    if(!d?.g)continue;
+    const ne=document.getElementById('dcName'+i);
+    const ke=document.getElementById('dcKw'+i);
+    if(ne)ne.textContent=d.g.name;
+    if(ke)ke.textContent=d.g.keyword;
   }
   // 레거시 id 유지
-  const g0=_dailyGuaData[0]?.g;
-  if(g0){
-    const nameEl=document.getElementById('dName');
-    const hjEl=document.getElementById('dHj');
-    const descEl=document.getElementById('dDesc');
-    if(nameEl) nameEl.textContent=g0.name;
-    if(hjEl) hjEl.textContent=(g0.hanja||'')+'·'+(g0.keyword||'');
-    if(descEl) descEl.textContent=g0.desc||'';
+  const g=_dgd[0]?.g;
+  if(g){
+    const nm=document.getElementById('dName');
+    const hj=document.getElementById('dHj');
+    const dc=document.getElementById('dDesc');
+    if(nm)nm.textContent=g.name;
+    if(hj)hj.textContent=(g.hanja||'')+'·'+(g.keyword||'');
+    if(dc)dc.textContent=g.desc||'';
   }
 }
 
 /* ══ 종합해석 모달 ══ */
+const _SYN_LABELS=['천기·天氣','지운·地運','국운·國運','시운·時運'];
+
 async function openSynthesisMo(){
   openMo('synthesisMo');
 
-  // 날짜 라인
-  const n=new Date();
-  const ds=`${n.getFullYear()}년 ${n.getMonth()+1}월 ${n.getDate()}일`;
-  const el=document.getElementById('synthDateLine');
-  if(el) el.textContent=ds+' · 오늘의 외부 형세 — 하늘 · 땅 · 나라 · 시장';
+  // 날짜
+  const now=new Date();
+  const ds=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`;
+  const dlEl=document.getElementById('synDateLine');
+  if(dlEl)dlEl.textContent=ds+' · 하늘 · 땅 · 나라 · 시장 — 오늘의 외부 형세';
 
-  // 배지 렌더
-  const domains=_DAILY_DOMAINS;
-  const badges=document.getElementById('synthBadges');
-  if(badges){
-    badges.innerHTML=_dailyGuaData.map((d,i)=>{
-      if(!d||!d.g) return '';
-      return `<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(200,146,42,.13);border:1px solid rgba(200,146,42,.26);border-radius:3px;padding:4px 11px;">
-        <span style="font-size:9px;letter-spacing:1px;color:var(--ink3);">${domains[i].split('·')[0]}</span>
+  // 4괘 배지
+  const bd=document.getElementById('synBadges');
+  if(bd){
+    bd.innerHTML=_dgd.map((d,i)=>{
+      if(!d?.g)return '';
+      return `<div style="display:inline-flex;align-items:center;gap:5px;
+        background:rgba(200,146,42,.13);border:1px solid rgba(200,146,42,.26);
+        border-radius:3px;padding:4px 11px;">
+        <span style="font-size:9px;letter-spacing:1px;color:var(--ink3);">${_SYN_LABELS[i].split('·')[0]}</span>
         <span style="font-family:'Noto Serif KR',serif;font-size:14px;font-weight:700;color:var(--goldl);">${d.g.name}</span>
         <span style="font-size:9px;color:var(--gold);">${d.g.keyword}</span>
-      </span>`;
+      </div>`;
     }).join('');
   }
 
-  // 본문 로딩 상태
-  const bodyEl=document.getElementById('synthBody');
-  const actionEl=document.getElementById('synthAction');
-  if(bodyEl) bodyEl.innerHTML='<p style="font-size:13px;color:var(--ink3);text-align:center;padding:32px 0;letter-spacing:1px;animation:breathe 2s infinite;">네 기운을 종합하는 중…</p>';
-  if(actionEl) actionEl.style.display='none';
+  // 로딩
+  const bodyEl=document.getElementById('synBody');
+  const actEl=document.getElementById('synAction');
+  if(bodyEl)bodyEl.innerHTML=`<p style="font-family:'Noto Serif KR',serif;font-size:13px;color:var(--ink3);text-align:center;padding:40px 0;animation:breathe 2s infinite;">네 기운을 종합하는 중…</p>`;
+  if(actEl)actEl.style.display='none';
 
-  // 프롬프트 구성
-  const guaParts=_dailyGuaData.map((d,i)=>{
-    if(!d||!d.g) return '';
-    const extras = i===0&&d.wxLabel ? ` (${d.wxLabel} ${d.temp})` : i===1&&d.junggi ? ` (${d.junggi} 절기 ${d.daysInto}일째)` : i===3&&d.krw ? ` (USD/KRW ${d.krw})` : '';
-    return `${_DAILY_DOMAINS[i]} — ${d.g.name}(${d.g.hanja||''}), 키워드: ${d.g.keyword}. ${d.g.desc} 취할 태도: ${d.g.action}${extras}`;
+  // 프롬프트
+  const parts=_dgd.map((d,i)=>{
+    if(!d?.g)return '';
+    let ex='';
+    if(i===0&&d.wx)ex=` (${d.wx} ${d.temp})`;
+    if(i===1&&d.jg)ex=` (${d.jg} 절기 ${d.di}일째, 다음: ${d.nj})`;
+    if(i===3&&d.krw)ex=` (USD/KRW ${d.krw})`;
+    return `${_SYN_LABELS[i]} — ${d.g.name}(${d.g.hanja||''}), 키워드: ${d.g.keyword}. ${d.g.desc} 취할 태도: ${d.g.action}${ex}`;
   }).filter(Boolean).join('\n');
 
-  const prompt=`오늘은 ${ds}입니다. 천지인(天地人) 삼재 사상에 근거한 오늘의 네 괘 정보입니다:\n\n${guaParts}\n\n위 네 기운(천기·지운·국운·시운)을 종합하여 오늘 하루의 전체 형세를 고전적이고 시적인 문체로 해석해주십시오.\n반드시 아래 JSON 형식만 출력하십시오(마크다운·코드블록 없이):\n{"interpretation":"150~250자 종합 해석 (네 괘가 서로 어떻게 얽히는지 설명. 단락 구분은 \\n\\n 사용)","action":"오늘 취해야 할 핵심 태도 40자 이내 한 문장"}`;
+  const prompt=`오늘은 ${ds}입니다. 천지인(天地人) 삼재 사상에 근거한 오늘의 네 괘 정보:\n\n${parts}\n\n위 네 기운(천기·지운·국운·시운)을 종합하여 오늘 하루의 전체 형세를 고전적이고 시적인 문체로 해석하십시오.\n반드시 아래 JSON만 출력하십시오(마크다운·코드블록 없이):\n{"interpretation":"200~280자 종합 해석. 네 괘가 서로 얽히는 흐름을 설명. 단락 구분은 \\n\\n 사용.","action":"오늘 취해야 할 핵심 태도 40자 이내 한 문장"}`;
 
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
@@ -2469,21 +2484,18 @@ async function openSynthesisMo(){
       body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})
     });
     const data=await resp.json();
-    const raw=data.content.map(b=>b.text||'').join('');
-    const clean=raw.replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(clean);
+    const raw=(data.content||[]).map(b=>b.text||'').join('');
+    const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
 
-    if(bodyEl){
-      bodyEl.innerHTML=`<p style="font-family:'Noto Serif KR',serif;font-size:14px;color:#c8b090;line-height:2.0;white-space:pre-line;padding-bottom:4px;">${parsed.interpretation||''}</p>`;
+    if(bodyEl)bodyEl.innerHTML=`
+      <p style="font-family:'Noto Serif KR',serif;font-size:14px;color:#c8b090;line-height:2.1;white-space:pre-line;padding-bottom:4px;">${parsed.interpretation||''}</p>`;
+
+    if(parsed.action&&actEl){
+      document.getElementById('synActionText').textContent=parsed.action;
+      actEl.style.display='block';
     }
-    if(parsed.action && actionEl){
-      document.getElementById('synthActionText').textContent=parsed.action;
-      actionEl.style.display='block';
-      // 패딩 조정 (action이 있을 때 body 아래 여백 제거)
-      if(bodyEl) bodyEl.style.paddingBottom='0';
-    }
-  } catch(e){
-    if(bodyEl) bodyEl.innerHTML='<p style="font-size:13px;color:var(--ink3);text-align:center;padding:32px 0;">해석을 불러오지 못했습니다.<br><span style="font-size:11px;">잠시 후 다시 시도해주세요.</span></p>';
+  }catch(e){
+    if(bodyEl)bodyEl.innerHTML=`<p style="font-size:13px;color:var(--ink3);text-align:center;padding:40px 0;">해석을 불러오지 못했습니다.<br><span style="font-size:11px;opacity:.7;">잠시 후 다시 시도해 주세요.</span></p>`;
   }
 }
 // initDaily()는 ensureIching().then() 에서 호출됨
