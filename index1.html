@@ -243,12 +243,28 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
   font-family:'Noto Serif KR',serif;font-size:88px;font-weight:700;
   color:rgba(255,255,255,.04);line-height:1;user-select:none;pointer-events:none;
 }
-.dc-label{font-size:9px;letter-spacing:2.5px;color:var(--gold);text-transform:uppercase;margin-bottom:5px;}
-.dc-sub{font-size:10px;color:var(--ink3);margin-bottom:14px;letter-spacing:.5px;}
-.dc-name{font-family:'Noto Serif KR',serif;font-size:26px;font-weight:700;color:var(--goldl);line-height:1;margin-bottom:3px;}
-.dc-hanja{font-size:10px;color:var(--ink3);letter-spacing:1px;margin-bottom:10px;}
-.dc-kw-pill{display:inline-block;font-size:10px;letter-spacing:1.5px;background:rgba(200,146,42,.16);border:1px solid rgba(200,146,42,.3);color:var(--gold);padding:3px 10px;border-radius:2px;margin-bottom:12px;}
-.dc-desc{font-size:11px;color:#9a8e7a;line-height:1.75;}
+.dc-label{
+  font-size:9px;letter-spacing:2.5px;color:var(--gold);
+  text-transform:uppercase;margin-bottom:5px;
+}
+.dc-sub{
+  font-size:10px;color:var(--ink3);margin-bottom:14px;letter-spacing:.5px;
+}
+.dc-name{
+  font-family:'Noto Serif KR',serif;font-size:26px;font-weight:700;
+  color:var(--goldl);line-height:1;margin-bottom:3px;
+}
+.dc-hanja{
+  font-size:10px;color:var(--ink3);letter-spacing:1px;margin-bottom:10px;
+}
+.dc-kw-pill{
+  display:inline-block;font-size:10px;letter-spacing:1.5px;
+  background:rgba(200,146,42,.16);border:1px solid rgba(200,146,42,.3);
+  color:var(--gold);padding:3px 10px;border-radius:2px;margin-bottom:12px;
+}
+.dc-desc{
+  font-size:11px;color:#9a8e7a;line-height:1.75;
+}
 @media(max-width:680px){
   #dailyCardGrid{grid-template-columns:repeat(2,1fr)!important;}
   .dc-box{min-height:160px;}
@@ -258,22 +274,35 @@ nav{position:sticky;top:0;z-index:200;background:rgba(250,246,239,.96);backdrop-
   #dailyCardGrid{grid-template-columns:1fr!important;}
 }
 
-/* 괘 칩 (종합해석 모달 배지) */
-.gua-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(200,146,42,.11);border:1px solid rgba(200,146,42,.22);border-radius:3px;padding:4px 10px;flex-shrink:0;transition:background .18s,border-color .18s;}
-.gua-chip:hover{background:rgba(200,146,42,.22);border-color:rgba(200,146,42,.5);}
+/* 기존 칩 스타일 유지 (모달 내 배지용) */
+.gua-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(200,146,42,.11);border:1px solid rgba(200,146,42,.22);
+  border-radius:3px;padding:4px 10px;flex-shrink:0;
+  transition:background .18s,border-color .18s;
+}
+.gua-chip:hover{
+  background:rgba(200,146,42,.22);border-color:rgba(200,146,42,.5);
+}
 .gua-chip:hover .gua-chip-name{color:#fff;}
 .gua-chip-eye{font-size:9px;letter-spacing:1px;color:var(--ink3);}
 .gua-chip-name{font-family:'Noto Serif KR',serif;font-size:14px;font-weight:700;color:var(--goldl);}
 .gua-chip-kw{font-size:9px;color:var(--gold);}
-
 /* 종합해석 버튼 */
-.syn-btn{flex-shrink:0;background:rgba(200,146,42,.16);border:1px solid rgba(200,146,42,.38);color:var(--goldl);font-size:11px;letter-spacing:1.5px;padding:5px 14px;border-radius:3px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:background .2s;white-space:nowrap;}
+.syn-btn{
+  flex-shrink:0;background:rgba(200,146,42,.16);
+  border:1px solid rgba(200,146,42,.38);color:var(--goldl);
+  font-size:11px;letter-spacing:1.5px;padding:5px 14px;border-radius:3px;
+  cursor:pointer;font-family:'Noto Sans KR',sans-serif;
+  transition:background .2s;white-space:nowrap;
+}
 .syn-btn:hover{background:rgba(200,146,42,.32);}
-
 /* 모달 본문 스크롤바 */
 #synBody::-webkit-scrollbar{width:4px;}
 #synBody::-webkit-scrollbar-track{background:rgba(255,255,255,.04);}
 #synBody::-webkit-scrollbar-thumb{background:rgba(200,146,42,.28);border-radius:2px;}
+
+
 .hamb{
   display:none;background:none;border:none;cursor:pointer;
   width:32px;height:32px;align-items:center;justify-content:center;
@@ -2487,32 +2516,55 @@ function initDaily(){
 
   _renderChips();
 
-  // 날씨 API — 성공하면 천기 괘·맥락 업데이트
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,weathercode,windspeed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=Asia/Seoul')
-    .then(r=>r.json()).then(data=>{
-      const w=data.current;
-      const tmax=data.daily?.temperature_2m_max?.[0];
-      const tmin=data.daily?.temperature_2m_min?.[0];
-      const wl=w.weathercode===0?'맑음':w.weathercode<=3?'구름조금':w.weathercode<=48?'흐림':w.weathercode<=67?'비':'소나기';
-      const tempRange=(tmin!=null&&tmax!=null)?`${Math.round(tmin)}~${Math.round(tmax)}°C`:`${Math.round(w.temperature_2m)}°C`;
-      const wCode=w.weathercode, wTemp=w.temperature_2m;
-      const guaId=_wmoGua(wCode,wTemp);
-      const newG=G64[guaId-1]||_dgd[0].g;
-      const wDescMap={
-        '맑음':'맑은 하늘의 순수한 기운이 흐릅니다. 에너지가 충만하니 결단하기 좋은 날입니다.',
-        '구름조금':'바람이 하늘 위를 지나는 형상 — 큰 비는 없으나 구름이 오가니 완전히 맑지도 않습니다. 잠시 막힌 듯 보여도 곧 순환합니다.',
-        '흐림':'하늘이 두꺼운 구름에 덮인 형세입니다. 섣불리 나서기보다 상황을 관찰하며 때를 기다리십시오.',
-        '비':'비가 내려 땅을 적시는 형세입니다. 흘러가는 물처럼 저항하지 말고 유연하게 대처하십시오.',
-        '소나기':'갑작스러운 소나기처럼 충격이 오더라도 흔들리지 마십시오. 지나고 나면 하늘이 맑아집니다.'
-      };
-      _dgd[0]=Object.assign(_dgd[0],{
-        g: newG,
-        wx: wl, temp: tempRange,
-        realCtx: `서울 · ${wl}, ${tempRange}`,
-        realDesc: wDescMap[wl]||_dgd[0].realDesc
-      });
-      _renderChips();
-    }).catch(()=>{ /* 고정 데이터 유지 */ });
+  // 날씨 API — 위치 자동감지 후 천기 괘·맥락 업데이트
+  function _fetchWeather(lat, lng, locLabel){
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Seoul';
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weathercode,windspeed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=${encodeURIComponent(tz)}`)
+      .then(r=>r.json()).then(data=>{
+        const w=data.current;
+        const tmax=data.daily?.temperature_2m_max?.[0];
+        const tmin=data.daily?.temperature_2m_min?.[0];
+        const wl=w.weathercode===0?'맑음':w.weathercode<=3?'구름조금':w.weathercode<=48?'흐림':w.weathercode<=67?'비':'소나기';
+        const tempRange=(tmin!=null&&tmax!=null)?`${Math.round(tmin)}~${Math.round(tmax)}°C`:`${Math.round(w.temperature_2m)}°C`;
+        const guaId=_wmoGua(w.weathercode, w.temperature_2m);
+        const newG=G64[guaId-1]||_dgd[0].g;
+        const wDescMap={
+          '맑음':`${locLabel}의 하늘이 활짝 열렸습니다. 건(乾)의 순수한 기운이 충만하니 — 지금 결심한 일은 하늘의 도움을 받습니다. 주저하지 말고 나아가십시오.`,
+          '구름조금':`바람이 하늘 위를 지나는 형상입니다. ${locLabel} 하늘에 구름이 오가니 완전히 맑지도 흐리지도 않습니다. 작은 것에 충실하면 잠시 막힌 듯 보여도 곧 순환합니다.`,
+          '흐림':`${locLabel}의 하늘이 두꺼운 구름에 덮인 형세입니다. 지금은 나서기보다 상황을 조용히 관찰하며 때를 기다릴 때입니다. 억지로 밀어붙이면 막힙니다.`,
+          '비':`${locLabel}에 비가 내려 땅을 적십니다. 물은 막히면 돌아가는 법 — 저항하지 말고 유연하게 흘러가십시오. 감괘(坎)의 이치처럼, 험난함 속에도 반드시 길은 있습니다.`,
+          '소나기':`${locLabel}에 갑작스러운 소나기가 내립니다. 진(震)의 충격처럼 예상치 못한 일이 닥쳐도 흔들리지 마십시오. 소나기는 반드시 지나가고, 지나면 하늘이 더 맑아집니다.`
+        };
+        _dgd[0]=Object.assign(_dgd[0],{
+          g: newG,
+          wx: wl, temp: tempRange,
+          realCtx: `${locLabel} · ${wl}, ${tempRange}`,
+          realDesc: wDescMap[wl]
+        });
+        _renderChips();
+      }).catch(()=>{ /* 고정 데이터 유지 */ });
+  }
+
+  // 위치 자동감지 시도 → 실패 시 서울 fallback
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const {latitude: lat, longitude: lng} = pos.coords;
+        // 역지오코딩으로 도시명 가져오기
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ko`)
+          .then(r=>r.json())
+          .then(geo=>{
+            const city = geo.address?.city || geo.address?.town || geo.address?.county || '현재 위치';
+            _fetchWeather(lat, lng, city);
+          })
+          .catch(()=>_fetchWeather(lat, lng, '현재 위치'));
+      },
+      ()=>_fetchWeather(37.5665, 126.9780, '서울'), // 거부 시 서울
+      {timeout:5000}
+    );
+  } else {
+    _fetchWeather(37.5665, 126.9780, '서울');
+  }
 
   // 환율 API — 성공하면 시운 괘·맥락 업데이트
   fetch('https://api.frankfurter.app/latest?from=USD&to=KRW')
@@ -2529,12 +2581,12 @@ function initDaily(){
       const krwStr=Math.round(krw).toLocaleString()+'원';
       const trend=krw>1450?'극도 약세':krw>1400?'강한 약세':krw>1350?'약세':krw>1300?'보통':krw>1250?'강세':'강한 강세';
       const krwDescMap={
-        '극도 약세':'원화가 극도로 약세인 지금, 감괘(坎)의 험난함이 시장을 지배합니다. 방어적 자세를 유지하고 섣불리 움직이지 마십시오.',
-        '강한 약세':'감괘(坎)는 험난한 물길이 거듭되는 위험의 괘입니다. 달러 강세·원화 약세 국면에서 섣불리 나서기보다 진실한 마음으로 버티면 반드시 돌파구가 생깁니다.',
-        '약세':'비괘(否)의 막힘처럼 원화가 눌려 있습니다. 억지로 추진하기보다 내실을 다지며 기다리십시오.',
-        '보통':'환율이 안정된 구간입니다. 곤괘(困)의 형세이니 말보다 행동으로 증명할 때입니다.',
-        '강세':'태괘(泰)의 소통처럼 원화 강세가 흐름을 뚫었습니다. 적극적으로 나아갈 때입니다.',
-        '강한 강세':'대유괘(大有)의 풍요처럼 원화가 강합니다. 지금의 풍요를 나누며 미래를 대비하십시오.'
+        '극도 약세':'원화가 극도로 약세인 지금은 감괘(坎)가 거듭되는 형세입니다. 두 겹의 물길이 험난하게 흐르듯, 무리하게 나서면 더 깊이 빠집니다. 방어적 자세를 굳건히 유지하며 때를 기다리십시오.',
+        '강한 약세':'감괘(坎)는 험난한 물길이 거듭되는 위험의 괘입니다. 달러 강세·원화 약세 국면에서 섣불리 나서기보다 진실한 마음으로 버티면 반드시 돌파구가 생깁니다. 흐름을 거스르지 말고 따라가십시오.',
+        '약세':'비괘(否)의 막힘처럼 원화가 눌려 있습니다. 하늘과 땅이 소통하지 못하는 형세 — 억지로 추진하기보다 내실을 다지며 기다리면 통함(泰)의 때가 반드시 옵니다.',
+        '보통':'환율이 안정된 구간입니다. 곤괘(困)의 형세이니 말보다 행동으로 증명할 때입니다. 과도한 욕심보다 꾸준함이 지금의 시운에 맞습니다.',
+        '강세':'태괘(泰)의 소통처럼 원화 강세가 막힌 흐름을 뚫었습니다. 하늘과 땅이 교류하는 형세 — 적극적으로 나아가되 지나친 자만은 금물입니다.',
+        '강한 강세':'대유괘(大有)의 풍요처럼 원화가 강합니다. 하늘 아래 태양이 빛나는 형세이니 지금의 풍요를 나누며 미래를 대비하십시오. 독식하면 형세가 기울기 시작합니다.'
       };
       _dgd[3]=Object.assign(_dgd[3],{
         g: G64[guaId-1]||_dgd[3].g,
@@ -2648,10 +2700,75 @@ function _renderChips(){
 /* ══ 종합해석 모달 ══ */
 const _SYN_LABELS=['천기·天氣','지운·地運','국운·國運','시운·時運'];
 
-async function openSynthesisMo(){
+/* 4괘 조합 → 자체 종합 해석 생성 */
+function _buildSynthesis(){
+  const [sky, earth, nation, market] = _dgd.map(d=>d?.g||{});
+
+  // 각 괘의 핵심 상태 분류
+  function _tone(g){
+    const pos=['길','대유','태','익','진','풍','점','귀매','소축','대축'];
+    const neg=['험','비','곤','감','둔','명이','분','박','규','손'];
+    const n=g?.name||'';
+    if(pos.some(k=>n.includes(k))) return 'pos';
+    if(neg.some(k=>n.includes(k))) return 'neg';
+    return 'neu';
+  }
+  const tones=[sky,earth,nation,market].map(_tone);
+  const posCount=tones.filter(t=>t==='pos').length;
+  const negCount=tones.filter(t=>t==='neg').length;
+
+  // 천기 → 하늘 기운 묘사
+  const skyCtx = _dgd[0].realCtx || (sky?.name ? `하늘에 ${sky.name}의 기운` : '');
+  const skyLine = _dgd[0].realDesc || sky?.desc || '';
+
+  // 지운 → 절기 흐름
+  const jg = _dgd[1].jg;
+  const earthLine = _dgd[1].realDesc || earth?.desc || '';
+
+  // 국운 → 사회 형세
+  const nationLine = _dgd[2].realDesc || nation?.desc || '';
+
+  // 시운 → 경제 흐름
+  const marketLine = _dgd[3].realDesc || market?.desc || '';
+
+  // 전체 기운 판단
+  let overallTone, actionLine;
+  if(negCount>=3){
+    overallTone='삼중의 험난함이 겹쳐 있습니다. 지금은 움직임보다 고요함이 지혜입니다.';
+    actionLine='나서지 말고 내실을 다지십시오. 험난함은 반드시 지납니다.';
+  } else if(negCount===2){
+    overallTone='두 기운이 막혀 있고 두 기운이 버팁니다. 안정을 유지하되 기회를 놓치지 마십시오.';
+    actionLine='섣불리 움직이지 말고, 열리는 문을 조용히 기다리십시오.';
+  } else if(posCount>=3){
+    overallTone='세 기운 이상이 열려 있습니다. 하늘과 땅이 교류하는 형세이니 과감히 나아갈 때입니다.';
+    actionLine='때가 왔습니다. 결심한 것을 실행에 옮기십시오.';
+  } else if(posCount===2){
+    overallTone='하늘과 땅 중 두 기운이 순하게 흐릅니다. 큰 욕심보다 꾸준한 행보가 어울리는 때입니다.';
+    actionLine='작은 것에 충실하십시오. 작은 성실함이 큰 결실로 이어집니다.';
+  } else {
+    overallTone='네 기운이 서로 균형을 이루며 중도(中道)를 가리킵니다. 극단을 피하고 중심을 지키십시오.';
+    actionLine='흔들리지 마십시오. 중심을 지키는 것이 오늘의 최선입니다.';
+  }
+
+  // 괘 이름 조합 문장
+  const guaLine = `${sky?.name||'—'}(하늘) · ${earth?.name||'—'}(땅) · ${nation?.name||'—'}(나라) · ${market?.name||'—'}(시장)`;
+
+  // 본문 조립 (단락 구분)
+  const paragraphs = [
+    `오늘의 네 기운은 ${guaLine}으로 펼쳐집니다.`,
+    skyLine,
+    earthLine,
+    `나라와 시장의 형세: ${nationLine}`,
+    marketLine,
+    overallTone
+  ].filter(Boolean);
+
+  return { paragraphs, action: actionLine };
+}
+
+function openSynthesisMo(){
   openMo('synthesisMo');
 
-  // 날짜
   const now=new Date();
   const ds=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`;
   const dlEl=document.getElementById('synDateLine');
@@ -2672,47 +2789,26 @@ async function openSynthesisMo(){
     }).join('');
   }
 
-  // 로딩
   const bodyEl=document.getElementById('synBody');
   const actEl=document.getElementById('synAction');
-  if(bodyEl)bodyEl.innerHTML=`<p style="font-family:'Noto Serif KR',serif;font-size:13px;color:var(--ink3);text-align:center;padding:40px 0;animation:breathe 2s infinite;">네 기운을 종합하는 중…</p>`;
-  if(actEl)actEl.style.display='none';
 
-  // 프롬프트
-  const parts=_dgd.map((d,i)=>{
-    if(!d?.g)return '';
-    let ex='';
-    if(d.realCtx) ex=` (${d.realCtx})`;
-    else{
-      if(i===0&&d.wx)ex=` (${d.wx} ${d.temp})`;
-      if(i===1&&d.jg)ex=` (${d.jg} 절기 ${d.di}일째, 다음: ${d.nj})`;
-      if(i===3&&d.krw)ex=` (USD/KRW ${d.krw})`;
-    }
-    const extraDesc=d.realDesc?` 맥락: ${d.realDesc}`:'';
-    return `${_SYN_LABELS[i]} — ${d.g.name}(${d.g.hanja||''}), 키워드: ${d.g.keyword}. ${d.g.desc}${extraDesc} 취할 태도: ${d.g.action}${ex}`;
-  }).filter(Boolean).join('\n');
+  // 자체 생성
+  const {paragraphs, action} = _buildSynthesis();
 
-  const prompt=`오늘은 ${ds}입니다. 천지인(天地人) 삼재 사상에 근거한 오늘의 네 괘 정보:\n\n${parts}\n\n위 네 기운(천기·지운·국운·시운)을 종합하여 오늘 하루의 전체 형세를 고전적이고 시적인 문체로 해석하십시오.\n반드시 아래 JSON만 출력하십시오(마크다운·코드블록 없이):\n{"interpretation":"200~280자 종합 해석. 네 괘가 서로 얽히는 흐름을 설명. 단락 구분은 \\n\\n 사용.","action":"오늘 취해야 할 핵심 태도 40자 이내 한 문장"}`;
+  if(bodyEl){
+    bodyEl.innerHTML = paragraphs.map((p,i)=>
+      `<p style="font-family:'Noto Serif KR',serif;font-size:${i===0?'12px':'13px'};
+        color:${i===0?'var(--gold)':'#c8b090'};line-height:2.0;margin-bottom:14px;
+        ${i===0?'letter-spacing:1px;':''}">
+        ${p}
+      </p>`
+    ).join('');
+  }
 
-  try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})
-    });
-    const data=await resp.json();
-    const raw=(data.content||[]).map(b=>b.text||'').join('');
-    const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
-
-    if(bodyEl)bodyEl.innerHTML=`
-      <p style="font-family:'Noto Serif KR',serif;font-size:14px;color:#c8b090;line-height:2.1;white-space:pre-line;padding-bottom:4px;">${parsed.interpretation||''}</p>`;
-
-    if(parsed.action&&actEl){
-      document.getElementById('synActionText').textContent=parsed.action;
-      actEl.style.display='block';
-    }
-  }catch(e){
-    if(bodyEl)bodyEl.innerHTML=`<p style="font-size:13px;color:var(--ink3);text-align:center;padding:40px 0;">해석을 불러오지 못했습니다.<br><span style="font-size:11px;opacity:.7;">잠시 후 다시 시도해 주세요.</span></p>`;
+  if(action && actEl){
+    const atEl=document.getElementById('synActionText');
+    if(atEl) atEl.textContent=action;
+    actEl.style.display='block';
   }
 }
 // initDaily()는 ensureIching().then() 에서 호출됨
