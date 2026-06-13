@@ -378,36 +378,89 @@ body.iab-active{padding-top:84px;}
 </div>
 
 <!-- ══ 천지인 종합해석 모달 ══ -->
+<style>
+/* 모달 내부 4괘 카드 그리드 */
+.syn-card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+@media(max-width:560px){.syn-card-grid{grid-template-columns:repeat(2,1fr);}}
+.syn-card{
+  background:rgba(255,255,255,.05);border:0.5px solid rgba(255,255,255,.1);
+  border-radius:10px;padding:14px 12px 12px;position:relative;overflow:hidden;
+}
+.syn-card::before{
+  content:attr(data-bg);position:absolute;top:-6px;right:4px;
+  font-family:'Noto Serif KR',serif;font-size:44px;font-weight:700;
+  color:rgba(255,255,255,.06);pointer-events:none;line-height:1;
+}
+.sc-eye{font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.35);margin-bottom:6px;}
+.sc-domain{font-size:9px;letter-spacing:1.5px;color:var(--gold);margin-bottom:2px;}
+.sc-gua{font-family:'Noto Serif KR',serif;font-size:18px;font-weight:700;color:var(--goldl);line-height:1.2;}
+.sc-hanja{font-size:10px;color:var(--ink3);margin-bottom:6px;}
+.sc-badge{
+  display:inline-block;background:rgba(200,146,42,.18);border:1px solid rgba(200,146,42,.32);
+  color:var(--goldl);font-size:9px;letter-spacing:1.5px;padding:2px 8px;border-radius:2px;margin-bottom:7px;
+}
+.sc-desc{font-size:10px;color:rgba(255,255,255,.45);line-height:1.6;}
+.sc-bar{height:2px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:10px;}
+.sc-fill{height:100%;background:var(--gold);border-radius:2px;}
+/* 종합해석 본문 영역 */
+.syn-mo-text{font-size:13px;color:#c8b090;line-height:2.1;font-family:'Noto Serif KR',serif;white-space:pre-line;}
+/* 실측 데이터 */
+.syn-data-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:11px;}
+.syn-data-row:last-child{border-bottom:none;}
+.syn-data-key{color:rgba(255,255,255,.4);}
+.syn-data-val{color:rgba(255,255,255,.75);font-weight:500;}
+.syn-data-warn{color:#e07755;}
+</style>
+
 <div class="mo" id="synthesisMo">
-  <div style="background:var(--ink);border-radius:14px;max-width:620px;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.5);">
+  <div style="background:var(--ink);border-radius:14px;max-width:680px;width:100%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.55);">
 
     <!-- 닫기 -->
-    <button class="mdx" onclick="closeMo('synthesisMo')" style="color:var(--ink3);">✕</button>
+    <button class="mdx" onclick="closeMo('synthesisMo')" style="color:rgba(255,255,255,.3);z-index:10;">✕</button>
 
-    <!-- 헤더 -->
-    <div style="padding:26px 28px 18px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;">
-      <p style="font-size:9px;letter-spacing:3px;color:var(--gold);margin-bottom:7px;">CHEONJIIN · 天地人 三才</p>
-      <h2 style="font-family:'Noto Serif KR',serif;font-size:19px;font-weight:700;color:var(--goldl);margin-bottom:3px;">천지인 삼재 종합해석</h2>
-      <p style="font-size:11px;color:var(--ink3);" id="synDateLine">하늘 · 땅 · 나라 · 시장 — 오늘의 외부 형세</p>
+    <!-- 헤더 (날짜 + 절기) -->
+    <div style="padding:20px 24px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+      <div id="synDateChip" style="background:rgba(255,255,255,.08);color:var(--goldl);font-family:'Noto Serif KR',serif;font-size:12px;letter-spacing:2px;padding:4px 12px;border-radius:4px;flex-shrink:0;"></div>
+      <p style="font-size:11px;color:rgba(255,255,255,.3);letter-spacing:1px;" id="synDateLine"></p>
+      <!-- 더보기 버튼 자리 -->
+      <div style="margin-left:auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid rgba(255,255,255,.1);cursor:pointer;flex-shrink:0;color:rgba(255,255,255,.3);font-size:14px;" title="공유">···</div>
     </div>
 
-    <!-- 4괘 배지 -->
-    <div style="padding:16px 28px 0;flex-shrink:0;display:flex;gap:8px;flex-wrap:wrap;" id="synBadges"></div>
+    <!-- 스크롤 영역 -->
+    <div id="synBody" style="overflow-y:auto;flex:1;padding:20px 24px 24px;">
 
-    <!-- 구분선 -->
-    <div style="margin:14px 28px 0;height:1px;background:rgba(255,255,255,.07);flex-shrink:0;"></div>
+      <!-- 4괘 카드 그리드 -->
+      <div class="syn-card-grid" id="synCardGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:32px 0;font-size:12px;color:rgba(255,255,255,.25);letter-spacing:2px;">네 기운을 읽는 중…</div>
+      </div>
 
-    <!-- 해석 본문 (스크롤) -->
-    <div id="synBody" style="padding:18px 28px 0;overflow-y:auto;flex:1;">
-      <p style="font-size:13px;color:var(--ink3);text-align:center;padding:36px 0;letter-spacing:1px;">네 기운을 종합하는 중…</p>
+      <!-- 구분선 -->
+      <div style="height:1px;background:rgba(255,255,255,.07);margin-bottom:20px;"></div>
+
+      <!-- 종합해석 레이블 + 배지 -->
+      <p style="font-size:9px;letter-spacing:3px;color:var(--gold);margin-bottom:10px;">천지인 삼재 종합해석</p>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;" id="synBadges"></div>
+      <div style="height:1px;background:rgba(255,255,255,.07);margin-bottom:16px;"></div>
+
+      <!-- 해석 본문 -->
+      <div id="synInterpret" style="position:relative;">
+        <p class="syn-mo-text" id="synText" style="color:rgba(255,255,255,.25);text-align:center;padding:20px 0;font-size:12px;font-family:'Noto Sans KR',sans-serif;letter-spacing:1px;">해석을 불러오는 중…</p>
+      </div>
+
+      <!-- 오늘의 태도 -->
+      <div id="synAction" style="display:none;margin-top:18px;background:rgba(200,146,42,.12);border:1px solid rgba(200,146,42,.25);border-radius:8px;padding:14px 16px;">
+        <p style="font-size:9px;letter-spacing:2px;color:var(--gold);margin-bottom:7px;">오늘 취해야 할 태도</p>
+        <p style="font-size:13px;color:var(--goldl);line-height:1.8;font-family:'Noto Serif KR',serif;" id="synActionText"></p>
+      </div>
+
+      <!-- 실측 데이터 -->
+      <div id="synDataBox" style="display:none;margin-top:18px;background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.09);border-radius:10px;padding:14px 16px;">
+        <p style="font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.3);margin-bottom:10px;">실측 데이터 기반</p>
+        <div id="synDataRows"></div>
+        <p style="font-size:10px;color:rgba(255,255,255,.2);margin-top:12px;line-height:1.7;" id="synDataNote"></p>
+      </div>
+
     </div>
-
-    <!-- 오늘의 태도 (하단 고정) -->
-    <div id="synAction" style="display:none;margin:14px 28px 26px;background:rgba(200,146,42,.12);border:1px solid rgba(200,146,42,.25);border-radius:8px;padding:14px 16px;flex-shrink:0;">
-      <p style="font-size:9px;letter-spacing:2px;color:var(--gold);margin-bottom:7px;">오늘 취해야 할 태도</p>
-      <p style="font-size:13px;color:var(--goldl);line-height:1.8;font-family:'Noto Serif KR',serif;" id="synActionText"></p>
-    </div>
-
   </div>
 </div>
 
@@ -2348,8 +2401,14 @@ const _JUNGGI=[
 const _JG2GUA={소한:29,대한:52,입춘:24,우수:3,경칩:51,춘분:11,청명:5,곡우:42,
   입하:1,소만:14,망종:43,하지:44,소서:13,대서:30,입추:33,처서:12,
   백로:6,추분:2,한로:23,상강:15,입동:16,소설:7,대설:24,동지:24};
+const _JG_HANJA={소한:'小寒',대한:'大寒',입춘:'立春',우수:'雨水',경칩:'驚蟄',춘분:'春分',
+  청명:'淸明',곡우:'穀雨',입하:'立夏',소만:'小滿',망종:'芒種',하지:'夏至',
+  소서:'小暑',대서:'大暑',입추:'立秋',처서:'處暑',백로:'白露',추분:'秋分',
+  한로:'寒露',상강:'霜降',입동:'立冬',소설:'小雪',대설:'大雪',동지:'冬至'};
 
 let _dgd=[{},{},{},{}]; // daily gua data
+// 국운 월별 매핑 — 전역 (initDaily + openSynthesisMo 공용)
+const _GUOYUN_MAP=[23,18,33,42,43,53,54,55,56,57,58,59];
 
 function _getJg(now){
   const m=now.getMonth()+1,d=now.getDate();
@@ -2380,7 +2439,6 @@ function initDaily(){
   // 국운 — 월별 매핑 (음양오행·절기 기반 배정)
   // 1월:복(23) 2월:임(18) 3월:대장(33) 4월:쾌(42) 5월:구(43) 6월:귀매(53)
   // 7월:풍(54) 8월:여(55) 9월:손(56) 10월:태(57) 11월:환(58) 12월:절(59)
-  const _GUOYUN_MAP=[23,18,33,42,43,53,54,55,56,57,58,59];
   const ns=_GUOYUN_MAP[now.getMonth()];
   _dgd[2]={g:G64[ns],label:'국운·國運'};
 
@@ -2441,34 +2499,69 @@ const _SYN_LABELS=['천기·天氣','지운·地運','국운·國運','시운·�
 async function openSynthesisMo(){
   openMo('synthesisMo');
 
-  // 날짜
   const now=new Date();
+  const DOW=['日','月','火','水','木','金','土'];
   const ds=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`;
-  const dlEl=document.getElementById('synDateLine');
-  if(dlEl)dlEl.textContent=ds+' · 하늘 · 땅 · 나라 · 시장 — 오늘의 외부 형세';
+  const dsChip=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${DOW[now.getDay()]}`;
 
-  // 4괘 배지
-  const bd=document.getElementById('synBadges');
-  if(bd){
-    bd.innerHTML=_dgd.map((d,i)=>{
+  // 헤더 날짜 칩
+  const chipEl=document.getElementById('synDateChip');
+  if(chipEl)chipEl.textContent=dsChip;
+
+  // 절기 부제
+  const jg=_getJg(now);
+  const dlEl=document.getElementById('synDateLine');
+  if(dlEl)dlEl.textContent=`${jg.cur.n} 절기 ${jg.daysInto}일째 · ${jg.next.n}까지 ${_daysUntilNext(now,jg.next)}일`;
+
+  // 도메인 레이블
+  const _DOMAINS=['날씨 기운','절기 기운','사회 정세','경제 흐름'];
+  const _BG=['天','地','國','市'];
+  // 게이지 기준값 (목표 화면 참고)
+  const _GAUGES=[58,72,44,82];
+
+  // ─── 4괘 카드 그리드 렌더 ───
+  const grid=document.getElementById('synCardGrid');
+  if(grid){
+    grid.innerHTML=_dgd.map((d,i)=>{
       if(!d?.g)return '';
-      return `<div style="display:inline-flex;align-items:center;gap:5px;
-        background:rgba(200,146,42,.13);border:1px solid rgba(200,146,42,.26);
-        border-radius:3px;padding:4px 11px;">
-        <span style="font-size:9px;letter-spacing:1px;color:var(--ink3);">${_SYN_LABELS[i].split('·')[0]}</span>
-        <span style="font-family:'Noto Serif KR',serif;font-size:14px;font-weight:700;color:var(--goldl);">${d.g.name}</span>
-        <span style="font-size:9px;color:var(--gold);">${d.g.keyword}</span>
+      const pct=_GAUGES[i];
+      return `<div class="syn-card" data-bg="${_BG[i]}">
+        <div class="sc-eye">${_SYN_LABELS[i].replace('·',' · ')}</div>
+        <div class="sc-domain">${_DOMAINS[i]}</div>
+        <div class="sc-gua">${d.g.name}</div>
+        <div class="sc-hanja">${d.g.hanja||''} · ${d.g.keyword||''}</div>
+        <div class="sc-badge">${d.g.keyword||''}</div>
+        <div class="sc-desc">${d.g.desc||''}</div>
+        <div class="sc-bar"><div class="sc-fill" style="width:${pct}%"></div></div>
       </div>`;
     }).join('');
   }
 
-  // 로딩
-  const bodyEl=document.getElementById('synBody');
-  const actEl=document.getElementById('synAction');
-  if(bodyEl)bodyEl.innerHTML=`<p style="font-family:'Noto Serif KR',serif;font-size:13px;color:var(--ink3);text-align:center;padding:40px 0;animation:breathe 2s infinite;">네 기운을 종합하는 중…</p>`;
-  if(actEl)actEl.style.display='none';
+  // ─── 4괘 배지 ───
+  const bd=document.getElementById('synBadges');
+  if(bd){
+    bd.innerHTML=_dgd.map((d,i)=>{
+      if(!d?.g)return '';
+      const eyeLabel=_SYN_LABELS[i].split('·')[0].replace('·','').trim();
+      return `<div style="display:inline-flex;align-items:center;gap:5px;
+        background:rgba(200,146,42,.13);border:1px solid rgba(200,146,42,.26);
+        border-radius:3px;padding:4px 11px;">
+        <span style="font-size:9px;letter-spacing:1px;color:var(--ink3);">${eyeLabel}</span>
+        <span style="font-family:'Noto Serif KR',serif;font-size:14px;font-weight:700;color:var(--goldl);">${d.g.name}</span>
+        <span style="font-size:9px;color:var(--gold);">${d.g.hanja||''}</span>
+      </div>`;
+    }).join('');
+  }
 
-  // 프롬프트
+  // ─── 해석 로딩 상태 ───
+  const txtEl=document.getElementById('synText');
+  const actEl=document.getElementById('synAction');
+  const dataBox=document.getElementById('synDataBox');
+  if(txtEl){txtEl.textContent='네 기운을 종합하는 중…';txtEl.style.color='rgba(255,255,255,.25)';txtEl.className='';}
+  if(actEl)actEl.style.display='none';
+  if(dataBox)dataBox.style.display='none';
+
+  // ─── AI 해석 프롬프트 ───
   const parts=_dgd.map((d,i)=>{
     if(!d?.g)return '';
     let ex='';
@@ -2478,7 +2571,7 @@ async function openSynthesisMo(){
     return `${_SYN_LABELS[i]} — ${d.g.name}(${d.g.hanja||''}), 키워드: ${d.g.keyword}. ${d.g.desc} 취할 태도: ${d.g.action}${ex}`;
   }).filter(Boolean).join('\n');
 
-  const prompt=`오늘은 ${ds}입니다. 천지인(天地人) 삼재 사상에 근거한 오늘의 네 괘 정보:\n\n${parts}\n\n위 네 기운(천기·지운·국운·시운)을 종합하여 오늘 하루의 전체 형세를 고전적이고 시적인 문체로 해석하십시오.\n반드시 아래 JSON만 출력하십시오(마크다운·코드블록 없이):\n{"interpretation":"200~280자 종합 해석. 네 괘가 서로 얽히는 흐름을 설명. 단락 구분은 \\n\\n 사용.","action":"오늘 취해야 할 핵심 태도 40자 이내 한 문장"}`;
+  const prompt=`오늘은 ${ds}입니다. 천지인(天地人) 삼재 사상에 근거한 오늘의 네 괘 정보:\n\n${parts}\n\n위 네 기운(천기·지운·국운·시운)을 종합하여 오늘 하루의 전체 형세를 고전적이고 시적인 문체로 해석하십시오.\n반드시 아래 JSON만 출력하십시오(마크다운·코드블록 없이):\n{"interpretation":"250~350자 종합 해석. 각 괘를 하나씩 설명 후 종합. 단락 구분은 \\n\\n 사용.","action":"오늘 취해야 할 핵심 태도 40자 이내 한 문장"}`;
 
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
@@ -2490,16 +2583,56 @@ async function openSynthesisMo(){
     const raw=(data.content||[]).map(b=>b.text||'').join('');
     const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
 
-    if(bodyEl)bodyEl.innerHTML=`
-      <p style="font-family:'Noto Serif KR',serif;font-size:14px;color:#c8b090;line-height:2.1;white-space:pre-line;padding-bottom:4px;">${parsed.interpretation||''}</p>`;
+    if(txtEl){
+      txtEl.className='syn-mo-text';
+      txtEl.style.color='';
+      txtEl.style.textAlign='';
+      txtEl.style.padding='';
+      txtEl.textContent=parsed.interpretation||'';
+    }
 
     if(parsed.action&&actEl){
       document.getElementById('synActionText').textContent=parsed.action;
       actEl.style.display='block';
     }
+
+    // ─── 실측 데이터 박스 ───
+    if(dataBox){
+      const wx=_dgd[0];
+      const krwD=_dgd[3];
+      const jgD=_dgd[1];
+      const rows=[
+        {k:'오늘 날씨 (서울·경기)',v:(wx?.wx&&wx?.temp)?`${wx.wx} ${wx.temp}`:'—',warn:false},
+        {k:'현재 절기',v:jgD?.jg?`${jgD.jg}(${_JG_HANJA[jgD.jg]||''}) ${jgD.di||0}일째`:'—',warn:false},
+        {k:'다음 절기',v:jgD?.nj?`${jgD.nj}(${_JG_HANJA[jgD.nj]||''}) D-${_daysUntilNext(now,jg.next)}`:'—',warn:false},
+        {k:'USD/KRW',v:krwD?.krw||'—',warn:!!(krwD?.krw)},
+        {k:'국운 산출 기준',v:`${now.getFullYear()}년 ${now.getMonth()+1}월 시드 → ${(_GUOYUN_MAP[now.getMonth()])+1}번째 괘`,warn:false},
+      ];
+      document.getElementById('synDataRows').innerHTML=rows.map(r=>
+        `<div class="syn-data-row">
+          <span class="syn-data-key">${r.k}</span>
+          <span class="${r.warn?'syn-data-warn':'syn-data-val'}">${r.v}</span>
+        </div>`
+      ).join('');
+      document.getElementById('synDataNote').textContent=`오늘 ${ds}의 괘를 실측 데이터로 산출했습니다.`;
+      dataBox.style.display='block';
+    }
+
   }catch(e){
-    if(bodyEl)bodyEl.innerHTML=`<p style="font-size:13px;color:var(--ink3);text-align:center;padding:40px 0;">해석을 불러오지 못했습니다.<br><span style="font-size:11px;opacity:.7;">잠시 후 다시 시도해 주세요.</span></p>`;
+    if(txtEl){
+      txtEl.className='';
+      txtEl.style.color='rgba(255,255,255,.3)';
+      txtEl.textContent='해석을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+    }
   }
+}
+
+function _daysUntilNext(now,nextJg){
+  if(!nextJg)return '?';
+  const ny=now.getFullYear();
+  const nd=new Date(ny,nextJg.m-1,nextJg.d);
+  if(nd<now)nd.setFullYear(ny+1);
+  return Math.ceil((nd-now)/86400000);
 }
 // initDaily()는 ensureIching().then() 에서 호출됨
 
