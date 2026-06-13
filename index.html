@@ -1582,28 +1582,9 @@ function openMypage(){
         return;
       }
 
-      recordList.innerHTML = recs.map(r => {
-        const d = new Date(r.date);
-        const dateStr = `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-        const movStr  = r.moving && r.moving.length > 0 ? r.moving.map(y=>y+'효').join('·') : '없음';
-        const daysLeft = Math.ceil((r.expireAfterDays||7) - (now - r.date)/86400000);
-        const typeLabel = r.divType === 'paid' ? '사주 점괘' : '일반 점괘';
-        const typeCol   = r.divType === 'paid' ? 'var(--pb)' : 'var(--fg)';
-        return `
-          <div style="border:1px solid var(--paper3);border-radius:8px;padding:14px 16px;margin-bottom:8px;background:#fff;cursor:pointer;transition:box-shadow .2s;"
-            onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,.07)'" onmouseout="this.style.boxShadow=''"
-            onclick="openRecordDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-family:'Noto Serif KR',serif;font-size:15px;font-weight:600;color:var(--ink);">${r.guaName||'—'}</span>
-                <span style="font-size:10px;color:var(--ink3);">${r.hanja||''}</span>
-              </div>
-              <span style="font-size:9px;padding:2px 7px;border-radius:8px;background:var(--paper2);color:var(--ink3);">만료 ${daysLeft}일 전</span>
-            </div>
-            <p style="font-size:11px;color:var(--ink3);margin-bottom:6px;">${dateStr} · <span style="color:${typeCol};">${typeLabel}</span> · 동효 ${movStr}</p>
-            <p style="font-size:12px;color:var(--ink2);line-height:1.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">"${(r.question||'').slice(0,40)}${(r.question||'').length>40?'…':''}"</p>
-          </div>`;
-      }).join('');
+      // 전역에 저장해 페이지 전환 시 재사용
+      window._allRecords = recs;
+      renderRecordPage(0);
     }).catch(() => {
       recordList.innerHTML = '<p style="font-size:12px;color:var(--red);padding:8px 0;">기록을 불러오지 못했습니다.</p>';
     });
@@ -2872,6 +2853,73 @@ function openConcept(i){
   }
 })();
 
+
+/* ══ 점괘 기록 페이지네이션 ══ */
+const RECORDS_PER_PAGE = 10;
+
+function renderRecordPage(page){
+  const recs = window._allRecords || [];
+  const total = recs.length;
+  const totalPages = Math.ceil(total / RECORDS_PER_PAGE);
+  const start = page * RECORDS_PER_PAGE;
+  const pageRecs = recs.slice(start, start + RECORDS_PER_PAGE);
+  const now = Date.now();
+
+  const recordList = document.getElementById('mpRecordList');
+  if(!recordList) return;
+
+  const cardsHtml = pageRecs.map(r => {
+    const d = new Date(r.date);
+    const dateStr = `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const movStr  = r.moving && r.moving.length > 0 ? r.moving.map(y=>y+'효').join('·') : '없음';
+    const daysLeft = Math.ceil((r.expireAfterDays||7) - (now - r.date)/86400000);
+    const typeLabel = r.divType === 'paid' ? '사주 점괘' : '일반 점괘';
+    const typeCol   = r.divType === 'paid' ? 'var(--pb)' : 'var(--fg)';
+    return `
+      <div style="border:1px solid var(--paper3);border-radius:8px;padding:14px 16px;margin-bottom:8px;background:#fff;cursor:pointer;transition:box-shadow .2s;"
+        onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,.07)'" onmouseout="this.style.boxShadow=''"
+        onclick="openRecordDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-family:'Noto Serif KR',serif;font-size:15px;font-weight:600;color:var(--ink);">${r.guaName||'—'}</span>
+            <span style="font-size:10px;color:var(--ink3);">${r.hanja||''}</span>
+          </div>
+          <span style="font-size:9px;padding:2px 7px;border-radius:8px;background:var(--paper2);color:var(--ink3);">만료 ${daysLeft}일 전</span>
+        </div>
+        <p style="font-size:11px;color:var(--ink3);margin-bottom:6px;">${dateStr} · <span style="color:${typeCol};">${typeLabel}</span> · 동효 ${movStr}</p>
+        <p style="font-size:12px;color:var(--ink2);line-height:1.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">"${(r.question||'').slice(0,40)}${(r.question||'').length>40?'…':''}"</p>
+      </div>`;
+  }).join('');
+
+  // 페이지 버튼
+  let pagerHtml = '';
+  if(totalPages > 1){
+    const btns = Array.from({length: totalPages}, (_,i) => {
+      const isActive = i === page;
+      return `<button onclick="renderRecordPage(${i})"
+        style="min-width:30px;height:30px;padding:0 8px;border-radius:4px;border:1px solid ${isActive?'var(--gold)':'var(--paper3)'};
+        background:${isActive?'var(--ink)':'#fff'};color:${isActive?'var(--goldd)':'var(--ink3)'};
+        font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s;"
+        onmouseover="if(${!isActive})this.style.borderColor='var(--gold)'"
+        onmouseout="if(${!isActive})this.style.borderColor='var(--paper3)'">${i+1}</button>`;
+    }).join('');
+    pagerHtml = `
+      <div style="display:flex;justify-content:center;align-items:center;gap:6px;margin-top:12px;flex-wrap:wrap;">
+        <button onclick="if(${page}>0)renderRecordPage(${page-1})"
+          style="min-width:30px;height:30px;padding:0 8px;border-radius:4px;border:1px solid var(--paper3);
+          background:#fff;color:${page>0?'var(--ink2)':'var(--paper3)'};font-size:13px;cursor:${page>0?'pointer':'default'};
+          font-family:'Noto Sans KR',sans-serif;">‹</button>
+        ${btns}
+        <button onclick="if(${page}<${totalPages-1})renderRecordPage(${page+1})"
+          style="min-width:30px;height:30px;padding:0 8px;border-radius:4px;border:1px solid var(--paper3);
+          background:#fff;color:${page<totalPages-1?'var(--ink2)':'var(--paper3)'};font-size:13px;cursor:${page<totalPages-1?'pointer':'default'};
+          font-family:'Noto Sans KR',sans-serif;">›</button>
+      </div>
+      <p style="text-align:center;font-size:11px;color:var(--ink3);margin-top:8px;">전체 ${total}건 · ${page+1} / ${totalPages} 페이지</p>`;
+  }
+
+  recordList.innerHTML = cardsHtml + pagerHtml;
+}
 
 /* ══ 점괘 기록 상세 ══ */
 function openRecordDetail(r){
