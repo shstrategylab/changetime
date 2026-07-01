@@ -2459,13 +2459,22 @@ const _JG2GUA={소한:29,대한:52,입춘:24,우수:3,경칩:51,춘분:11,청명
 let _dgd=[{},{},{},{}]; // daily gua data
 
 function _getJg(now){
-  const m=now.getMonth()+1,d=now.getDate();
+  // 연도 경계(12월→1월)를 넘나드는 절기도 올바르게 계산하도록
+  // 작년/올해/내년 절기를 모두 실제 Date로 만들어 정렬 후 비교한다.
   const s=_JUNGGI.slice().sort((a,b)=>a.m*100+a.d-(b.m*100+b.d));
-  let cur=s[s.length-1],next=s[0],di=0;
-  for(let i=0;i<s.length;i++){
-    if(s[i].m*100+s[i].d<=m*100+d){cur=s[i];di=m*100+d-(s[i].m*100+s[i].d);next=s[(i+1)%s.length];}
+  const y=now.getFullYear();
+  const cands=[];
+  [y-1,y,y+1].forEach(yr=>{
+    s.forEach(t=>cands.push({m:t.m,d:t.d,n:t.n,date:new Date(yr,t.m-1,t.d)}));
+  });
+  cands.sort((a,b)=>a.date-b.date);
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  let cur=cands[0], next=cands[1];
+  for(let i=0;i<cands.length;i++){
+    if(cands[i].date<=today){cur=cands[i];next=cands[i+1]||cands[0];}
   }
-  return{cur,next,daysInto:di};
+  const di=Math.round((today-cur.date)/86400000);
+  return{cur:{m:cur.m,d:cur.d,n:cur.n}, next:{m:next.m,d:next.d,n:next.n}, daysInto:di};
 }
 function _wmoGua(c,t){
   // 맑음(0): 폭염이면 중수감(29), 아니면 건위천(1)
@@ -2503,13 +2512,20 @@ function initDaily(){
     realCtx:'서울 · 구름조금, 최저 18°C / 최고 27°C',
     realDesc:'바람이 하늘 위를 지나는 형상 — 큰 비는 없으나 구름이 오가니 완전히 맑지도 않습니다. 잠시 막힌 듯 보여도 곧 순환합니다.'
   };
-  _dgd[1]={
-    g: G64[41], // 풍뢰익 (id 42)
-    label:'지운·地運',
-    jg:'망종', di:7, nj:'하지',
-    realCtx:'망종(芒種) 절기 7일째 · 씨앗을 심는 시기',
-    realDesc:'망종은 보리를 거두고 모를 심는 절기입니다. 익괘(益)는 더함·유익의 괘 — 땅의 기운이 씨앗을 키우듯 지금 시작한 일에는 이로움이 더해집니다.'
-  };
+  // ── 지운: 오늘 실제 날짜의 절기를 계산해 자동 산출 ──────────
+  (function _setJiun(){
+    const jgInfo = _getJg(now);           // 오늘 날짜 기준 현재 절기 계산
+    const jgName = jgInfo.cur.n;
+    const guaId  = _JG2GUA[jgName] || 42;  // 매핑 없으면 풍뢰익 폴백
+    const gua    = G64[guaId - 1];
+    _dgd[1] = {
+      g: gua,
+      label:'지운·地運',
+      jg: jgName, di: jgInfo.daysInto, nj: jgInfo.next.n,
+      realCtx: `${jgName}(節氣) ${jgInfo.daysInto}일째 · ${jgInfo.next.n}까지`,
+      realDesc: `지금은 ${jgName} 절기입니다. ${gua.name}(${gua.keyword||''}) 괘의 기운이 땅 위에 흐르니 — ${gua.desc||'절기의 흐름에 맞춰 순리대로 움직이면 이로움이 있습니다.'}`
+    };
+  })();
   // ── 국운: 만세력 월건 기반 자동 산출 ──────────────────
   // 월건 지지(12개) → 국운 괘 매핑 테이블
   // 근거: 지지별 오행 기운이 사회·국가 형세에 투영되는 명리학적 원칙
