@@ -2686,10 +2686,14 @@ function initDaily(){
       pos => {
         const {latitude: lat, longitude: lng} = pos.coords;
         // 역지오코딩으로 도시명 가져오기
-        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ko`)
+        // ⚠ Nominatim(OpenStreetMap)은 이용정책상 '식별 가능한 User-Agent/Referer'
+        //   없는 클라이언트(브라우저) 직접 호출을 차단/제한하는 경우가 많아,
+        //   실제 서비스 트래픽에서는 403/차단으로 계속 '현재 위치'로만 폴백되기 쉬움.
+        //   → 브라우저 클라이언트 호출을 정식 지원하는 BigDataCloud 무료 API로 교체.
+        fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=ko`)
           .then(r=>r.json())
           .then(geo=>{
-            const city = geo.address?.city || geo.address?.town || geo.address?.county || '현재 위치';
+            const city = geo.city || geo.locality || geo.principalSubdivision || '현재 위치';
             _fetchWeather(lat, lng, city);
           })
           .catch(()=>_fetchWeather(lat, lng, '현재 위치'));
@@ -2702,7 +2706,11 @@ function initDaily(){
   }
 
   // 환율 API — 성공하면 시운 괘·맥락 업데이트
-  fetch('https://api.frankfurter.app/latest?from=USD&to=KRW')
+  // ⚠ api.frankfurter.app → api.frankfurter.dev/v1 로 마이그레이션되면서
+  //   구버전 파라미터(from/to)가 무시되고 base/symbols만 인식됨.
+  //   기존 URL을 그대로 두면 301 리다이렉트 후 base가 기본값 EUR로 처리되어
+  //   USD/KRW가 아닌 EUR/KRW 환율이 잘못 들어오는 버그가 있었음 → 아래로 수정.
+  fetch('https://api.frankfurter.dev/v1/latest?base=USD&symbols=KRW')
     .then(r=>r.json()).then(data=>{
       const krw=data.rates?.KRW;
       if(!krw) return;
